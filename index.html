@@ -225,23 +225,7 @@ details[open] summary::after{transform:rotate(45deg)}
       Ouça antes de acessar o método
     </div>
     <div class="audio-widget-sub">Como funciona o Consultor Rural e por que o mercado está esperando por você.</div>
-    <div class="audio-controls">
-      <button class="audio-play-btn" id="audioPlayBtn" aria-label="Play/Pause">
-        <svg class="play-icon" width="14" height="14" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        <svg class="pause-icon" width="14" height="14" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-      </button>
-      <div class="audio-progress-wrap">
-        <div class="audio-timeline" id="audioTimeline">
-          <div class="audio-timeline-fill" id="audioFill"></div>
-        </div>
-        <div class="audio-time">
-          <span id="audioCurrentTime">0:00</span>
-          <span id="audioDuration">1:34</span>
-        </div>
-      </div>
-      <svg class="audio-volume" id="audioVolumeBtn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Mudo"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path id="audioVolumePath" d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-    </div>
-    <audio id="audioPlayer" preload="metadata">
+    <audio controls preload="metadata" style="width:100%;margin-top:8px;border-radius:8px;accent-color:#166534;">
       <source src="vdave.mp3" type="audio/mpeg" />
     </audio>
   </div>
