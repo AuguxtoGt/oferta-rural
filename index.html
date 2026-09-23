@@ -236,13 +236,12 @@ details[open] summary::after{transform:rotate(45deg)}
         </div>
         <div class="audio-time">
           <span id="audioCurrentTime">0:00</span>
-          <span id="audioDuration">1:46</span>
+          <span id="audioDuration">1:34</span>
         </div>
       </div>
       <svg class="audio-volume" id="audioVolumeBtn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" title="Mudo"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path id="audioVolumePath" d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
     </div>
-    <audio id="audioPlayer" preload="none">
-      <!-- Substitua o src pelo link do seu arquivo de áudio após geração -->
+    <audio id="audioPlayer" preload="metadata">
       <source src="vdave.mp3" type="audio/mpeg" />
     </audio>
   </div>
@@ -842,24 +841,33 @@ document.getElementById('orderbump').addEventListener('change',function(){
   if(!audio || !playBtn) return;
 
   function fmt(s){
+    if(!isFinite(s)) return '0:00';
     const m=Math.floor(s/60);
     const sec=Math.floor(s%60);
     return m+':'+(sec<10?'0':'')+sec;
   }
 
+  // Sync button state from actual audio events (more reliable on mobile)
+  audio.addEventListener('play',function(){ playBtn.classList.add('playing'); });
+  audio.addEventListener('pause',function(){ playBtn.classList.remove('playing'); });
+
   playBtn.addEventListener('click',function(){
     if(audio.paused){
-      audio.play().catch(()=>{});
-      playBtn.classList.add('playing');
+      var p = audio.play();
+      if(p !== undefined){
+        p.catch(function(err){
+          console.warn('Audio play failed:', err);
+          playBtn.classList.remove('playing');
+        });
+      }
     } else {
       audio.pause();
-      playBtn.classList.remove('playing');
     }
   });
 
   audio.addEventListener('timeupdate',function(){
     if(!audio.duration) return;
-    const pct=(audio.currentTime/audio.duration)*100;
+    var pct=(audio.currentTime/audio.duration)*100;
     fill.style.width=pct+'%';
     currentTimeEl.textContent=fmt(audio.currentTime);
   });
@@ -869,19 +877,18 @@ document.getElementById('orderbump').addEventListener('change',function(){
   });
 
   audio.addEventListener('ended',function(){
-    playBtn.classList.remove('playing');
     fill.style.width='0%';
     currentTimeEl.textContent='0:00';
   });
 
   timeline.addEventListener('click',function(e){
     if(!audio.duration) return;
-    const rect=timeline.getBoundingClientRect();
-    const x=e.clientX-rect.left;
+    var rect=timeline.getBoundingClientRect();
+    var x=e.clientX-rect.left;
     audio.currentTime=(x/rect.width)*audio.duration;
   });
 
-  let muted=false;
+  var muted=false;
   volumeBtn.addEventListener('click',function(){
     muted=!muted;
     audio.muted=muted;
