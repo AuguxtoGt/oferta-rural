@@ -1,0 +1,12 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)\\.mp3",
+      "headers": [
+        { "key": "Content-Type", "value": "audio/mpeg" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Accept-Ranges", "value": "bytes" }
+      ]
+    }
+  ]
+}
