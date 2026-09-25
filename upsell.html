@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atenção — Oferta Especial para Você</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --red:#dc2626;--red2:#b91c1c;
+      --verde:#166534;--verde-m:#16a34a;--verde-c:#f0fdf4;
+      --ouro:#d97706;--ouro-c:#fffbeb;
+      --cinza:#f8fafc;--cinza3:#e2e8f0;
+      --texto:#0f172a;--texto2:#475569;--texto3:#94a3b8;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,sans-serif;color:var(--texto);background:#fff;overflow-x:hidden;line-height:1.6}
+    a{text-decoration:none;color:inherit}
+    #banner-alerta{background:linear-gradient(90deg,#991b1b,#dc2626,#b91c1c);color:#fff;position:sticky;top:0;z-index:999;box-shadow:0 4px 20px rgba(220,38,38,.5);transition:opacity .3s}
+    .banner-inner{max-width:860px;margin:0 auto;padding:14px 20px;text-align:center}
+    .banner-tag{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);font-size:.65rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;padding:3px 12px;border-radius:100px;margin-bottom:7px}
+    .banner-title{font-size:clamp(1.05rem,4vw,1.35rem);font-weight:900;line-height:1.2}
+    .banner-title span{color:#fde68a}
+    .banner-sub{font-size:.82rem;color:rgba(255,255,255,.8);margin-top:4px}
+    .banner-arrow{font-size:1.3rem;display:block;margin-top:6px;animation:bounce .8s infinite alternate}
+    @keyframes bounce{0%{transform:translateY(0)}100%{transform:translateY(5px)}}
+    #hero{padding:48px 20px 0;text-align:center;max-width:720px;margin:0 auto}
+    .badge-hero{display:inline-block;background:var(--ouro-c);border:1.5px solid #fcd34d;color:var(--ouro);font-size:.7rem;font-weight:800;padding:5px 16px;border-radius:100px;letter-spacing:2px;text-transform:uppercase;margin-bottom:20px}
+    #hero h1{font-size:clamp(1.75rem,6vw,2.6rem);font-weight:900;line-height:1.08;margin-bottom:16px;letter-spacing:-.5px}
+    #hero h1 em{color:var(--verde-m);font-style:normal}
+    #hero h1 u{text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:5px}
+    .hero-sub{font-size:clamp(.95rem,3vw,1.1rem);color:var(--texto2);max-width:540px;margin:0 auto 32px;line-height:1.7}
+    #dor{padding:32px 20px;max-width:720px;margin:0 auto}
+    .dor-box{background:#fff5f5;border:2px solid #fca5a5;border-radius:16px;padding:24px 28px}
+    .dor-title{font-size:1rem;font-weight:800;color:var(--red2);margin-bottom:14px}
+    .dor-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+    .dor-list li{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:#7f1d1d;line-height:1.5}
+    .dor-list li::before{content:"X";color:var(--red);font-weight:900;flex-shrink:0;margin-top:1px}
+    #virada{padding:36px 20px;text-align:center;max-width:720px;margin:0 auto}
+    .virada-title{font-size:clamp(1.3rem,4.5vw,1.9rem);font-weight:900;line-height:1.15;margin-bottom:12px}
+    .virada-title span{color:var(--verde-m)}
+    .virada-sub{font-size:.95rem;color:var(--texto2);max-width:520px;margin:0 auto;line-height:1.7}
+    #recebe{padding:32px 20px;max-width:720px;margin:0 auto}
+    .recebe-title{font-size:1.1rem;font-weight:800;margin-bottom:16px;text-align:center}
+    .item-list{display:flex;flex-direction:column;gap:10px}
+    .item{display:flex;gap:14px;align-items:flex-start;background:var(--verde-c);border:1.5px solid #86efac;border-radius:12px;padding:14px 16px}
+    .item-icon{font-size:1.5rem;flex-shrink:0;margin-top:1px}
+    .item-info h3{font-size:.92rem;font-weight:700;margin-bottom:2px}
+    .item-info p{font-size:.82rem;color:var(--texto2);line-height:1.5}
+    #prova{padding:32px 20px;max-width:720px;margin:0 auto}
+    .prova-title{font-size:1rem;font-weight:800;text-align:center;margin-bottom:16px}
+    .depos{display:flex;flex-direction:column;gap:10px}
+    .depo{background:var(--cinza);border:1px solid var(--cinza3);border-radius:12px;padding:16px;font-size:.88rem;color:var(--texto2);line-height:1.6}
+    .depo-nome{font-weight:700;color:var(--texto);font-size:.8rem;margin-top:8px}
+    .depo-valor{display:inline-block;background:var(--verde-c);border:1px solid #86efac;color:var(--verde);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px}
+    .urgencia-strip{background:linear-gradient(90deg,#92400e,#d97706,#92400e);color:#fff;text-align:center;padding:12px 20px;font-size:.82rem;font-weight:700;letter-spacing:.5px}
+    .urgencia-strip span{color:#fde68a}
+    #oferta{padding:32px 20px 48px;max-width:580px;margin:0 auto;text-align:center}
+    .price-box{background:#fff;border:2.5px solid var(--verde-m);border-radius:20px;padding:32px 28px;box-shadow:0 0 60px rgba(22,163,74,.18)}
+    .price-label{font-size:.75rem;color:var(--texto3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+    .price-old{font-size:1rem;color:var(--texto3);text-decoration:line-through;margin-bottom:4px}
+    .price-main{font-size:clamp(2.6rem,9vw,3.6rem);font-weight:900;line-height:1;color:var(--texto);margin-bottom:4px}
+    .price-main small{font-size:1rem;font-weight:400;color:var(--texto3)}
+    .price-desc{font-size:.82rem;color:var(--texto3);margin-bottom:24px}
+    .btn-cta{display:block;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;font-size:clamp(1rem,3.5vw,1.1rem);font-weight:900;padding:20px 28px;border-radius:10px;text-transform:uppercase;letter-spacing:.5px;text-align:center;box-shadow:0 6px 28px rgba(22,163,74,.45);transition:transform .15s,box-shadow .15s;cursor:pointer;border:none;width:100%;margin-bottom:12px}
+    .btn-cta:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(22,163,74,.55)}
+    .btn-pulse{animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 6px 28px rgba(22,163,74,.45)}50%{box-shadow:0 6px 40px rgba(22,163,74,.75),0 0 0 8px rgba(22,163,74,.12)}}
+    .btn-recusar{display:block;font-size:.78rem;color:var(--texto3);text-align:center;margin-top:10px;cursor:pointer;background:none;border:none;text-decoration:underline;width:100%}
+    .btn-recusar:hover{color:var(--red)}
+    .price-garantia{display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;margin-top:18px;text-align:left}
+    .price-garantia p{font-size:.8rem;color:var(--texto2);line-height:1.5}
+    #overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+    #overlay.show{display:flex}
+    .popup{background:#fff;border-radius:20px;padding:36px 32px;max-width:420px;width:100%;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.3);animation:popIn .3s cubic-bezier(.175,.885,.32,1.275)}
+    @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+    .popup-icon{font-size:2.8rem;margin-bottom:12px}
+    .popup-title{font-size:1.2rem;font-weight:900;color:var(--texto);margin-bottom:8px;line-height:1.2}
+    .popup-title span{color:var(--red)}
+    .popup-sub{font-size:.88rem;color:var(--texto2);line-height:1.6;margin-bottom:24px}
+    .popup-sub strong{color:var(--texto)}
+    .popup-btn{display:block;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;font-size:.95rem;font-weight:800;padding:16px 24px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px;box-shadow:0 6px 20px rgba(22,163,74,.4);transition:transform .15s;margin-bottom:12px}
+    .popup-btn:hover{transform:translateY(-1px)}
+    .popup-close{font-size:.78rem;color:var(--texto3);cursor:pointer;background:none;border:none;text-decoration:underline;display:block;width:100%;text-align:center}
+    .popup-close:hover{color:var(--red)}
+    @media(max-width:600px){#hero{padding:36px 16px 0}.price-box{padding:24px 18px}.popup{padding:28px 22px}}
+  </style>
+</head>
+<body>
+
+<div id="banner-alerta">
+  <div class="banner-inner">
+    <div class="banner-tag">Aviso Importante</div>
+    <div class="banner-title">PODE TER <span>UM ERRO</span> NA SUA COMPRA — VEJA ABAIXO</div>
+    <div class="banner-sub">Voce adquiriu o kit principal mas esta saindo sem a parte mais importante para faturar.</div>
+    <span class="banner-arrow">v</span>
+  </div>
+</div>
+
+<section id="hero">
+  <div class="badge-hero">Oferta unica — So aparece uma vez</div>
+  <h1>Voce sabe regularizar.<br><em>Mas sabe onde</em> achar<br><u>o cliente que paga?</u></h1>
+  <p class="hero-sub">
+    90% dos consultores que compram o kit travam exatamente aqui:
+    sabem fazer o servico, mas <strong>nao sabem abordar, convencer e fechar</strong>.
+    Resultado? Ficam semanas esperando um cliente aparecer do nada.
+  </p>
+</section>
+
+<section id="dor">
+  <div class="dor-box">
+    <div class="dor-title">Sem esse guia, voce provavelmente vai:</div>
+    <ul class="dor-list">
+      <li>Ficar dias esperando alguem te chamar — sem nunca prospectar ativamente</li>
+      <li>Travar na hora de falar o preco e acabar cobrando barato ou perdendo o cliente</li>
+      <li>Nao saber o que responder quando o produtor disser "ja tenho contador" ou "ta caro"</li>
+      <li>Abordar errado e parecer um vendedor insistente em vez de um especialista</li>
+      <li>Perder semanas tentando descobrir o que falar — por tentativa e erro</li>
+    </ul>
+  </div>
+</section>
+
+<section id="virada">
+  <div class="virada-title">E se voce pudesse abrir o WhatsApp<br>agora e ja <span>enviar a mensagem certa?</span></div>
+  <p class="virada-sub">
+    Sao 21 scripts testados e prontos para copiar, colar e mandar —
+    para grupos rurais, corretores, advogados, bancos e muito mais. Sem improvisar. Sem travar.
+  </p>
+</section>
+
+<section id="recebe">
+  <div class="recebe-title">O que voce leva hoje por apenas R$67:</div>
+  <div class="item-list">
+    <div class="item">
+      <div class="item-icon">📱</div>
+      <div class="item-info">
+        <h3>21+ Scripts Prontos para Copiar e Colar</h3>
+        <p>Para WhatsApp, grupos rurais, Instagram, corretores, advogados e bancos. E so trocar o nome e enviar.</p>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">🗺️</div>
+      <div class="item-info">
+        <h3>8 Canais Revelados para Encontrar Clientes</h3>
+        <p>Onde exatamente estao os produtores rurais dispostos a pagar hoje — incluindo fontes publicas e gratuitas.</p>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">💰</div>
+      <div class="item-info">
+        <h3>Tabela de Precos e Modelo de Proposta Pronto</h3>
+        <p>Quanto cobrar por cada servico e como pedir 50% adiantado sem constrangimento.</p>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">🛡️</div>
+      <div class="item-info">
+        <h3>Respostas para as 5 Objecoes Mais Comuns</h3>
+        <p>"Ta caro", "ja tenho contador", "vou pensar"... Para cada uma, uma resposta que nao soa como vendedor.</p>
+      </div>
+    </div>
+    <div class="item">
+      <div class="item-icon">📅</div>
+      <div class="item-info">
+        <h3>Plano Dia a Dia — Semana 1 para o 1 Primeiro Cliente</h3>
+        <p>O que exatamente fazer em cada dia da primeira semana para sair do zero ao primeiro pagamento.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="prova">
+  <div class="prova-title">Quem aplicou o metodo:</div>
+  <div class="depos">
+    <div class="depo">
+      Mandei no grupo da cooperativa exatamente como o script ensinava. Em 40 minutos ja tinha 4 produtores interessados. Fechei 2 no mesmo dia.
+      <div class="depo-nome">— Antonio S. <span class="depo-valor">R$2.400 na semana 1</span></div>
+    </div>
+    <div class="depo">
+      A parte das objecoes salvou minha vida. O fazendeiro falou "ja tenho contador" e eu usei o script. Ele fechou na hora. Cobrei R$1.200.
+      <div class="depo-nome">— Fernanda M. <span class="depo-valor">1 primeiro cliente em 48h</span></div>
+    </div>
+    <div class="depo">
+      Fiz parceria com uma imobiliaria usando o Script 3. Em 30 dias eles ja tinham me mandado 6 clientes. E receita praticamente passiva.
+      <div class="depo-nome">— Roberto L. <span class="depo-valor">6 clientes em 30 dias</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="urgencia-strip">
+  Oferta valida <span>somente agora</span> — nao vai aparecer novamente depois que sair desta pagina
+</div>
+
+<section id="oferta">
+  <div class="price-box">
+    <div class="price-label">Acesso imediato — Pagamento unico</div>
+    <div class="price-old">De R$ 147,00</div>
+    <div class="price-main"><small>R$</small> 67</div>
+    <div class="price-desc">Uma unica vez · Seu para sempre · PDF + Guia Completo</div>
+    <a href="https://pay.novarkbr.com/bet5bxrw" class="btn-cta btn-pulse" id="btn-main-cta">
+      QUERO O KIT DE PROSPECCAO AGORA
+    </a>
+    <div class="price-garantia">
+      <p><strong>Garantia de 7 dias.</strong> Se voce achar que nao valeu, devolvemos tudo. Sem perguntas.</p>
+    </div>
+    <button class="btn-recusar" id="btn-recusar">
+      Nao, prefiro continuar sem saber onde estao meus clientes
+    </button>
+  </div>
+</section>
+
+<div id="overlay">
+  <div class="popup">
+    <div class="popup-icon">⚠️</div>
+    <div class="popup-title">Tem certeza que deseja <span>sair?</span></div>
+    <div class="popup-sub">
+      Essa pode ser a sua unica chance de levar o <strong>Kit de Prospeccao</strong> por R$67.
+      Depois que fechar essa pagina, o preco volta para R$147 — ou a oferta desaparece completamente.
+      <br><br>
+      <strong>Voce esta a um clique de saber exatamente o que mandar no WhatsApp para fechar seu primeiro cliente essa semana.</strong>
+    </div>
+    <a href="https://pay.novarkbr.com/bet5bxrw" class="popup-btn">
+      QUERO CLIENTES — GARANTIR POR R$67
+    </a>
+    <button class="popup-close" id="popup-close">
+      Nao, prefiro sair e perder essa oportunidade
+    </button>
+  </div>
+</div>
+
+<script>
+  let exitShown = false;
+  let exitEnabled = true;
+
+  document.addEventListener('mouseleave', function(e){
+    if(e.clientY <= 5 && !exitShown && exitEnabled){ showExit(); }
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState === 'hidden' && !exitShown && exitEnabled){ showExit(); }
+  });
+
+  document.getElementById('btn-recusar').addEventListener('click', function(){ showExit(); });
+
+  function showExit(){
+    exitShown = true;
+    document.getElementById('overlay').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  document.getElementById('popup-close').addEventListener('click', function(){
+    document.getElementById('overlay').classList.remove('show');
+    document.body.style.overflow = '';
+  });
+
+  document.getElementById('overlay').addEventListener('click', function(e){
+    if(e.target === this){
+      const popup = document.querySelector('.popup');
+      popup.style.transform = 'translateX(-8px)';
+      setTimeout(()=>popup.style.transform='translateX(8px)',80);
+      setTimeout(()=>popup.style.transform='translateX(-5px)',160);
+      setTimeout(()=>popup.style.transform='translateX(0)',240);
+    }
+  });
+
+  const oferta = document.getElementById('oferta');
+  const banner = document.getElementById('banner-alerta');
+  window.addEventListener('scroll', function(){
+    const rect = oferta.getBoundingClientRect();
+    if(rect.top < window.innerHeight * 0.5){
+      banner.style.opacity = '0';
+      banner.style.pointerEvents = 'none';
+    } else {
+      banner.style.opacity = '1';
+      banner.style.pointerEvents = 'auto';
+    }
+  });
+
+  document.getElementById('btn-main-cta').addEventListener('click', function(){ exitEnabled = false; });
+</script>
+
+</body>
+</html>
