@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',sans-serif;background:#fff;color:#0f172a;overflow-x:hidden}
+    body{font-family:'Inter',sans-serif;background:#fff;color:#0f172a;overflow-x:hidden;padding-bottom:80px}
     a{text-decoration:none;color:inherit}
 
     /* BANNER */
@@ -85,6 +85,9 @@
     .popup-btn{display:block;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;font-size:.95rem;font-weight:800;padding:15px 20px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px;margin-bottom:10px;box-shadow:0 6px 18px rgba(22,163,74,.4)}
     .popup-btn:hover{transform:translateY(-1px)}
     .popup-close{font-size:.75rem;color:#94a3b8;cursor:pointer;background:none;border:none;text-decoration:underline;display:block;width:100%;text-align:center}
+    /* STICKY CTA */
+    #sticky-cta{position:fixed;bottom:0;left:0;right:0;z-index:998;background:#fff;border-top:1px solid #e2e8f0;padding:12px 20px;box-shadow:0 -4px 24px rgba(0,0,0,.1)}
+    #sticky-cta a{display:block;background:linear-gradient(135deg,#15803d,#16a34a);color:#fff;font-size:.95rem;font-weight:900;padding:15px 24px;border-radius:10px;text-transform:uppercase;letter-spacing:.3px;text-align:center;box-shadow:0 4px 16px rgba(22,163,74,.4);animation:pulse 2s infinite}
   </style>
 </head>
 <body>
@@ -98,8 +101,8 @@
 <!-- HERO -->
 <section id="hero">
   <div class="pill">Voce foi uma das poucas pessoas selecionadas hoje para receber esta oferta.</div>
-  <h1>Voce acabou de aprender como<br>regularizar imoveis rurais.<br><em>Mas existe um problema</em><br>que pode mudar tudo isso.</h1>
-  <p class="sub">Voce pode ter todo esse conhecimento nas maos e mesmo assim continuar sem ganhar dinheiro com ele. Porque aprender a fazer o servico e apenas uma parte do processo. A outra parte e colocar esse servico na frente das pessoas certas, abordar da maneira correta e transformar uma conversa em um cliente pagante.</p>
+  <h1>Voce vai aprender agora a fazer dinheiro com o nosso metodo Imovel Rural em Dia. <em>Porem voce nao tem o passo a passo correto</em> de como encontrar clientes de forma rapida e facil.</h1>
+  <p class="sub">Ter o conhecimento do servico e apenas uma parte. A outra e saber onde encontrar clientes, o que falar na primeira mensagem e como fechar a venda. E foi para resolver isso que criamos o Kit de Prospeccao.</p>
 </section>
 
 <!-- DORES -->
@@ -280,5 +283,10 @@
     banner.style.opacity=oferta.getBoundingClientRect().top<window.innerHeight*.6?'0':'1';
   });
 </script>
+<!-- STICKY CTA -->
+<div id="sticky-cta">
+  <a href="https://pay.novarkbr.com/bet5bxrw" id="sticky-btn">QUERO TER ACESSO AO KIT AGORA</a>
+</div>
+
 </body>
 </html>
