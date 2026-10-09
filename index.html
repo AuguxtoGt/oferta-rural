@@ -61,7 +61,7 @@ h2{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;line-height:1.2;margin-bot
 #hero p.sub{font-size:clamp(1rem,3.5vw,1.2rem);color:var(--gray);max-width:620px;margin:0 auto 32px;line-height:1.7}
 .hero-proof{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin:32px 0 36px}
 .hero-proof-item{display:flex;align-items:center;gap:8px;font-size:.9rem;color:var(--gray)}
-.hero-img{display:block;margin:36px auto 0;max-width:480px;width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.hero-img{height:auto;display:block;margin:36px auto 0;max-width:480px;width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
 .hero-mockup-title{font-size:.72rem;text-transform:uppercase;letter-spacing:2px;color:var(--red2);margin-bottom:12px}
 .hero-mockup h3{font-size:1.05rem;font-weight:800;margin-bottom:8px;line-height:1.3}
 .hero-mockup p{font-size:.82rem;color:var(--gray)}
@@ -153,10 +153,6 @@ h2{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:800;line-height:1.2;margin-bot
 .price-guarantee{display:flex;align-items:center;gap:12px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.25);border-radius:12px;padding:14px;margin-top:20px;text-align:left}
 .price-guarantee .gicon{font-size:2rem;flex-shrink:0}
 .price-guarantee p{font-size:.82rem;color:var(--gray);line-height:1.5}
-.bump-box{max-width:480px;margin:16px auto 0;background:rgba(245,166,35,.06);border:1px dashed var(--gold);border-radius:14px;padding:18px 20px;text-align:left;display:flex;gap:14px;align-items:flex-start}
-.bump-box input[type="checkbox"]{margin-top:3px;flex-shrink:0;width:18px;height:18px;cursor:pointer;accent-color:var(--gold)}
-.bump-label{font-size:.85rem;color:var(--gray);line-height:1.5}
-.bump-price{color:var(--gold);font-weight:800}
 
 /* FAQ */
 #faq{text-align:center}
@@ -181,22 +177,7 @@ details[open] summary::after{transform:rotate(45deg)}
 .audio-widget-label{font-size:.78rem;font-weight:700;color:#166534;display:flex;align-items:center;gap:6px;margin-bottom:2px}
 .audio-widget-label svg{flex-shrink:0}
 .audio-widget-sub{font-size:.72rem;color:var(--gray);margin-bottom:12px}
-.audio-controls{display:flex;align-items:center;gap:12px}
-.audio-play-btn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--red),#166534);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s,box-shadow .15s;box-shadow:0 2px 10px rgba(22,101,52,.3);position:relative;z-index:1002}
-.audio-play-btn:hover{transform:scale(1.08);box-shadow:0 4px 16px rgba(22,101,52,.45)}
-.audio-play-btn svg{fill:#fff;margin-left:2px}
-.audio-play-btn.playing .play-icon{display:none}
-.audio-play-btn.playing .pause-icon{display:block}
-.audio-play-btn .pause-icon{display:none}
-.audio-progress-wrap{flex:1;display:flex;flex-direction:column;gap:5px}
-.audio-timeline{position:relative;height:4px;background:rgba(22,101,52,.15);border-radius:100px;cursor:pointer}
-.audio-timeline-fill{height:100%;background:linear-gradient(90deg,var(--red),#16a34a);border-radius:100px;width:0%;transition:width .1s linear}
-.audio-time{display:flex;justify-content:space-between;font-size:.68rem;color:var(--gray)}
-.audio-volume{width:20px;height:20px;color:var(--gray);cursor:pointer;flex-shrink:0;opacity:.7;transition:opacity .2s}
-.audio-volume:hover{opacity:1}
 
-/* STICKY CTA - desabilitado: substituído pelo navbar header */
-.sticky-cta{display:none !important}
 
 @media(max-width:600px){section{padding:48px 16px}.bento-grid{grid-template-columns:1fr}}
   </style>
@@ -247,7 +228,7 @@ details[open] summary::after{transform:rotate(45deg)}
     </audio>
   </div>
 
-  <img src="mockup.jpg" alt="Imóvel Rural em Dia Mockup" class="hero-img" />
+  <img src="mockup.webp" alt="Imóvel Rural em Dia Mockup" class="hero-img" width="960" height="536" fetchpriority="high" decoding="async" />
   <br />
   <div class="btn-center">
     <a href="#oferta" class="btn-main">QUERO SER UM CONSULTOR RURAL</a>
@@ -697,7 +678,7 @@ details[open] summary::after{transform:rotate(45deg)}
 <hr class="divider" />
 
 <section id="garantia" style="text-align:center; padding: 60px 20px; background:var(--bg3)">
-  <img src="7dias.png" alt="Garantia de 7 Dias" style="width: 140px; margin: 0 auto 20px; display: block;" />
+  <img src="7dias.webp" alt="Garantia de 7 Dias" width="140" height="140" loading="lazy" decoding="async" style="width: 140px; height: 140px; margin: 0 auto 20px; display: block;" />
   <h2>Garantia Incondicional de 7 Dias</h2>
   <p style="max-width: 600px; margin: 0 auto; color: var(--gray);">Se você acessar o material e achar que não te ajudou, basta enviar um e-mail em até 7 dias e devolvemos 100% do seu dinheiro. Sem perguntas, sem letras miúdas.</p>
 </section>
@@ -769,25 +750,7 @@ details[open] summary::after{transform:rotate(45deg)}
   <div style="margin-top:12px;font-size:.7rem;color:#444">Este produto não é oferecido pelo Governo Federal, Incra, Receita Federal ou IBAMA. É um material educativo independente.</div>
 </div>
 
-<!-STICKY CTA MOBILE->
-<a href="#oferta" class="sticky-cta"> COMEÇAR POR R$27,90 →</a>
-
 <script>
-// STICKY CTA OBSERVER
-document.addEventListener("DOMContentLoaded", function() {
-  const sticky = document.querySelector('.sticky-cta');
-  const hero = document.getElementById('hero');
-  if(sticky && hero) {
-    const obs = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if(!e.isIntersecting) sticky.classList.add('visible');
-        else sticky.classList.remove('visible');
-      });
-    }, {threshold: 0.1});
-    obs.observe(hero);
-  }
-});
-
 // CARROSSEL
 const carousel=document.getElementById('testiCarousel');
 const dots=document.querySelectorAll('.carousel-dot');
@@ -820,82 +783,6 @@ startAuto();
 document.querySelectorAll('details').forEach(d=>{
   d.addEventListener('toggle',()=>{
     if(d.open)document.querySelectorAll('details').forEach(o=>{if(o!==d&&o.open)o.open=false;});
-  });
-});
-
-// ORDER BUMP
-document.getElementById('orderbump').addEventListener('change',function(){
-  const btn=document.getElementById('btn-checkout');
-  btn.textContent=this.checked?'QUERO MEU IMÓVEL EM DIA + KIT R$38,90':'QUERO MEU IMÓVEL EM DIA R$27,90';
-});
-
-// AUDIO PLAYER
-document.addEventListener('DOMContentLoaded', function(){
-  const audio = document.getElementById('audioPlayer');
-  const playBtn = document.getElementById('audioPlayBtn');
-  const fill = document.getElementById('audioFill');
-  const timeline = document.getElementById('audioTimeline');
-  const currentTimeEl = document.getElementById('audioCurrentTime');
-  const durationEl = document.getElementById('audioDuration');
-  const volumeBtn = document.getElementById('audioVolumeBtn');
-  const volumePath = document.getElementById('audioVolumePath');
-
-  if(!audio || !playBtn) return;
-
-  function fmt(s){
-    if(!isFinite(s)) return '0:00';
-    const m=Math.floor(s/60);
-    const sec=Math.floor(s%60);
-    return m+':'+(sec<10?'0':'')+sec;
-  }
-
-  // Sync button state from actual audio events (more reliable on mobile)
-  audio.addEventListener('play',function(){ playBtn.classList.add('playing'); });
-  audio.addEventListener('pause',function(){ playBtn.classList.remove('playing'); });
-
-  playBtn.addEventListener('click',function(){
-    if(audio.paused){
-      var p = audio.play();
-      if(p !== undefined){
-        p.catch(function(err){
-          console.warn('Audio play failed:', err);
-          playBtn.classList.remove('playing');
-        });
-      }
-    } else {
-      audio.pause();
-    }
-  });
-
-  audio.addEventListener('timeupdate',function(){
-    if(!audio.duration) return;
-    var pct=(audio.currentTime/audio.duration)*100;
-    fill.style.width=pct+'%';
-    currentTimeEl.textContent=fmt(audio.currentTime);
-  });
-
-  audio.addEventListener('loadedmetadata',function(){
-    durationEl.textContent=fmt(audio.duration);
-  });
-
-  audio.addEventListener('ended',function(){
-    fill.style.width='0%';
-    currentTimeEl.textContent='0:00';
-  });
-
-  timeline.addEventListener('click',function(e){
-    if(!audio.duration) return;
-    var rect=timeline.getBoundingClientRect();
-    var x=e.clientX-rect.left;
-    audio.currentTime=(x/rect.width)*audio.duration;
-  });
-
-  var muted=false;
-  volumeBtn.addEventListener('click',function(){
-    muted=!muted;
-    audio.muted=muted;
-    volumePath.style.opacity=muted?'0':'1';
-    volumeBtn.style.opacity=muted?'0.35':'0.7';
   });
 });
 </script>
