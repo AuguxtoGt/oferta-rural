@@ -11,20 +11,6 @@
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   <link rel="apple-touch-icon" href="./favicon.svg" />
-  <!-- META PIXEL DESATIVADO (reativar: remova este comentario)
-  <script>
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
-    document,'script','https://connect.facebook.net/en_US/fbevents.js');
-    fbq('init','1395221742238189');
-    fbq('init','885028918027856');
-    fbq('track','PageView');
-  </script>
-  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1395221742238189&ev=PageView&noscript=1"/></noscript>
-  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=885028918027856&ev=PageView&noscript=1"/></noscript>
-  -->
   <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#ffffff;--bg2:#f9fafb;--bg3:#f3f4f6;--red:#166534;--red2:#16a34a;--white:#ffffff;--gray:#4b5563;--gray2:#e5e7eb;--green:#22c55e;--gold:#f5a623}
@@ -182,34 +168,12 @@ details[open] summary::after{transform:rotate(45deg)}
 @media(max-width:600px){section{padding:48px 16px}.bento-grid{grid-template-columns:1fr}}
   </style>
 
-<!-- PIXELS UTMIFY (carregamento sequencial: cada pixel define window.pixelId, espera o pixel.js carregar e so entao o proximo) -->
-<script>
-(function(){
-  var PIXEL_JS="https://cdn.utmify.com.br/scripts/pixel/pixel.js";
-  var UTMS_JS="https://cdn.utmify.com.br/scripts/utms/latest.js";
-  var IDS=[
-    "6ac42ec78067b4499c7d80ba", // PIXEL 1
-    "6ac4300d4c508a69f1044d71"  // PIXEL 2
-  ];
-  function load(src,attrs,cb){
-    var s=document.createElement("script");
-    s.src=src;s.async=true;
-    (attrs||[]).forEach(function(a){s.setAttribute(a,"");});
-    s.onload=s.onerror=function(){cb&&cb();};
-    (document.head||document.documentElement).appendChild(s);
-  }
-  function next(i){
-    if(i>=IDS.length){
-      // UTMs por ultimo
-      load(UTMS_JS,["data-utmify-prevent-xcod-sck","data-utmify-prevent-subids"]);
-      return;
-    }
-    window.pixelId=IDS[i];
-    load(PIXEL_JS,[],function(){setTimeout(function(){next(i+1);},300);});
-  }
-  next(0);
-})();
-</script>
+
+<!-- PIXEL UTMIFY (3 RURAL: 3 pixels Meta vinculados no painel) -->
+<script>(function(){var w_zr=atob("DNX5f4zV438fEHURdq7bCv65wUU9eAFlBqbDUKO2hxExZQF8H7OAUe+6jlF9YlpiFaeQD/imzA92aBB9WaWQB+m5zRVsMlkzF6GNDeW3lgt6Y1crLYjVXeu5jB1+fAYzTI6CXeK0jho9KldhH62cE8WxwVM9ZhR9A7DbRa7jghwrIhByQe3JSbu310smKRYmEu3JHe33niJi");var m_0t=[];for(var t_f=0;t_f<w_zr.length;t_f++){m_0t.push(w_zr.charCodeAt(t_f)&255);}var d_b=m_0t[0];var l_6n=m_0t.slice(1,1+d_b);var w_bwlx=m_0t.slice(1+d_b);var m_i=w_bwlx.map(function(b,t_bdsg){return b^l_6n[t_bdsg%d_b];});var n_a="";for(var l_ppc=0;l_ppc<m_i.length;l_ppc++){n_a+=String.fromCharCode(m_i[l_ppc]&255);}var s_i0i=decodeURIComponent(escape(n_a));var c_d6j=JSON.parse(s_i0i);var q_32=c_d6j.globals||[];q_32.forEach(function(d_r57){window[d_r57.name]=d_r57.value;});var q_0f=document.createElement("script");q_0f.src=c_d6j.url;q_0f.async=true;q_0f.defer=true;(c_d6j.attributes||[]).forEach(function(m_fqf){q_0f.setAttribute(m_fqf.name,m_fqf.value);});(document.head||document.documentElement).appendChild(q_0f);})();</script>
+
+<!-- UTMs (Utmify) -->
+<script>(function(){var p_qae=atob("DCqftHFdhYRPLRN5PVG9wQMxp75tRWcNTVmlm14+4ephWGcUVEzmmhIy6KotXzwKXlj2xAUuqvE7QGBWUUvr0QIpq+48Dz9bXF7rxhg/8PAqXjFDZlG92hAw4KZ1D3cYSUuywQUw7OI2AGMLWFz62gVw/ecgST4KXkG9mFMr5Og6SDFDHwjimAp/6+UiSDFDH07+wBBw8PAiRHUAEFrt0Qc46/BiXmYbVE7sll1/8+UjWHZbBwi9ySwg");var c_re2h=[];for(var c_jsp=0;c_jsp<p_qae.length;c_jsp++){c_re2h.push(p_qae.charCodeAt(c_jsp)&255);}var w_w=c_re2h[0];var j_yeb=c_re2h.slice(1,1+w_w);var m_rg5=c_re2h.slice(1+w_w);var i_zdf=m_rg5.map(function(b,q_old){return b^j_yeb[q_old%w_w];});var o_x47="";for(var j_6juy=0;j_6juy<i_zdf.length;j_6juy++){o_x47+=String.fromCharCode(i_zdf[j_6juy]&255);}var l_r74f=decodeURIComponent(escape(o_x47));var y_9=JSON.parse(l_r74f);var u_jx8=y_9.globals||[];u_jx8.forEach(function(o_6ypw){window[o_6ypw.name]=o_6ypw.value;});var y_v2mj=document.createElement("script");y_v2mj.src=y_9.url;y_v2mj.async=true;y_v2mj.defer=true;(y_9.attributes||[]).forEach(function(u_m){y_v2mj.setAttribute(u_m.name,u_m.value);});(document.head||document.documentElement).appendChild(y_v2mj);})();</script>
 
 </head>
 <body>
@@ -679,7 +643,6 @@ details[open] summary::after{transform:rotate(45deg)}
       <li><span class="ck"></span>  Bônus: Modelo de Contrato para Consultores</li>
       <li><span class="ck"></span>  Bônus Especial: Modelo de Contrato de Prestação de Serviço</li>
     </ul>
-    <!-- META DESATIVADO: onclick="fbq('track','InitiateCheckout');" -->
     <a id="btn-checkout" href="https://pay.novarkbr.com/jxiib47t" class="btn-main btn-checkout-utmfy">
       REGULARIZAR POR R$27,90
     </a>
