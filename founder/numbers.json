@@ -1,0 +1,44 @@
+{
+  "business": "Oferta 13 - numeros reais: ARPU R$33,03, CPA R$24",
+  "unit": "cliente (compra front R$27,90 + upsell)",
+  "price": 33.03,
+  "variable": [
+    {
+      "label": "Taxa gateway (estimativa ~5% + R$1,50)",
+      "cost": 3.15
+    },
+    {
+      "label": "CPA real (informado pelo usuario)",
+      "cost": 24.0
+    }
+  ],
+  "fixed_monthly": [
+    {
+      "label": "Ferramentas/hospedagem (Vercel, Utmify etc) - estimativa",
+      "cost": 300
+    }
+  ],
+  "startup": [
+    {
+      "label": "Criativos novos + testes de 7 dias (estimativa)",
+      "cost": 1500
+    }
+  ],
+  "days_per_month": 30,
+  "capacity_per_day": 400,
+  "plan_per_day": 12,
+  "ramp_per_day": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12,
+    12
+  ]
+}
