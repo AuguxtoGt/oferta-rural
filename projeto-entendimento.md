@@ -40,6 +40,12 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 - `Modelo_Solicitacao_Retificacao_Area.pdf` (5 págs)
 - `Guia_Acesso_Credito_Rural_Pos_Regularizacao.pdf` (5 págs)
 - `passo car.pdf`, `passo ccir.pdf`, `passo itr.pdf`
+- **Novos bônus (20/10/2026, ainda NÃO listados na página `/entenda`)**, fonte HTML em `fonte-pdfs/entenda/` (renderizados com Chrome headless):
+  - `Bonus_01_Checklist_Documentos_Imovel_Rural.pdf` (11 págs)
+  - `Bonus_02_Calendario_Anual_Prazos.pdf` (9 págs)
+  - `Bonus_03_Guia_Erros_Comuns_e_Como_Corrigir.pdf` (10 págs)
+  - `Bonus_04_Sobreposicao_CEFIR_Como_Resolver.pdf` (16 págs; CEFIR é específico da Bahia/INEMA/SEIA)
+  - `Bonus_05_eCAC_para_Imovel_Rural.pdf` (15 págs; e-CAC, gov.br, ITR, CAFIR, certidão, procuração, golpes)
 - `UPSELL_Negocio_Rural_do_Zero.pdf`
 
 **Preço:** R$ 27,90 (de R$ 68,91), garantia de 7 dias. Os dados de 2026 do manual (ITR de 10/08 a 30/09/2026, multa de 1% ao mês com mínimo de R$ 50, CCIR liberado em 19/05 com taxa até 17/06) vêm de pesquisa web. A parte de Plano Safra ficou sem valores fixos, de propósito.
@@ -73,7 +79,8 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 
 | Arquivo | Função |
 |---|---|
-| `index.html` | Página de vendas (`/`), com pixel único da Utmify e UTMs |
+| `index.html` | **Página de vendas principal (`/`)**, versão nova reescrita (25/10/2026): sem navbar fixa, sem botão no hero, headline "Lucre de R$800 a R$2.400 por mês...", áudio `nova-hero.mp3` em 1.2x com autoplay, depoimentos na 2ª dobra, bloco "O que você perde", entrega principal enxuta e seção de Bônus (`mockup-bonus.webp`). Sem emojis. Pixel Utmify e UTMs mantidos |
+| `consultor.html` | **Versão antiga da página principal**, agora em `/consultor` (via `rewrite`). Mesmo pixel Utmify e UTMs; áudio `vdave.mp3`, faixa rolante e copy anterior |
 | `2.html` | Cópia da página de vendas (`/2`), sem Utmify, com Meta Pixel nativo. **Mudanças no `index.html` precisam ser repetidas aqui** |
 | `entenda-sem-se-perder.html` / `entenda.html` | Página da nova oferta (`/entenda`, via `rewrite` no `vercel.json`). `entenda.html` é cópia de `entenda-sem-se-perder.html`. Tem player de áudio no hero (`audio-pagina-entendasemseperder.mp3`), carrossel de 8 depoimentos (cards estilo Instagram DM, nome e foto borrados) e pixel/UTMs idênticos ao `index.html`. **Sem emojis na página.** |
 | `upsell.html` | Oferta especial pós-compra |
@@ -139,7 +146,7 @@ Página pós-compra para quem comprou o **ângulo consultor** (`/`). Entregável
 - **Notícia não vendeu**: não usar como aposta principal.
 - **Twitter/X vendeu mais**, mas nunca 100% nele (máximo 1 a 2 por lote).
 - **Formatos que venderam bem** (`rodados/venderam bem`): 17 Twitter/X, **19 Produto Mockup**, **20 Bold Overlay**, **22 Flatlay Documentos**. Priorizar variações desses.
-- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos`: último número usado 129** (120 a 129 = lote de 19/10). Os números 110 a 119 em `criativos/imagens/novos` são cópias antigas do lote Entenda e foram pulados. Próximo: 130.
+- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos`: último número usado 146** (120 a 129 = lote de 19/10; 130 a 135 = lote seguinte, em `.png`; 136 a 146 = lotes de 20/10, em `.png`). Os números 110 a 119 em `criativos/imagens/novos` são cópias antigas do lote Entenda e foram pulados. Próximo: 147.
 - **Pasta `criativos-entenda/`: numeração própria, começa em 1. Último usado: 15** (próximo é o 16).
 - Garantia correta: **7 dias**.
 
@@ -154,6 +161,8 @@ Página pós-compra para quem comprou o **ângulo consultor** (`/`). Entregável
 | **95 a 99** | Bold Overlay primeiro cliente (95), Produto Mockup consultor (96), Flatlay herança travada (97), WhatsApp depoimento fictício (98), Stories sem faculdade (99) | A testar |
 | **105 a 109** | Stories com foto (estilo 18) | A testar |
 | **120 a 129** | Twitter/X renda (120) e comparação com despachante (129), Produto Mockup kit (121) e tabela de preços (127), Bold Overlay fazendeiro paga (122) e sem faculdade (124), Flatlay ITR recorrente (123) e herança travada (128), Antes e Depois (125), lista de objeções (126). Sem prints reais (não havia). Cópia em `~/Downloads/criativos-board-4/` | A testar |
+| **136 a 140** | Nativos: UGC foto com seta (136), print de post de grupo do Facebook (137), lista de preços escrita à mão (138), card de story só texto (139), notificações de WhatsApp e Pix (140). Valores e nomes são ilustrativos | A testar |
+| **141 a 146** | Estilo Pixar 3D com copy direta: fazendeiro paga até R$ 1.500 (141), seu vizinho precisa de você (142), antes e depois da papelada (143), trabalhe de casa com o campo (144), imóvel sem regularização (145), seu primeiro cliente (146). No 144 aparece a logo da Apple no laptop | A testar |
 | **Entenda 1 a 5** | Formatos que vendem: Produto Mockup (1 e 4), Bold Overlay (2), Flatlay com painel preto (3) e UGC com seta (5) | A testar |
 | **Entenda 6 a 10** | Stories naturais (caixinha de perguntas, enquete, quiz, slider, resposta). **Usuário reprovou a copy da 6 (caixinha) e a enquete da 7; gostou da ideia da 7, mas não da execução**; a 10 foi refeita mais realista | A testar |
 | **Entenda 11 a 15** | Stories com slider de emoji (estilo do 9, **aprovado pelo usuário**), cada um com pergunta, cena e resposta diferentes | A testar |
@@ -214,6 +223,8 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 22/10/2026 | **3 Vídeos Criativos (Abordagem 1 - Consultor Rural):** Gerados em 1080x1920 (9:16 vertical) com locução neural madura (`pt-BR-AntonioNeural`), b-roll real em câmera lenta, legendas contrastadas, trilha acústica e CTA com botão oficial `REGULARIZAR POR R$27,90`. Salvos em `criativos/videos/` e em `~/Downloads/`. |
+| 20/10/2026 | **Criativos 136 a 146** (oferta principal, consultor): 136 a 140 nativos (UGC, post, lista à mão, story, notificações) e 141 a 146 estilo Pixar 3D |
 | 19/10/2026 | **Criativos 120 a 129** (oferta principal, consultor): 10 formatos/ângulos, 123 e 128 refeitos para tirar data e texto em inglês |
 | 16/10/2026 | **Upsell "Negócio Rural do Zero"** (`upsell2.html`) documentado; falta preço, checkout e tracking |
 | 15/10/2026 | **Criativos Entenda**: lote 1 a 5 (formatos que vendem), 6 a 10 (Stories) e 11 a 15 (slider de emoji); pasta `criativos-entenda/` com numeração própria; skill `/criativos-meta-ads` atualizada |
