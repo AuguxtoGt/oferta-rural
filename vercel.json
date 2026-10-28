@@ -3,7 +3,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/entenda", "destination": "/entenda.html" },
-    { "source": "/consultor", "destination": "/consultor.html" }
+    { "source": "/consultor", "destination": "/consultor.html" },
+    { "source": "/an", "destination": "/an.html" }
   ],
   "headers": [
     {
