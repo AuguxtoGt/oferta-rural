@@ -4,7 +4,8 @@
   "rewrites": [
     { "source": "/entenda", "destination": "/entenda.html" },
     { "source": "/consultor", "destination": "/consultor.html" },
-    { "source": "/an", "destination": "/an.html" }
+    { "source": "/an", "destination": "/an.html" },
+    { "source": "/w", "destination": "/w.html" }
   ],
   "headers": [
     {

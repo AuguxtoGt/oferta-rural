@@ -1,7 +1,7 @@
 # 📊 Projeto Entendimento — Oferta 13 (Imóvel Rural em Dia)
 
 > Documento de referência rápida para entender o projeto, a oferta e a estrutura.
-> Atualizado em: 2026-10-19
+> Atualizado em: 2026-10-28
 
 ---
 
@@ -12,7 +12,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 - **Pasta local:** `/Users/gustavoaugusto/Desktop/oferta13`
 - **Repositório:** https://github.com/AuguxtoGt/oferta-rural (branch `main`)
 - **Hospedagem:** Vercel (`vercel.json` com `cleanUrls`)
-- **Site no ar:** https://regularizerural.vercel.app/ (página `/`, com Utmify), https://regularizerural.vercel.app/2 (página `/2`, com Meta Pixel) e https://regularizerural.vercel.app/entenda (nova oferta, com Utmify, rota via rewrite no `vercel.json`)
+- **Site no ar:** https://regularizerural.vercel.app/ (página `/`, versão nova, com Utmify, R$ 27,90), https://regularizerural.vercel.app/w (cópia da principal nova, com Utmify, R$ 27,90, para teste de checkout), https://regularizerural.vercel.app/an (versão antiga com áudio do Dave, Utmify, R$ 27,90), https://regularizerural.vercel.app/consultor (versão antiga com áudio do Dave, Utmify, R$ 37,90), https://regularizerural.vercel.app/2 (versão antiga com áudio do Dave, Meta Pixel nativo, R$ 37,90) e https://regularizerural.vercel.app/entenda (nova oferta foco no dono da terra, com Utmify, rota via rewrite no `vercel.json`)
 - **Checkout:** Novark (`pay.novarkbr.com`)
 
 ---
@@ -54,35 +54,43 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 
 ## 💰 Planos e Preços
 
-| Item | Valor |
-|---|---|
-| Oferta principal | **R$ 27,90** (de R$ 68,91), pagamento único |
-| **ARPU real** | **R$ 33,03** (informado em 08/10/2026) |
-| **CPA real** | **R$ 24** (média, informado em 08/10/2026) |
-| Sobra por venda | ~R$ 5,88 (18%), CPA de empate ~R$ 29,88 (taxa do gateway estimada) |
-| Garantia | 7 dias, devolução de 100% |
-| Upsell | Kit de Prospecção por R$ 67 (de R$ 147), `upsell.html` e `upclientes.html`, checkout `bet5bxrw`. **Vendeu só 3 até agora**; teste de melhoria previsto para 09/10 |
+| Rota / Página | Arquivo | Oferta e Layout | Áudio | Ticket | Checkout Novark | Rastreamento |
+|---|---|---|---|---|---|---|
+| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) |
+| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4 e 5, sem Utmify) |
+| `/entenda` | `entenda.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) |
+| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Gateway Novark direto |
+| Upsell 2 | `upsell2.html` | Negócio Rural do Zero | - | *A definir* | *Sem checkout* | Sem pixel |
+
+- **ARPU real:** R$ 33,03 (em 08/10/2026)
+- **CPA real:** R$ 24 (em 08/10/2026)
+- **Garantia:** 7 dias em todas as ofertas
 
 ---
 
 ## 🔄 Como Funciona (Fluxo Principal)
 
-1. Tráfego (anúncios Meta, em `criativos/` e `criativos-entenda/`) leva à **página de vendas** (`index.html` ou `entenda.html`). Orçamento acima de R$ 200/dia.
-2. O visitante ouve o áudio (`vdave.mp3`), lê os benefícios, depoimentos e o passo a passo.
-3. Clica em **"REGULARIZAR POR R$27,90"** e vai ao checkout Novark.
+1. Tráfego (anúncios Meta, em `criativos/` e `criativos-entenda/`) leva à **página de vendas** (`index.html`, `w.html`, `an.html`, `consultor.html`, `2.html` ou `entenda.html`). Orçamento acima de R$ 200/dia.
+2. O visitante ouve o áudio do hero (`nova-hero.mp3` na `/` e `/w`; `vdave.mp3` na `/an`, `/consultor` e `/2`), lê os benefícios, depoimentos e o passo a passo.
+3. Clica no botão de checkout da oferta (R$ 27,90 ou R$ 37,90) e vai ao checkout Novark.
 4. Após a compra, é apresentado ao **upsell** (`upsell.html` / `upclientes.html`).
-5. A entrega é feita com os arquivos de `entregaveis-lucre/` (PDFs; a pasta se chamava `entregaveis/`).
+5. A entrega é feita com os arquivos de `entregaveis-lucre/` (PDFs).
 
 ---
 
 ## 📱 Páginas e Seções
 
-| Arquivo | Função |
-|---|---|
-| `index.html` | **Página de vendas principal (`/`)**, versão nova reescrita (25/10/2026): sem navbar fixa, sem botão no hero, headline "Lucre de R$800 a R$2.400 por mês...", áudio `nova-hero.mp3` em 1.2x com autoplay, depoimentos na 2ª dobra, bloco "O que você perde", entrega principal enxuta e seção de Bônus (`mockup-bonus.webp`). Sem emojis. Pixel Utmify e UTMs mantidos |
-| `consultor.html` | **Versão antiga da página principal**, agora em `/consultor` (via `rewrite`). Mesmo pixel Utmify e UTMs; áudio `vdave.mp3`, faixa rolante e copy anterior |
-| `2.html` | Cópia da página de vendas (`/2`), sem Utmify, com Meta Pixel nativo. **Mudanças no `index.html` precisam ser repetidas aqui** |
-| `entenda-sem-se-perder.html` / `entenda.html` | Página da nova oferta (`/entenda`, via `rewrite` no `vercel.json`). `entenda.html` é cópia de `entenda-sem-se-perder.html`. Tem player de áudio no hero (`audio-pagina-entendasemseperder.mp3`), carrossel de 8 depoimentos (cards estilo Instagram DM, nome e foto borrados) e pixel/UTMs idênticos ao `index.html`. **Sem emojis na página.** |
+| Arquivo | Rota | Função e Configuração |
+|---|---|---|
+| `index.html` | `/` | **Página de vendas principal (versão nova)**: copy reescrita (25/10/2026), áudio `nova-hero.mp3` em 1.2x com autoplay, depoimentos na 2ª dobra, entrega de 3 itens + seção de bônus (`mockup-bonus.webp`). Ticket **R$ 27,90**, checkout Novark `jxiib47t`. Pixel Utmify e UTMs. Sem emojis |
+| `w.html` | `/w` | **Duplicação da página principal nova (`index.html`) com checkout Wiven**: mantém layout novo, áudio `nova-hero.mp3`, ticket **R$ 27,90** e Pixel Utmify/UTMs. Checkout Wiven (`https://checkout.wiven.com.br/checkout/cmvtzzy2y07e701q3pwyg0mj3?offer=0RSKIQY`) |
+| `an.html` | `/an` | **Versão com layout antigo (do Dave) no ticket de R$ 27,90**: áudio `vdave.mp3`, copy anterior, mockup clássico, checkout Novark `jxiib47t`. Pixel Utmify e UTMs |
+| `consultor.html` | `/consultor` | **Versão com layout antigo (do Dave) no ticket de R$ 37,90**: áudio `vdave.mp3`, copy anterior, mockup clássico, checkout Novark `kg1a7jgt`. Pixel Utmify e UTMs |
+| `2.html` | `/2` | **Versão com layout antigo (do Dave) isolada para teste de Meta Pixel nativo**: áudio `vdave.mp3`, copy anterior, ticket **R$ 37,90**, checkout Novark `kg1a7jgt`. **Sem Utmify**, com 2 Meta Pixels nativos (`2794376007657993` e `1088370370664674`) e `InitiateCheckout` nativo no botão |
+| `entenda.html` / `entenda-sem-se-perder.html` | `/entenda` | **Oferta "Entenda sem se perder"**: foco direto no dono da terra que quer regularizar seus próprios documentos (sem promessa de renda como consultor). Áudio `audio-pagina-entendasemseperder.mp3`, carrossel de 8 depoimentos de donos de terra, ticket **R$ 27,90**, checkout Novark `agwfds26`. Pixel Utmify e UTMs |
 | `upsell.html` | Oferta especial pós-compra |
 | `upclientes.html` | Upsell do kit para conseguir clientes |
 | `upsell2.html` | **Upsell "Negócio Rural do Zero"** (página de oferta pós-compra, entregável `UPSELL_Negocio_Rural_do_Zero.pdf`). Ver seção abaixo |
@@ -92,7 +100,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | `criativos-entenda/` | Criativos da oferta Entenda: `1.jpg` a `15.jpg` (numeração própria), mais `descartados/` |
 | `roteiro-audio-entenda.txt` / `depoimentos-index.txt` | Roteiro do áudio da `/entenda` e textos de depoimentos |
 
-**Seções do `index.html`:** Hero (H1, subtítulo, áudio, mockup) → Faixa de prova → Benefícios (bento grid) → Depoimentos (carrossel) → Como funciona (3 passos) → O que você recebe → Oferta (preço e botão) → Garantia 7 dias → FAQ → Autor → Rodapé. Botão fixo no rodapé no mobile.
+**Seções do `index.html` (versão nova):** Hero (H1 com "R$800 a R$2.400 por mês" e "sem precisar de experiência" em verde, subtítulo curto, áudio com autoplay em 1.2x, seta "Veja quem já está faturando"; sem botão e sem mockup) → Depoimentos (carrossel, 2ª dobra) → Por que esse serviço (6 cards) + "O que você perde" → Como funciona (3 passos) → A entrega principal (3 itens) → Bônus (4 itens, `mockup-bonus.webp`) → Oferta (preço e botão) → Garantia 7 dias → FAQ → Autor → Rodapé. Textos centralizados, sem emojis, sem navbar fixa e sem faixa animada. Roteiro do áudio antigo em `roteiro-audio-hero-consultor.txt`.
 
 ---
 
@@ -146,8 +154,8 @@ Página pós-compra para quem comprou o **ângulo consultor** (`/`). Entregável
 - **Notícia não vendeu**: não usar como aposta principal.
 - **Twitter/X vendeu mais**, mas nunca 100% nele (máximo 1 a 2 por lote).
 - **Formatos que venderam bem** (`rodados/venderam bem`): 17 Twitter/X, **19 Produto Mockup**, **20 Bold Overlay**, **22 Flatlay Documentos**. Priorizar variações desses.
-- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos`: último número usado 146** (120 a 129 = lote de 19/10; 130 a 135 = lote seguinte, em `.png`; 136 a 146 = lotes de 20/10, em `.png`). Os números 110 a 119 em `criativos/imagens/novos` são cópias antigas do lote Entenda e foram pulados. Próximo: 147.
-- **Pasta `criativos-entenda/`: numeração própria, começa em 1. Último usado: 15** (próximo é o 16).
+- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos/imagens`: último número rodado foi 162** (em `rodados/`). Novos criativos na raiz de `criativos/imagens/`: **162 a 166** (lote estilo post de notícia de Instagram, 28/10), **167 a 171** (lote estilo Geração de Criativo Advantage+ Meta Ads, 28/10), **172 a 181** (lote 10 formatos campeões variados, 29/10) e **182 a 186** (lote 5 conceitos inéditos: Pasta Acorrentada vs. Regularizado, Mural de Cortiça com Post-it, Drone com Pins de Preço por Propriedade, Caderno Espiral Manuscrito e História Dividida Produtor vs. Consultor, 29/10). Próximo número livre: 187.
+- **Pasta `criativos-entenda/`: numeração própria, começa em 1. Último número rodado foi 19** (em `rodados/`). Criativos prontos para rodar na raiz: **20 e 21**, e novos adicionados: **22 a 39**. Próximo número livre: 40.
 - Garantia correta: **7 dias**.
 
 ### Histórico de lotes
@@ -223,6 +231,9 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 29/10/2026 | **Criação da rota `/w` (`w.html`):** Duplicação da página principal nova (`index.html`) com o mesmo layout novo, áudio `nova-hero.mp3`, ticket R$ 27,90 e Pixel Utmify, criada para teste de novo checkout. Rewrite adicionado no `vercel.json`. Tabela geral de páginas e tickets atualizada. |
+| 28/10/2026 | **Criação da rota `/an` (`an.html`):** Cópia da versão com layout do Dave (`vdave.mp3`, mockup clássico) no ticket original de R$ 27,90, com o checkout `jxiib47t` e Pixel Utmify idêntico à principal. |
+| 28/10/2026 | **Lotes de Criativos 162 a 186:** Criativos gerados para a oferta principal: 162 a 166 (estilo notícia Instagram), 167 a 171 (estilo Advantage+ Meta) e 172 a 186 (formatos campeões e 5 conceitos inéditos). Salvos em `criativos/imagens/`. |
 | 22/10/2026 | **3 Vídeos Criativos (Abordagem 1 - Consultor Rural):** Gerados em 1080x1920 (9:16 vertical) com locução neural madura (`pt-BR-AntonioNeural`), b-roll real em câmera lenta, legendas contrastadas, trilha acústica e CTA com botão oficial `REGULARIZAR POR R$27,90`. Salvos em `criativos/videos/` e em `~/Downloads/`. |
 | 20/10/2026 | **Criativos 136 a 146** (oferta principal, consultor): 136 a 140 nativos (UGC, post, lista à mão, story, notificações) e 141 a 146 estilo Pixar 3D |
 | 19/10/2026 | **Criativos 120 a 129** (oferta principal, consultor): 10 formatos/ângulos, 123 e 128 refeitos para tirar data e texto em inglês |
