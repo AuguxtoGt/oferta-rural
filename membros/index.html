@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imóvel Rural em Dia | Formação Consultor Rural</title>
+  <meta name="description" content="Área de membros Imóvel Rural em Dia. Acesse os 24 módulos visuais de CCIR, ITR, CAR, Retificação, Crédito Rural, planilhas interativas e o Consultor IA.">
+
+  <!-- OpenGraph Exclusivo da Area de Membros -->
+  <meta property="og:title" content="Imóvel Rural em Dia | Formação Consultor Rural">
+  <meta property="og:description" content="Plataforma exclusiva de alunos com 24 módulos visuais passo a passo, planilhas interativas, modelos copiáveis e Consultor IA.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://regularizerural.vercel.app/membros">
+  <meta property="og:image" content="https://regularizerural.vercel.app/mockup.webp">
+  <meta property="og:locale" content="pt_BR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Imóvel Rural em Dia | Formação Consultor Rural">
+  <meta name="twitter:description" content="Plataforma exclusiva de alunos com 24 módulos visuais passo a passo, planilhas interativas e Consultor IA.">
+  <meta name="twitter:image" content="https://regularizerural.vercel.app/mockup.webp">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/membros/styles.css">
+</head>
+<body>
+
+  <!-- TELA DE LOGIN ESTILO APPLE ID -->
+  <section id="login-view" class="login-view hidden">
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="brand-mark-lg">
+            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
+              <rect x="2" y="2" width="28" height="28" rx="8" fill="#15803d" stroke="none"/>
+              <path d="M10 21C10 15.5 14.5 11 21 11C21 16.5 16.5 21 10 21Z" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M10 21L16 15" stroke="#bbf7d0" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="login-eyebrow">PORTAL DO ALUNO</span>
+          <h1 class="login-title">Imóvel Rural em Dia</h1>
+          <p class="login-subtitle">Use o mesmo e-mail cadastrado na sua inscrição para acessar os módulos e ferramentas.</p>
+        </div>
+
+        <div id="login-alert" class="login-alert hidden" role="alert"></div>
+
+        <form id="login-form" class="login-form" onsubmit="window.RRApp.handleLoginSubmit(event)">
+          <div class="form-group">
+            <label for="login-email">E-mail de acesso</label>
+            <input type="email" id="login-email" name="email" class="apple-input" placeholder="seuemail@exemplo.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="login-password">Senha</label>
+              <span class="password-hint">Padrão inicial: <code>rural123</code></span>
+            </div>
+            <div class="password-input-wrap">
+              <input type="password" id="login-password" name="password" class="apple-input" placeholder="Digite sua senha" value="rural123" required autocomplete="current-password">
+              <button type="button" class="password-toggle-btn" onclick="window.RRApp.togglePasswordVisibility()" aria-label="Mostrar senha">
+                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="login-submit-btn" class="btn-apple-primary btn-full">
+            <span>Continuar</span>
+            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </form>
+
+        <div class="login-quick-switch">
+          <span class="login-quick-label">Contas de demonstração rápida:</span>
+          <div class="login-quick-pills">
+            <button type="button" class="chip-ghost" onclick="window.RRApp.quickSwitch('vip@rural.com', 'vip')">Aluno VIP</button>
+            <button type="button" class="chip-ghost" onclick="window.RRApp.quickSwitch('aluno@rural.com', 'dia1')">Aluno Dia 1</button>
+            <button type="button" class="chip-ghost" onclick="window.RRApp.quickSwitch('aluno8dias@rural.com', 'dia8')">Aluno Dia 8+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHELL PRINCIPAL ESTILO APPLE GALLERY -->
+  <div id="app-shell" class="app-shell">
+
+    <!-- TOP NAV GLOBAL (52px, FROSTED GLASS APPLE) -->
+    <header id="app-header" class="global-nav">
+      <div class="global-nav-inner">
+        <!-- Esquerda: Logo minimalista -->
+        <a href="#modulos" class="nav-brand" onclick="window.RRApp.navigate('home'); return false;">
+          <span class="nav-brand-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M6 19C6 12.5 11 7.5 18 7.5C18 14.5 13 19 6 19Z" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 19L12.5 12.5" stroke-linecap="round"/>
+            </svg>
+          </span>
+          <span class="nav-brand-title">Imóvel Rural em Dia</span>
+        </a>
+
+        <!-- Centro: Apenas 3 links limpos -->
+        <nav class="nav-center-links" aria-label="Menu Principal">
+          <button type="button" class="nav-item active" data-nav="home" onclick="window.RRApp.navigate('home')">
+            Módulos
+          </button>
+          <button type="button" id="nav-btn-tools" class="nav-item" data-nav="tools" onclick="window.RRApp.navigate('tools')">
+            Ferramentas e Planilhas
+          </button>
+          <button type="button" id="nav-btn-ai" class="nav-item" data-nav="ai" onclick="window.RRApp.navigate('ai')">
+            Consultor IA
+          </button>
+        </nav>
+
+        <!-- Direita: Busca minimalista em pilula + Tema + Perfil com dropdown discreto -->
+        <div class="nav-right-actions">
+          <div class="nav-search-pill">
+            <svg class="icon-xs nav-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input
+              type="search"
+              id="module-search-input"
+              class="nav-search-input"
+              placeholder="Buscar módulo..."
+              aria-label="Buscar módulo ou aula"
+              oninput="window.RRApp.handleSearch(this.value)"
+            >
+            <button type="button" id="search-clear-btn" class="nav-search-clear hidden" onclick="window.RRApp.clearSearch()" aria-label="Limpar busca">
+              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          <button type="button" id="theme-toggle-btn" class="nav-icon-btn" onclick="window.RRApp.toggleTheme()" aria-label="Alternar tema claro ou escuro" title="Alternar aparência">
+            <svg id="theme-icon-moon" class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <svg id="theme-icon-sun" class="icon-sm hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="5"/>
+              <line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+              <line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </button>
+
+          <div class="profile-dropdown-wrap">
+            <button type="button" id="profile-menu-btn" class="profile-trigger-btn" onclick="window.RRApp.toggleProfileMenu(event)" aria-expanded="false" aria-haspopup="true">
+              <span class="profile-avatar-circle" id="header-user-initials">AL</span>
+              <span class="profile-email-short" id="header-user-email">aluno@rural.com</span>
+              <svg class="icon-xs profile-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </button>
+
+            <div id="profile-dropdown" class="profile-dropdown hidden" role="menu">
+              <div class="dropdown-user-header">
+                <strong id="dropdown-user-name">Aluno Consultor</strong>
+                <span id="dropdown-user-email">aluno@rural.com</span>
+                <div class="dropdown-progress-row">
+                  <span id="header-progress-pct">0% concluído</span>
+                  <div class="dropdown-progress-track">
+                    <div id="header-progress-bar" class="dropdown-progress-fill" style="width: 0%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <div class="dropdown-section">
+                <span class="dropdown-section-label">Trocar conta de teste</span>
+                <button type="button" class="dropdown-item" data-sim="vip" onclick="window.RRApp.quickSwitch('vip@rural.com', 'vip')">
+                  <span>Aluno VIP (Completo + IA)</span>
+                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </button>
+                <button type="button" class="dropdown-item" data-sim="dia1" onclick="window.RRApp.quickSwitch('aluno@rural.com', 'dia1')">
+                  <span>Aluno Dia 1 (Trava 7 dias)</span>
+                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <circle cx="12" cy="12" r="9"/>
+                    <polyline points="12 7 12 12 15 14"/>
+                  </svg>
+                </button>
+                <button type="button" class="dropdown-item" data-sim="dia8" onclick="window.RRApp.quickSwitch('aluno8dias@rural.com', 'dia8')">
+                  <span>Aluno Dia 8+ (7 dias liberado)</span>
+                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                  </svg>
+                </button>
+                <button type="button" class="dropdown-item" data-sim="proprietario" onclick="window.RRApp.quickSwitch('proprietario@rural.com', 'proprietario')">
+                  <span>Proprietário Rural (Oferta Entenda)</span>
+                  <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="dropdown-divider"></div>
+
+              <button type="button" class="dropdown-item dropdown-item-danger" onclick="window.RRApp.logout()">
+                <span>Sair</span>
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16 17 21 12 16 7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====================================================================== -->
+    <!-- VIEW 1: HOME (HERO MINIMALISTA APPLE + VITRINE DE CAPAS APPLE BOOKS)   -->
+    <!-- ====================================================================== -->
+    <main id="view-home" class="app-view">
+
+      <!-- HERO MINIMALISTA ESTILO APPLE.COM -->
+      <section class="apple-hero">
+        <div class="apple-hero-inner">
+          <span id="hero-eyebrow" class="apple-hero-eyebrow">FORMAÇÃO CONSULTOR RURAL</span>
+          <h1 id="hero-title" class="apple-hero-title">Domine a regularização rural com clareza visual.</h1>
+          <p id="hero-subtitle" class="apple-hero-subtitle">CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 24 módulos práticos.</p>
+          <div class="apple-hero-actions">
+            <button type="button" id="hero-continue-btn" class="btn-apple-primary" onclick="window.RRApp.continueStudying()">
+              <span id="hero-continue-label">Continuar Estudando</span>
+            </button>
+            <button type="button" class="btn-apple-ghost" onclick="window.RRApp.navigate('ai')">
+              <span id="hero-ai-btn-label">Abrir Consultor IA</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VITRINE DE TRILHAS E CAPAS DE MODULOS (ESTILO APPLE BOOKS / APPLE TV+) -->
+      <section id="tracks-container" class="tracks-showcase" aria-label="Trilhas de Módulos">
+        <!-- Renderizado dinamicamente via app.js -->
+      </section>
+
+    </main>
+
+    <!-- ====================================================================== -->
+    <!-- VIEW 2: WORKBOOK VISUAL INTERATIVO (MODULE READER VIEW)                -->
+    <!-- ====================================================================== -->
+    <section id="view-classroom" class="app-view hidden">
+      <!-- Barra Superior Limpa do Leitor -->
+      <div class="reader-topbar">
+        <div class="reader-topbar-inner">
+          <button type="button" class="btn-reader-back" onclick="window.RRApp.navigate('home')">
+            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <line x1="19" y1="12" x2="5" y2="12"/>
+              <polyline points="12 19 5 12 12 5"/>
+            </svg>
+            <span>Voltar aos Módulos</span>
+          </button>
+
+          <div class="reader-topbar-title">
+            <span id="cls-mod-number" class="reader-mod-badge">MÓDULO 01</span>
+            <h2 id="cls-mod-title" class="reader-mod-name">Título do Módulo</h2>
+          </div>
+
+          <div class="reader-topbar-progress">
+            <span id="cls-mod-progress-text" class="reader-progress-label">0 de 3 aulas</span>
+            <div class="reader-progress-track">
+              <div id="cls-mod-progress-bar" class="reader-progress-fill" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Layout em 2 Colunas Limpas -->
+      <div class="reader-workspace">
+        <!-- Coluna Esquerda (280px, fixa) -->
+        <aside class="reader-sidebar">
+          <div class="reader-sidebar-head">
+            <span class="reader-sidebar-label">AULAS DO MÓDULO</span>
+          </div>
+
+          <div id="cls-lessons-list" class="reader-lessons-list" role="navigation" aria-label="Aulas do módulo">
+            <!-- Preenchido via app.js -->
+          </div>
+
+          <div class="reader-sidebar-footer">
+            <button type="button" id="cls-complete-btn" class="btn-complete-lesson" onclick="window.RRApp.toggleCurrentLessonComplete()">
+              <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <span id="cls-complete-btn-label">Marcar aula como concluída</span>
+            </button>
+
+            <button type="button" id="cls-sidebar-pdf-btn" class="btn-reader-utility hidden" onclick="window.RRApp.openModulePdf()">
+              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <span>Versão em PDF</span>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Coluna Principal (max-width: 860px, fundo #ffffff, padding 40px) -->
+        <div class="reader-main-column">
+          <article class="reader-paper">
+            <!-- Player de Video elegante (16:9 arredondado 18px) ou card discreto -->
+            <div id="cls-video-stage" class="reader-video-wrap">
+              <!-- Preenchido dinamicamente via app.js -->
+            </div>
+
+            <!-- Cabecalho da Aula -->
+            <header class="reader-lesson-header">
+              <div class="reader-lesson-meta">
+                <span id="cls-lesson-number-badge" class="reader-lesson-pill">Aula 01</span>
+                <span id="cls-lesson-duration-badge" class="reader-lesson-duration">15 min</span>
+                <span id="cls-lesson-status-badge" class="reader-lesson-status">Em estudo</span>
+              </div>
+              <h1 id="cls-lesson-title" class="reader-lesson-title">Título da Aula</h1>
+            </header>
+
+            <!-- Corpo Rico do Workbook da Aula -->
+            <div id="cls-lesson-content" class="workbook-content">
+              <!-- Renderizado via app.js -->
+            </div>
+
+            <!-- Navegacao Inferior entre Aulas -->
+            <footer class="reader-bottom-nav">
+              <button type="button" id="cls-prev-btn" class="btn-apple-secondary" onclick="window.RRApp.prevLesson()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <line x1="19" y1="12" x2="5" y2="12"/>
+                  <polyline points="12 19 5 12 12 5"/>
+                </svg>
+                <span>Aula Anterior</span>
+              </button>
+
+              <button type="button" id="cls-next-btn" class="btn-apple-primary" onclick="window.RRApp.nextLesson()">
+                <span id="cls-next-btn-label">Próxima Aula</span>
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                  <polyline points="12 5 19 12 12 19"/>
+                </svg>
+              </button>
+            </footer>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================== -->
+    <!-- VIEW 3: FERRAMENTAS E PLANILHAS INTERATIVAS (view === 'tools')          -->
+    <!-- ====================================================================== -->
+    <section id="view-tools" class="app-view hidden">
+      <div class="tools-container">
+        <header class="tools-hero">
+          <span id="tools-eyebrow" class="apple-hero-eyebrow">FERRAMENTAS OPERACIONAIS</span>
+          <h1 id="tools-title" class="tools-main-title">Planilhas e Calculadoras de Campo.</h1>
+          <p id="tools-subtitle" class="tools-main-subtitle">Simule honorários por hectare, faça a auditoria cruzada dos 4 documentos do imóvel e planeje sua meta mensal.</p>
+
+          <div id="tools-nav-pills" class="tools-nav-pills" role="tablist">
+            <a href="#tool-calc-honorarios" class="chip-option active">1. Calculadora de Honorários</a>
+            <a href="#tool-auditoria-cruzada" class="chip-option">2. Auditoria Cruzada (4 Órgãos)</a>
+            <a href="#tool-meta-financeira" class="chip-option">3. Meta Financeira Mensal</a>
+          </div>
+        </header>
+
+        <!-- PLANILHA 1: CALCULADORA INTERATIVA DE HONORARIOS E PACOTES RURAIS -->
+        <section id="tool-calc-honorarios" class="interactive-sheet tool-sheet-card">
+          <div class="sheet-header">
+            <div>
+              <span class="sheet-eyebrow">PLANILHA INTERATIVA 01</span>
+              <h2 class="sheet-title">Calculadora de Honorários e Pacotes Rurais</h2>
+              <p class="sheet-desc">Selecione o porte do imóvel em hectares e os serviços desejados para gerar os valores de Serviço Avulso, Pacote Essencial, Pacote Completo e Entrada de 50%.</p>
+            </div>
+            <button type="button" class="btn-apple-primary" onclick="window.RRApp.copyPricingProposal(this)">
+              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              <span>Copiar Orçamento</span>
+            </button>
+          </div>
+
+          <div class="sheet-grid-2">
+            <!-- Controles de Entrada -->
+            <div class="sheet-controls-panel">
+              <div class="form-group">
+                <label for="calc-client-name">Nome do cliente ou propriedade (opcional)</label>
+                <input type="text" id="calc-client-name" class="apple-input" placeholder="Ex.: Fazenda Boa Esperança (Sr. Antônio)" oninput="window.RRApp.recalculatePricing()">
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="calc-hectares">Porte do imóvel em hectares (ha)</label>
+                  <strong id="calc-hectares-badge" class="sheet-value-pill">45 ha (Pequeno / Médio Porte)</strong>
+                </div>
+                <input type="range" id="calc-hectares-range" class="apple-range" min="5" max="1500" step="5" value="45" oninput="window.RRApp.syncHectaresInput(this.value, 'range')">
+                <div class="range-input-row">
+                  <input type="number" id="calc-hectares" class="apple-input input-sm" min="1" max="50000" value="45" oninput="window.RRApp.syncHectaresInput(this.value, 'number')">
+                  <span class="range-unit-label">hectares declarados</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="calc-complexity">Grau de complexidade cadastral</label>
+                <select id="calc-complexity" class="apple-input" onchange="window.RRApp.recalculatePricing()">
+                  <option value="1">Padrão: Emissão e atualização sem litígio (1.0x)</option>
+                  <option value="1.35">Intermediário: Divergência cadastral, espólio ou malha fina ITR (1.35x)</option>
+                  <option value="1.75">Avançado: Sobreposição de CAR, retificação ou múltiplos herdeiros (1.75x)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Serviços incluídos no levantamento</label>
+                <div class="sheet-check-grid">
+                  <label class="sheet-Toggle-option">
+                    <input type="checkbox" id="srv-ccir" checked onchange="window.RRApp.recalculatePricing()">
+                    <span>CCIR / Atualização DCR no INCRA</span>
+                  </label>
+                  <label class="sheet-Toggle-option">
+                    <input type="checkbox" id="srv-itr" checked onchange="window.RRApp.recalculatePricing()">
+                    <span>ITR (DITR) + Vínculo CIB/CNIR e CND</span>
+                  </label>
+                  <label class="sheet-Toggle-option">
+                    <input type="checkbox" id="srv-car" checked onchange="window.RRApp.recalculatePricing()">
+                    <span>CAR / SICAR (Inscrição ou Retificação)</span>
+                  </label>
+                  <label class="sheet-Toggle-option">
+                    <input type="checkbox" id="srv-ret" onchange="window.RRApp.recalculatePricing()">
+                    <span>Dossiê de Retificação / Pasta Crédito Rural</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resultados Calculados em Tempo Real -->
+            <div class="sheet-results-panel">
+              <div class="pricing-cards-grid">
+                <div class="pricing-result-card">
+                  <span class="pricing-card-tag">OPÇÃO 1 · SERVIÇO AVULSO</span>
+                  <strong id="res-val-avulso" class="pricing-card-amount">R$ 350</strong>
+                  <span class="pricing-card-sub">Por demanda unitária ou diagnóstico técnico inicial</span>
+                </div>
+
+                <div class="pricing-result-card">
+                  <span class="pricing-card-tag">OPÇÃO 2 · PACOTE ESSENCIAL</span>
+                  <strong id="res-val-essencial" class="pricing-card-amount">R$ 980</strong>
+                  <span class="pricing-card-sub">Diagnóstico + Regularização base de 2 órgãos</span>
+                </div>
+
+                <div class="pricing-result-card pricing-card-featured">
+                  <span class="pricing-card-tag">OPÇÃO 3 · PACOTE COMPLETO</span>
+                  <strong id="res-val-completo" class="pricing-card-amount">R$ 1.650</strong>
+                  <span class="pricing-card-sub">Solução completa dos serviços selecionados + Pasta final</span>
+                </div>
+
+                <div class="pricing-result-card pricing-card-split">
+                  <span class="pricing-card-tag">CONDIÇÃO DE FECHAMENTO (50% + 50%)</span>
+                  <strong id="res-val-entrada" class="pricing-card-amount">R$ 825</strong>
+                  <span id="res-val-saldo" class="pricing-card-sub">50% na assinatura + R$ 825 na entrega dos protocolos</span>
+                </div>
+              </div>
+
+              <div class="script-box" style="margin-top: 16px;">
+                <div class="script-box-header">
+                  <span class="script-box-title">Proposta Comercial Gerada Automaticamente</span>
+                  <button type="button" class="btn-copy-pill" onclick="window.RRApp.copyPricingProposal(this)">
+                    <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    <span>Copiar Orçamento</span>
+                  </button>
+                </div>
+                <pre id="calc-proposal-preview" class="script-pre"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PLANILHA 2: AUDITORIA CRUZADA DO IMOVEL (MATRICULA X CCIR X ITR X CAR) -->
+        <section id="tool-auditoria-cruzada" class="interactive-sheet tool-sheet-card">
+          <div class="sheet-header">
+            <div>
+              <span class="sheet-eyebrow">PLANILHA INTERATIVA 02</span>
+              <h2 class="sheet-title">Auditoria Cruzada do Imóvel (Matrícula x CCIR x ITR x CAR)</h2>
+              <p class="sheet-desc">Digite o nome do titular, CPF/CNPJ e área em hectares nos 4 documentos. A planilha aponta automaticamente onde está a divergência e qual requerimento usar.</p>
+            </div>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('divergent')">
+                <span>Carregar Exemplo com Divergência</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('clean')">
+                <span>Exemplo 100% Regular</span>
+              </button>
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.copyAuditReport(this)">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copiar Laudo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="apple-table-wrap">
+            <table class="apple-spec-table audit-interactive-table">
+              <thead>
+                <tr>
+                  <th>Documento / Órgão</th>
+                  <th>Nome do Titular no Documento</th>
+                  <th>CPF ou CNPJ</th>
+                  <th>Área Registrada (ha)</th>
+                  <th>Status na Auditoria</th>
+                  <th>Ação / Requerimento Recomendado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <strong>1. Matrícula / Registro</strong>
+                    <span class="table-sub">Cartório de Imóveis (Base Legal)</span>
+                  </td>
+                  <td><input type="text" id="aud-mat-nome" class="table-input" value="José Carlos Oliveira" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="text" id="aud-mat-cpf" class="table-input" value="142.850.910-00" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="number" step="0.01" id="aud-mat-area" class="table-input" value="64.50" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><span id="aud-mat-status" class="audit-pill audit-ok">Documento Base</span></td>
+                  <td id="aud-mat-action" class="table-action-cell">Certidão de Inteiro Teor atualizada (referência de domínio).</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>2. CCIR / SNCR</strong>
+                    <span class="table-sub">INCRA (Código 13 dígitos)</span>
+                  </td>
+                  <td><input type="text" id="aud-ccir-nome" class="table-input" value="Espólio de Sebastião Oliveira" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="text" id="aud-ccir-cpf" class="table-input" value="018.442.110-49" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="number" step="0.01" id="aud-ccir-area" class="table-input" value="60.00" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><span id="aud-ccir-status" class="audit-pill audit-err">Divergente</span></td>
+                  <td id="aud-ccir-action" class="table-action-cell">Protocolar DCR no SNCR/INCRA atualizando titular e área.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>3. ITR / CIB (CNIR)</strong>
+                    <span class="table-sub">Receita Federal / e-CAC</span>
+                  </td>
+                  <td><input type="text" id="aud-itr-nome" class="table-input" value="José Carlos Oliveira" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="text" id="aud-itr-cpf" class="table-input" value="142.850.910-00" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="number" step="0.01" id="aud-itr-area" class="table-input" value="60.00" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><span id="aud-itr-status" class="audit-pill audit-err">Divergente</span></td>
+                  <td id="aud-itr-action" class="table-action-cell">Atualizar área no CAFIR/CNIR e retificar DIAC na DITR.</td>
+                </tr>
+                <tr>
+                  <td>
+                    <strong>4. CAR / SICAR</strong>
+                    <span class="table-sub">Órgão Ambiental Estadual</span>
+                  </td>
+                  <td><input type="text" id="aud-car-nome" class="table-input" value="José Carlos Oliveira" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="text" id="aud-car-cpf" class="table-input" value="142.850.910-00" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><input type="number" step="0.01" id="aud-car-area" class="table-input" value="64.80" oninput="window.RRApp.runCrossAudit()"></td>
+                  <td><span id="aud-car-status" class="audit-pill audit-ok">Compatível</span></td>
+                  <td id="aud-car-action" class="table-action-cell">Dentro da margem operacional. Vincular nº do SNCR.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="audit-summary-banner" class="audit-summary-banner">
+            <!-- Preenchido dinamicamente pelo app.js -->
+          </div>
+        </section>
+
+        <!-- PLANILHA 3: META FINANCEIRA MENSAL DO CONSULTOR -->
+        <section id="tool-meta-financeira" class="interactive-sheet tool-sheet-card">
+          <div class="sheet-header">
+            <div>
+              <span class="sheet-eyebrow">PLANILHA INTERATIVA 03</span>
+              <h2 class="sheet-title">Simulador de Meta Financeira Mensal do Consultor</h2>
+              <p class="sheet-desc">Escolha sua meta mensal de faturamento para calcular quantos atendimentos você precisa fechar por mês e por semana em cada modalidade.</p>
+            </div>
+            <div class="goal-preset-pills">
+              <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(2000)">Meta R$ 2.000</button>
+              <button type="button" class="chip-option active" onclick="window.RRApp.setMonthlyGoal(5000)">Meta R$ 5.000</button>
+              <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(10000)">Meta R$ 10.000</button>
+            </div>
+          </div>
+
+          <div class="goal-controls-row">
+            <div class="form-group">
+              <label for="goal-target-input">Meta mensal desejada (R$)</label>
+              <input type="number" id="goal-target-input" class="apple-input" step="500" min="500" max="100000" value="5000" oninput="window.RRApp.recalculateGoal()">
+            </div>
+            <div class="form-group">
+              <label for="goal-ticket-avulso">Ticket médio Serviço Rápido (CCIR / ITR / CND)</label>
+              <input type="number" id="goal-ticket-avulso" class="apple-input" step="50" min="100" value="300" oninput="window.RRApp.recalculateGoal()">
+            </div>
+            <div class="form-group">
+              <label for="goal-ticket-inter">Ticket médio Regularização 2 Órgãos (DCR + ITR)</label>
+              <input type="number" id="goal-ticket-inter" class="apple-input" step="50" min="300" value="950" oninput="window.RRApp.recalculateGoal()">
+            </div>
+            <div class="form-group">
+              <label for="goal-ticket-pack">Ticket médio Pacote Completo (3 Órgãos + Pasta)</label>
+              <input type="number" id="goal-ticket-pack" class="apple-input" step="100" min="500" value="1850" oninput="window.RRApp.recalculateGoal()">
+            </div>
+          </div>
+
+          <div id="goal-results-grid" class="topic-grid">
+            <!-- Preenchido dinamicamente pelo app.js -->
+          </div>
+        </section>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================== -->
+    <!-- VIEW 4: CONSULTOR IA (APPLE INTELLIGENCE / CHATGPT MINIMALISTA)        -->
+    <!-- ====================================================================== -->
+    <section id="view-ai" class="app-view hidden">
+      <div class="ai-minimal-shell">
+        <header class="ai-minimal-header">
+          <span class="ai-minimal-badge">
+            <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2L14.8 8.5L22 9.3L16.5 14L18.2 21L12 17.3L5.8 21L7.5 14L2 9.3L9.2 8.5L12 2Z"/>
+            </svg>
+            <span>Consultor Rural IA</span>
+          </span>
+          <h1 class="ai-minimal-title">Como posso ajudar no caso do seu cliente?</h1>
+          <p class="ai-minimal-sub">Receba o diagnóstico técnico, a ordem dos órgãos, os documentos necessários e o orçamento pronto.</p>
+        </header>
+
+        <!-- Aviso discreto caso o perfil de teste nao tenha o Upsell da IA -->
+        <div id="ai-locked-banner" class="ai-lock-notice hidden">
+          <div class="ai-lock-notice-text">
+            <strong>Recurso exclusivo do plano com Consultor IA</strong>
+            <span>Ative na sua conta ou alterne para o perfil Aluno VIP no menu superior direito para testar agora.</span>
+          </div>
+          <div class="ai-lock-notice-actions">
+            <a id="ai-unlock-checkout-link" href="https://pay.novarkbr.com/p0ptqz86" target="_blank" rel="noopener" class="btn-apple-primary">
+              <span>Liberar Consultor IA</span>
+            </a>
+            <button type="button" class="btn-apple-secondary" onclick="window.RRApp.quickSwitch('vip@rural.com', 'vip')">
+              <span>Testar como Aluno VIP</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Sugestoes Rapidas em Pilulas Clicaveis -->
+        <div class="ai-suggestions-row" aria-label="Sugestões rápidas">
+          <button type="button" class="ai-suggestion-pill" onclick="window.RRApp.askPresetCase(0)">
+            Sítio de 25 ha com CCIR no nome de falecido
+          </button>
+          <button type="button" class="ai-suggestion-pill" onclick="window.RRApp.askPresetCase(1)">
+            Pronaf travado por CND de ITR e vínculo no CNIR
+          </button>
+          <button type="button" class="ai-suggestion-pill" onclick="window.RRApp.askPresetCase(2)">
+            Sobreposição de área no CAR com vizinho
+          </button>
+          <button type="button" class="ai-suggestion-pill" onclick="window.RRApp.askPresetCase(3)">
+            Orçamento em 3 pacotes para fazenda de 120 ha
+          </button>
+        </div>
+
+        <!-- Caixa de Conversa Limpa -->
+        <div class="ai-chat-card">
+          <div id="ai-chat-messages" class="ai-chat-stream" role="log" aria-live="polite">
+            <!-- Renderizado via app.js -->
+          </div>
+
+          <form id="ai-chat-form" class="ai-composer-bar" onsubmit="window.RRApp.handleAiSubmit(event)">
+            <textarea
+              id="ai-question-input"
+              class="ai-composer-input"
+              rows="2"
+              maxlength="800"
+              placeholder="Descreva o problema do imóvel rural (área, estado, CCIR, ITR, CAR, herança ou financiamento)..."
+              onkeydown="window.RRApp.handleAiKeydown(event)"
+            ></textarea>
+            <div class="ai-composer-actions">
+              <button type="button" class="btn-ai-clear" onclick="window.RRApp.clearAiChat()" title="Limpar conversa">
+                Limpar
+              </button>
+              <button type="submit" id="ai-send-btn" class="btn-apple-primary">
+                <span>Enviar</span>
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAIS MINIMALISTAS APPLE (DESBLOQUEIO DE MODULO / TRAVA DE 7 DIAS) -->
+  <div id="modal-backdrop" class="modal-backdrop hidden" onclick="window.RRApp.closeModalOnBackdrop(event)">
+
+    <!-- Modal A: Modulo Bloqueado (Order Bump / Upsell) -->
+    <div id="modal-purchase" class="apple-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-purchase-title">
+      <button type="button" class="modal-close-btn" onclick="window.RRApp.closeModals()" aria-label="Fechar">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <span id="modal-purchase-badge" class="modal-eyebrow">MÓDULO COMPLEMENTAR</span>
+      <h3 id="modal-purchase-title" class="modal-title">Destravar Módulo</h3>
+      <p id="modal-purchase-subtitle" class="modal-subtitle">Adicione este módulo complementar à sua conta usando o mesmo e-mail (<code id="modal-purchase-email">aluno@rural.com</code>) para liberação imediata.</p>
+
+      <div class="modal-lessons-box">
+        <span class="modal-box-label">Aulas incluídas neste módulo:</span>
+        <ul id="modal-purchase-lessons" class="modal-lessons-list"></ul>
+      </div>
+
+      <div class="modal-actions">
+        <a id="modal-purchase-cta" href="https://pay.novarkbr.com/t61jpbxl" target="_blank" rel="noopener" class="btn-apple-primary btn-full">
+          <span id="modal-purchase-cta-label">Destravar Este Pacote Agora</span>
+        </a>
+        <a id="modal-purchase-combo-cta" href="https://pay.novarkbr.com/fotl08p9" target="_blank" rel="noopener" class="btn-apple-secondary btn-full hidden" style="margin-top: 8px; justify-content: center; text-align: center;">
+          <span>Levar Combo com os 3 Order Bumps Juntos</span>
+        </a>
+        <button type="button" class="btn-modal-test-link" onclick="window.RRApp.unlockCurrentModalTrackForTest()">
+          Testar abertura deste módulo no modo demonstração
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal B: Modulo com Liberação Programada (7 Dias) -->
+    <div id="modal-drip" class="apple-modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-drip-title">
+      <button type="button" class="modal-close-btn" onclick="window.RRApp.closeModals()" aria-label="Fechar">
+        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <span id="modal-drip-badge" class="modal-eyebrow">CRONOGRAMA DE ESTUDOS</span>
+      <h3 id="modal-drip-title" class="modal-title">Liberação Programada</h3>
+      <p id="modal-drip-explanation" class="modal-subtitle">Este módulo já faz parte do seu plano e abre automaticamente a partir do 8º dia de acesso.</p>
+
+      <div class="modal-lessons-box">
+        <span id="modal-drip-countdown-title" class="modal-box-label">Conteúdos programados:</span>
+        <ul id="modal-drip-lessons" class="modal-lessons-list"></ul>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-apple-primary btn-full" onclick="window.RRApp.closeModals()">
+          <span>Continuar nos Módulos Disponíveis</span>
+        </button>
+        <button type="button" class="btn-modal-test-link" onclick="window.RRApp.simulatePass7DaysNow()">
+          Simular conta após 7 dias para visualizar este módulo agora
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOAST MINIMALISTA -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- BANCO DE CONTEUDO + APLICACAO -->
+  <script src="/membros/data/courses-db.js"></script>
+  <script src="/membros/app.js"></script>
+</body>
+</html>

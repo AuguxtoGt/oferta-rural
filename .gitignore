@@ -5,5 +5,14 @@
 **/._.DS_Store
 **/._*
 criativos/
+criativos-entenda/
+entregaveis/
+entregaveis-lucre/
+founder/
 .vercel
 _antigos_backup/
+.env
+.env.*
+!.env.example
+data/members-db.json
+

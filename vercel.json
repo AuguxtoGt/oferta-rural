@@ -5,7 +5,9 @@
     { "source": "/entenda", "destination": "/entenda.html" },
     { "source": "/consultor", "destination": "/consultor.html" },
     { "source": "/an", "destination": "/an.html" },
-    { "source": "/w", "destination": "/w.html" }
+    { "source": "/w", "destination": "/w.html" },
+    { "source": "/membros", "destination": "/membros/index.html" },
+    { "source": "/proprietario", "destination": "/membros/index.html" }
   ],
   "headers": [
     {
