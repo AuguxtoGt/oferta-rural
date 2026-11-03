@@ -4,18 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Imóvel Rural em Dia | Formação Consultor Rural</title>
-  <meta name="description" content="Área de membros Imóvel Rural em Dia. Acesse os 24 módulos visuais de CCIR, ITR, CAR, Retificação, Crédito Rural, planilhas interativas e o Consultor IA.">
+  <meta name="description" content="Área de membros Imóvel Rural em Dia. Acesse os 23 módulos visuais de CCIR, ITR, CAR, Retificação, Crédito Rural, modelos prontos e planilhas interativas.">
 
   <!-- OpenGraph Exclusivo da Area de Membros -->
   <meta property="og:title" content="Imóvel Rural em Dia | Formação Consultor Rural">
-  <meta property="og:description" content="Plataforma exclusiva de alunos com 24 módulos visuais passo a passo, planilhas interativas, modelos copiáveis e Consultor IA.">
+  <meta property="og:description" content="Plataforma exclusiva de alunos com 23 módulos visuais passo a passo, planilhas interativas e modelos copiáveis.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://regularizerural.vercel.app/membros">
   <meta property="og:image" content="https://regularizerural.vercel.app/mockup.webp">
   <meta property="og:locale" content="pt_BR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Imóvel Rural em Dia | Formação Consultor Rural">
-  <meta name="twitter:description" content="Plataforma exclusiva de alunos com 24 módulos visuais passo a passo, planilhas interativas e Consultor IA.">
+  <meta name="twitter:description" content="Plataforma exclusiva de alunos com 23 módulos visuais passo a passo, planilhas interativas e modelos copiáveis.">
   <meta name="twitter:image" content="https://regularizerural.vercel.app/mockup.webp">
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -113,7 +113,7 @@
           <button type="button" id="nav-btn-tools" class="nav-item" data-nav="tools" onclick="window.RRApp.navigate('tools')">
             Ferramentas e Planilhas
           </button>
-          <button type="button" id="nav-btn-ai" class="nav-item" data-nav="ai" onclick="window.RRApp.navigate('ai')">
+          <button type="button" id="nav-btn-ai" class="nav-item hidden" data-nav="ai" onclick="window.RRApp.navigate('ai')">
             Consultor IA
           </button>
         </nav>
@@ -184,7 +184,7 @@
               <div class="dropdown-section">
                 <span class="dropdown-section-label">Trocar conta de teste</span>
                 <button type="button" class="dropdown-item" data-sim="vip" onclick="window.RRApp.quickSwitch('vip@rural.com', 'vip')">
-                  <span>Aluno VIP (Completo + IA)</span>
+                  <span>Aluno VIP (Acesso Completo)</span>
                   <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -238,13 +238,13 @@
         <div class="apple-hero-inner">
           <span id="hero-eyebrow" class="apple-hero-eyebrow">FORMAÇÃO CONSULTOR RURAL</span>
           <h1 id="hero-title" class="apple-hero-title">Domine a regularização rural com clareza visual.</h1>
-          <p id="hero-subtitle" class="apple-hero-subtitle">CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 24 módulos práticos.</p>
+          <p id="hero-subtitle" class="apple-hero-subtitle">CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 23 módulos práticos.</p>
           <div class="apple-hero-actions">
             <button type="button" id="hero-continue-btn" class="btn-apple-primary" onclick="window.RRApp.continueStudying()">
               <span id="hero-continue-label">Continuar Estudando</span>
             </button>
-            <button type="button" class="btn-apple-ghost" onclick="window.RRApp.navigate('ai')">
-              <span id="hero-ai-btn-label">Abrir Consultor IA</span>
+            <button type="button" id="hero-secondary-btn" class="btn-apple-ghost" onclick="window.RRApp.navigate('tools')">
+              <span id="hero-ai-btn-label">Ferramentas e Planilhas</span>
             </button>
           </div>
         </div>

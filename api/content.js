@@ -334,7 +334,16 @@ module.exports = async function handler(req, res) {
 
   const accessInfo = computeAccessStatus(user, dripConfig);
   const checkoutUrls = getCheckoutUrls(user ? user.email : '');
-  const catalog = loadCoursesDatabase();
+  const rawCatalog = loadCoursesDatabase();
+  const aiEnabled = process.env.ENABLE_AI_CONSULTANT === 'true';
+  const catalog = {
+    tracks: (rawCatalog.tracks || []).filter((t) => aiEnabled || t.id !== 'ia'),
+    modules: (rawCatalog.modules || []).filter((m) => {
+      if (aiEnabled) return true;
+      const mid = String(m.id || m.modulo_id || '');
+      return mid !== 'mod-24' && m.trilha !== 'ia' && m.accessKey !== 'acesso_ia_consultor';
+    })
+  };
 
   const requestedModuleId =
     req.query && (req.query.moduleId || req.query.modulo_id || req.query.id)

@@ -4,11 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal do Proprietário Rural | Imóvel Rural em Dia (Entenda)</title>
-  <meta name="description" content="Portal exclusivo do Proprietário Rural - Imóvel Rural em Dia (Entenda Sem Se Perder). Guias visuais passo a passo de CCIR, ITR, CAR, Retificação, Crédito Rural e Tira-Dúvidas IA.">
+  <meta name="description" content="Portal exclusivo do Proprietário Rural - Imóvel Rural em Dia (Entenda Sem Se Perder). Guias visuais passo a passo de CCIR, ITR, CAR, Retificação, Crédito Rural e Diagnóstico do Imóvel.">
 
   <!-- OpenGraph Exclusivo da Area de Membros -->
   <meta property="og:title" content="Portal do Proprietário Rural | Imóvel Rural em Dia (Entenda)">
-  <meta property="og:description" content="Organize e regularize os documentos da sua propriedade rural passo a passo: CCIR, ITR, CAR, Retificação, Crédito Rural e Tira-Dúvidas IA.">
+  <meta property="og:description" content="Organize e regularize os documentos da sua propriedade rural passo a passo: CCIR, ITR, CAR, Retificação, Crédito Rural e Planilha de Diagnóstico.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://regularizerural.vercel.app/proprietario">
   <meta property="og:image" content="https://regularizerural.vercel.app/mockup.webp">
@@ -113,7 +113,7 @@
           <button type="button" id="nav-btn-tools" class="nav-item" data-nav="tools" onclick="window.RRApp.navigate('tools')">
             Ferramentas e Planilhas
           </button>
-          <button type="button" id="nav-btn-ai" class="nav-item" data-nav="ai" onclick="window.RRApp.navigate('ai')">
+          <button type="button" id="nav-btn-ai" class="nav-item hidden" data-nav="ai" onclick="window.RRApp.navigate('ai')">
             Consultor IA
           </button>
         </nav>
@@ -184,7 +184,7 @@
               <div class="dropdown-section">
                 <span class="dropdown-section-label">Trocar conta de teste</span>
                 <button type="button" class="dropdown-item" data-sim="vip" onclick="window.RRApp.quickSwitch('vip@rural.com', 'vip')">
-                  <span>Aluno VIP (Completo + IA)</span>
+                  <span>Aluno VIP (Acesso Completo)</span>
                   <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
@@ -236,15 +236,15 @@
       <!-- HERO MINIMALISTA ESTILO APPLE.COM -->
       <section class="apple-hero">
         <div class="apple-hero-inner">
-          <span id="hero-eyebrow" class="apple-hero-eyebrow">FORMAÇÃO CONSULTOR RURAL</span>
-          <h1 id="hero-title" class="apple-hero-title">Domine a regularização rural com clareza visual.</h1>
-          <p id="hero-subtitle" class="apple-hero-subtitle">CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 24 módulos práticos.</p>
+          <span id="hero-eyebrow" class="apple-hero-eyebrow">PORTAL DO PROPRIETÁRIO RURAL · ENTENDA SEM SE PERDER</span>
+          <h1 id="hero-title" class="apple-hero-title">Organize e regularize o seu imóvel rural sem depender de ninguém.</h1>
+          <p id="hero-subtitle" class="apple-hero-subtitle">Passo a passo prático de CCIR, ITR, CAR, Retificação de Área e Crédito Rural para deixar a documentação da sua terra 100% em dia.</p>
           <div class="apple-hero-actions">
             <button type="button" id="hero-continue-btn" class="btn-apple-primary" onclick="window.RRApp.continueStudying()">
               <span id="hero-continue-label">Continuar Estudando</span>
             </button>
-            <button type="button" class="btn-apple-ghost" onclick="window.RRApp.navigate('ai')">
-              <span id="hero-ai-btn-label">Abrir Consultor IA</span>
+            <button type="button" id="hero-secondary-btn" class="btn-apple-ghost" onclick="window.RRApp.navigate('tools')">
+              <span id="hero-ai-btn-label">Diagnóstico do Meu Imóvel</span>
             </button>
           </div>
         </div>

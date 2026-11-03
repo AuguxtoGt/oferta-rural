@@ -5,6 +5,9 @@
  * Zero emojis, zero travessoes longos. Todos os icones em SVG fino (stroke-width="1.8").
  */
 (function () {
+  // Flag do Consultor Rural IA 24h (desativado e oculto ate o lancamento futuro; mude para true para reativar)
+  const ENABLE_AI_CONSULTANT = false;
+
   const SVG_ICONS = {
     lock: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
     unlock: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>',
@@ -55,14 +58,18 @@
       accessKey: 'acesso_ob2_modelos',
       checkoutUrl: 'https://pay.novarkbr.com/ty2kxpf2'
     },
-    {
-      id: 'trilha-prop-ia',
-      modRange: [24, 24],
-      title: 'Tira-Dúvidas Rural IA 24h',
-      subtitle: 'Assistente inteligente para responder dúvidas específicas sobre a documentação do seu imóvel rural.',
-      accessKey: 'acesso_ia_consultor',
-      checkoutUrl: 'https://pay.novarkbr.com/p0ptqz86'
-    }
+    ...(ENABLE_AI_CONSULTANT
+      ? [
+          {
+            id: 'trilha-prop-ia',
+            modRange: [24, 24],
+            title: 'Tira-Dúvidas Rural IA 24h',
+            subtitle: 'Assistente inteligente para responder dúvidas específicas sobre a documentação do seu imóvel rural.',
+            accessKey: 'acesso_ia_consultor',
+            checkoutUrl: 'https://pay.novarkbr.com/p0ptqz86'
+          }
+        ]
+      : [])
   ];
 
   const PROPRIETARIO_MODULE_TITLES = {
@@ -74,7 +81,7 @@
     6: 'Guia do Proprietário para Crédito Rural',
     7: 'Checklists do Imóvel: Venda, Herança e Banco',
     8: 'Calendário Anual de Prazos da Propriedade',
-    9: 'Os 12 Erros que Travam a Terra e Como Corrigir',
+    9: 'Os 10 Erros que Travam a Terra e Como Corrigir',
     10: 'Como Resolver Sobreposição no CAR e CEFIR',
     11: 'Como Usar o Portal e-CAC para o Seu Imóvel',
     15: 'Fichas de Organização da Pasta da Propriedade',
@@ -126,9 +133,11 @@
     },
     {
       id: 'trilha-upsell',
-      modRange: [21, 24],
-      title: 'Negócio Rural e Consultor IA',
-      subtitle: 'Posicionamento profissional, parcerias recorrentes e assistente inteligente.',
+      modRange: ENABLE_AI_CONSULTANT ? [21, 24] : [21, 23],
+      title: ENABLE_AI_CONSULTANT ? 'Negócio Rural e Consultor IA' : 'Negócio Rural do Zero',
+      subtitle: ENABLE_AI_CONSULTANT
+        ? 'Posicionamento profissional, parcerias recorrentes e assistente inteligente.'
+        : 'Posicionamento profissional, pacotes premium e parcerias recorrentes.',
       accessKey: 'acesso_upsell_negocio',
       checkoutUrl: 'https://pay.novarkbr.com/p0ptqz86'
     }
@@ -144,7 +153,7 @@
     6: { shortTitle: 'Acesso ao Crédito Rural Pós-Regularização', tag: 'PRONAF · PLANO SAFRA', art: 'credito' },
     7: { shortTitle: 'Checklists de Documentos por Objetivo', tag: 'VENDA · HERANÇA', art: 'checklist' },
     8: { shortTitle: 'Calendário Anual de Prazos e Obrigações', tag: 'AGENDA RURAL', art: 'calendario' },
-    9: { shortTitle: 'Os 12 Erros Mais Comuns e Como Corrigir', tag: 'SOLUÇÃO DE ERROS', art: 'erros' },
+    9: { shortTitle: 'Os 10 Erros Mais Comuns e Como Corrigir', tag: 'SOLUÇÃO DE ERROS', art: 'erros' },
     10: { shortTitle: 'Sobreposição de Área no CAR e CEFIR', tag: 'DESBLOQUEIO TÉCNICO', art: 'sobreposicao' },
     11: { shortTitle: 'Dominando o e-CAC para Imóvel Rural', tag: 'CAFIR · CNIR · RFB', art: 'ecac' },
     12: { shortTitle: 'Prospecção e Captação de Clientes Rurais', tag: 'COMERCIAL · CAMPO', art: 'prospeccao' },
@@ -459,7 +468,13 @@
     const localMap = new Map(localMods.map((m) => [m.id, m]));
     const dripMap = new Map((state.dripConfig || []).map((d) => [d.modulo_id, d]));
 
-    const sourceList = apiModules.length > 0 ? apiModules : localMods;
+    const rawSourceList = apiModules.length > 0 ? apiModules : localMods;
+    const sourceList = ENABLE_AI_CONSULTANT
+      ? rawSourceList
+      : rawSourceList.filter((m) => {
+          const mid = String(m.id || m.modulo_id || '');
+          return mid !== 'mod-24' && m.accessKey !== 'acesso_ia_consultor' && m.trilha !== 'ia';
+        });
 
     return sourceList.map((m, idx) => {
       const id = m.id || m.modulo_id || `mod-${String(idx + 1).padStart(2, '0')}`;
@@ -648,7 +663,9 @@
     }
 
     const toastMap = {
-      vip: 'Conta ativa: Aluno VIP (24 módulos + Consultor IA)',
+      vip: ENABLE_AI_CONSULTANT
+        ? 'Conta ativa: Aluno VIP (24 módulos + Consultor IA)'
+        : 'Conta ativa: Aluno VIP (23 módulos completos)',
       dia1: 'Conta ativa: Aluno Dia 1 (Trava de 7 dias ativa)',
       dia8: 'Conta ativa: Aluno Dia 8+ (Módulos de 7 dias liberados)',
       proprietario: 'Portal do Proprietário Rural ativo (Oferta Entenda)'
@@ -771,15 +788,26 @@
     if (heroSubtitle) {
       heroSubtitle.textContent = isProp
         ? 'Passo a passo prático de CCIR, ITR, CAR, Retificação de Área e Crédito Rural para deixar a documentação da sua terra 100% em dia.'
-        : 'CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 24 módulos práticos.';
+        : ENABLE_AI_CONSULTANT
+          ? 'CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 24 módulos práticos.'
+          : 'CCIR, ITR, CAR, Retificação de Área, Crédito Rural e Consultoria em 23 módulos práticos.';
+    }
+    const heroSecondaryBtn = document.getElementById('hero-secondary-btn');
+    if (heroSecondaryBtn) {
+      heroSecondaryBtn.onclick = () => navigate(ENABLE_AI_CONSULTANT ? 'ai' : 'tools');
     }
     if (heroAiLabel) {
-      heroAiLabel.textContent = isProp ? 'Tira-Dúvidas IA da Minha Terra' : 'Abrir Consultor IA';
+      if (ENABLE_AI_CONSULTANT) {
+        heroAiLabel.textContent = isProp ? 'Tira-Dúvidas IA da Minha Terra' : 'Abrir Consultor IA';
+      } else {
+        heroAiLabel.textContent = isProp ? 'Diagnóstico do Meu Imóvel' : 'Ferramentas e Planilhas';
+      }
     }
     if (navTools) {
       navTools.textContent = isProp ? 'Diagnóstico do Meu Imóvel' : 'Ferramentas e Planilhas';
     }
     if (navAi) {
+      navAi.classList.toggle('hidden', !ENABLE_AI_CONSULTANT);
       navAi.textContent = isProp ? 'Tira-Dúvidas IA' : 'Consultor IA';
     }
 
@@ -893,6 +921,9 @@
      NAVEGACAO ENTRE AS VISÕES (HOME, CLASSROOM, TOOLS, AI)
      ======================================================================== */
   function navigate(viewName) {
+    if (viewName === 'ai' && !ENABLE_AI_CONSULTANT) {
+      viewName = 'tools';
+    }
     state.currentView = viewName;
     const views = ['home', 'classroom', 'tools', 'ai'];
     views.forEach((v) => {
@@ -1342,7 +1373,7 @@
       const hasVisualBanner = rawHtml.includes('visual-banner') || rawHtml.includes('visual-diagram');
       const bannerHtml = hasVisualBanner ? '' : buildModuleVisualBanner(mod, state.currentLessonIndex);
 
-      if (mod.id === 'mod-24') {
+      if (mod.id === 'mod-24' && ENABLE_AI_CONSULTANT) {
         rawHtml += `
           <div class="visual-banner" style="margin-top: 24px;">
             <span class="visual-banner-eyebrow">ACESSO DIRETO</span>

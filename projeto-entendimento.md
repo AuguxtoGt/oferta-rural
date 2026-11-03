@@ -1,7 +1,7 @@
 # 📊 Projeto Entendimento — Oferta 13 (Imóvel Rural em Dia)
 
 > Documento de referência rápida para entender o projeto, a oferta e a estrutura.
-> Atualizado em: 2026-10-28
+> Atualizado em: 2026-11-03
 
 ---
 
@@ -47,6 +47,19 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
   - `Bonus_04_Sobreposicao_CEFIR_Como_Resolver.pdf` (16 págs; CEFIR é específico da Bahia/INEMA/SEIA)
   - `Bonus_05_eCAC_para_Imovel_Rural.pdf` (15 págs; e-CAC, gov.br, ITR, CAFIR, certidão, procuração, golpes)
 - `UPSELL_Negocio_Rural_do_Zero.pdf`
+- **Entregáveis dos 3 Order Bumps da Oferta Principal (30/10/2026, 9 PDFs com 11 páginas cada = 99 páginas no total)**, fonte HTML em `fonte-pdfs/order-bumps/` (`style.css` + 9 HTMLs em Plus Jakarta Sans e paleta verde):
+  - **Order Bump 1 (`entregaveis-lucre/ob1-consultor-profissional/`):**
+    - `01_Manual_Prospeccao_e_Captacao_Clientes_Rurais.pdf` (11 págs)
+    - `02_Guia_Atendimento_Diagnostico_e_Apresentacao.pdf` (11 págs)
+    - `03_Tabela_Precificacao_Pacotes_e_Fechamento.pdf` (11 págs)
+  - **Order Bump 2 (`entregaveis-lucre/ob2-modelos-prontos/`):**
+    - `01_Caderno_Fichas_Atendimento_e_Checklists.pdf` (11 págs)
+    - `02_Kit_Propostas_Orcamentos_e_Recibos_Prontos.pdf` (11 págs)
+    - `03_Modelos_Procuracoes_Termos_e_Contratos.pdf` (11 págs)
+  - **Order Bump 3 (`entregaveis-lucre/ob3-guia-20-servicos/`):**
+    - `01_Servicos_Rurais_Lucrativos_Vol1_Cadastrais_e_Fiscais.pdf` (11 págs, Serviços 01 a 07)
+    - `02_Servicos_Rurais_Lucrativos_Vol2_Ambientais_e_Produtor.pdf` (11 págs, Serviços 08 a 14)
+    - `03_Servicos_Rurais_Lucrativos_Vol3_Credito_Contratos_e_Recorrencia.pdf` (11 págs, Serviços 15 a 20 + Esteira + Calendário Sazonal)
 
 **Preço:** R$ 27,90 (de R$ 68,91), garantia de 7 dias. Os dados de 2026 do manual (ITR de 10/08 a 30/09/2026, multa de 1% ao mês com mínimo de R$ 50, CCIR liberado em 19/05 com taxa até 17/06) vêm de pesquisa web. A parte de Plano Safra ficou sem valores fixos, de propósito.
 
@@ -94,6 +107,10 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | `upsell.html` | Oferta especial pós-compra |
 | `upclientes.html` | Upsell do kit para conseguir clientes |
 | `upsell2.html` | **Upsell "Negócio Rural do Zero"** (página de oferta pós-compra, entregável `UPSELL_Negocio_Rural_do_Zero.pdf`). Ver seção abaixo |
+| `membros/index.html` | `/membros` | **Área de Membros Web ("Formação Consultor Rural" - Ofertas de Lucrar)**: design minimalista estilo Apple Light/Dark em paleta Verde Floresta e `Plus Jakarta Sans`, **23 módulos ativos (69 aulas densas)** em 6 trilhas (com passo a passo completo tela a tela de emissão de Matrícula ONR, CCIR/DCR, CAFIR/CNIR/ITR/CND, ADA/IBAMA, CAR/SICAR, SIGEF, CAF e Certidões, modelos editáveis/copiáveis e 23 mensagens finais únicas sobre Jesus), ferramentas interativas (Calculadora de Honorários, Auditoria Cruzada e Simulador de Meta), trava de 7 dias (`dripDays: 7`) pós-compra e vitrine de Order Bumps/Combo (`fotl08p9`)/Upsell |
+| `proprietario/index.html` | `/proprietario` | **Portal do Proprietário Rural ("Imóvel Rural em Dia - Entenda")**: área de membros dedicada para compradores do checkout `agwfds26` (`/entenda`), com OpenGraph próprio, linguagem 100% focada no dono da terra (sem falar de prospecção ou honorários), 3 trilhas adaptadas e ferramenta interativa "Diagnóstico do Meu Imóvel" |
+| `api/auth.js`, `api/webhook.js`, `api/content.js`, `api/ai-consultant.js` | `/api/*` | **Backend Serverless (Vercel Functions) + Servidor Local (`server-membros.js` na porta `8090`)**: login por e-mail de compra + senha padrão `rural123`, webhook automático Novark ativo em produção (`Pedido Aprovado`, `Pedido Cancelado`, `Mudança de Status`, incluindo Combo dos 3 Order Bumps `fotl08p9`), banco dual Supabase REST (`ijozopseljwuoloqucvn`) + fallback local JSON (`data/members-db.json`). Endpoints de IA desativados por trava de ambiente até o lançamento futuro |
+| `supabase-setup.sql` | - | **Setup SQL completo do Supabase**: tabelas `alunos_membros`, `webhook_logs` e `config_modulos_drip`, políticas RLS e `GRANT SELECT, INSERT, UPDATE, DELETE` no esquema `public` |
 | `politica-privacidade.html` / `termos-de-uso.html` | Páginas legais |
 | `entregaveis-lucre/` | Material entregue ao cliente (PDFs novos da oferta Entenda). As pastas antigas m1 a m5, OB e guia HTML foram para `_antigos_backup/` (ignorada no git) |
 | `criativos/` | Criativos de anúncio da oferta principal (ignorada no git) |
@@ -118,6 +135,26 @@ Página pós-compra para quem comprou o **ângulo consultor** (`/`). Entregável
   - **Sem pixel** e sem Utmify.
   - O `<html>` não tem `<meta charset>` nem `viewport`, o que pode quebrar acentos e o layout no celular.
   - Os depoimentos citam resultados (3 clientes na semana, R$ 1.200) e têm cara de roteiro. Só manter se forem reais e autorizados.
+
+---
+
+## Recurso Salvo para Lancamento Futuro: Consultor Rural IA 24h
+
+A pedido do usuario (03/11/2026), o **Consultor Rural IA 24h** (chat tira-duvidas de regularizacao rural planejado como assinatura mensal recorrente de R$ 19,90/mes) foi **100% ocultado e desativado** nas interfaces `/membros` e `/proprietario` e nas APIs `/api/content` e `/api/ai-consultant`, mas **todo o codigo foi preservado intacto** para ser lancado em breve sem retrabalho.
+
+### Onde o codigo esta salvo
+1. **Backend do Chat e Firewall (`api/ai-consultant.js`):** contem o firewall de 7 camadas (bloqueio de payloads binarios/hex, SQLi, XSS, prompt injection e limite de tamanho), o motor especialista nativo de regularizacao rural (CCIR, DCR, ITR, CAFIR, CNIR, ADA, CAR/SICAR, SIGEF, Pronaf e precificacao) e a integracao pronta com Gemini ou OpenAI. Atualmente retorna `HTTP 503` ate que `ENABLE_AI_CONSULTANT=true` seja definido nas variaveis de ambiente.
+2. **Filtro de Catalogo (`api/content.js`):** oculta automaticamente a trilha `ia` e o `mod-24` (`acesso_ia_consultor`) enquanto `process.env.ENABLE_AI_CONSULTANT !== 'true'`.
+3. **Webhook de Assinatura Mensal (`api/webhook.js`):** ja contem toda a regra de ativacao e cancelamento recorrente via `CHECKOUT_IA_URL` / coluna `acesso_ia_consultor` no Supabase (se o aluno nao renovar a mensalidade da IA, perde apenas o acesso ao chat da IA e mantem todos os outros modulos ativos).
+4. **Logica Frontend (`membros/app.js`):** controlada pela constante `const ENABLE_AI_CONSULTANT = false;` (linha 9). Todo o chat estilo Apple Intelligence, pilulas de casos prontos (Consultor e Proprietario), banner de desbloqueio e redirecionamento continuam prontos no arquivo.
+5. **Interface HTML (`membros/index.html` e `proprietario/index.html`):** a secao `#view-ai` e o botao `#nav-btn-ai` permanecem salvos no DOM com a classe `hidden`.
+6. **Modulo 24 Completo (`build_rich_courses_db.py`):** as 3 aulas completas do Modulo 24 ("Guia Oficial do Consultor Rural IA 24h") e sua mensagem final exclusiva estao salvas na funcao `build_custom_ia_module()` controlada pela flag `ENABLE_AI_MODULE = False`.
+
+### Passo a passo rapido para reativar quando for lancar
+1. **Na Novark e Vercel:** criar o produto de assinatura mensal (ex: R$ 19,90/mes), marcar no Webhook `WEBH - RURAL` e adicionar na Vercel `CHECKOUT_IA_URL=<link_novark>` e `ENABLE_AI_CONSULTANT=true` (opcionalmente `GEMINI_API_KEY` ou `OPENAI_API_KEY`).
+2. **No banco de aulas (`membros/data/courses-db.js`):** alterar `ENABLE_AI_MODULE = True` no gerador `build_rich_courses_db.py` e rodar `python3` para republicar o `mod-24`.
+3. **No Frontend (`membros/app.js` e HTMLs):** mudar `const ENABLE_AI_CONSULTANT = true;` na linha 9 de `membros/app.js`, remover `hidden` de `#nav-btn-ai` em `membros/index.html` e `proprietario/index.html`, e restaurar o botao secundario do hero caso deseje destaque no topo.
+4. **Deploy:** fazer `git commit` e `git push origin main`.
 
 ---
 
@@ -154,7 +191,7 @@ Página pós-compra para quem comprou o **ângulo consultor** (`/`). Entregável
 - **Notícia não vendeu**: não usar como aposta principal.
 - **Twitter/X vendeu mais**, mas nunca 100% nele (máximo 1 a 2 por lote).
 - **Formatos que venderam bem** (`rodados/venderam bem`): 17 Twitter/X, **19 Produto Mockup**, **20 Bold Overlay**, **22 Flatlay Documentos**. Priorizar variações desses.
-- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos/imagens`: último número rodado foi 162** (em `rodados/`). Novos criativos na raiz de `criativos/imagens/`: **162 a 166** (lote estilo post de notícia de Instagram, 28/10), **167 a 171** (lote estilo Geração de Criativo Advantage+ Meta Ads, 28/10), **172 a 181** (lote 10 formatos campeões variados, 29/10) e **182 a 186** (lote 5 conceitos inéditos: Pasta Acorrentada vs. Regularizado, Mural de Cortiça com Post-it, Drone com Pins de Preço por Propriedade, Caderno Espiral Manuscrito e História Dividida Produtor vs. Consultor, 29/10). Próximo número livre: 187.
+- **Numeração sequencial**: cada criativo vira `NN.jpg` com o próximo número da sequência. **Pasta `criativos/imagens`: último número rodado foi 162** (em `rodados/`). Novos criativos na raiz de `criativos/imagens/`: **162 a 166** (lote estilo post de notícia de Instagram, 28/10), **167 a 171** (lote estilo Geração de Criativo Advantage+ Meta Ads, 28/10), **172 a 181** (lote 10 formatos campeões variados, 29/10), **182 a 186** (lote 5 conceitos inéditos: Pasta Acorrentada vs. Regularizado, Mural de Cortiça com Post-it, Drone com Pins de Preço por Propriedade, Caderno Espiral Manuscrito e História Dividida Produtor vs. Consultor, 29/10), **187 a 236** (sessão de 50 criativos 1:1 distintos para a oferta principal, 02/11, divididos em 10 lotes de 5: 35 sem preço e 15 com preço R$ 27,90 nos números 188, 193, 194, 201, 206, 211, 214, 221, 223, 230, 232, 233, 234, 235 e 236, cobrindo adaptações das 20 referências de `criativos/inspiracoes/`, jornal impresso e notícia sem marcas reais, UGC nativo com seta, Instagram Stories, Twitter/X, Feed/Comparativo/Checklist, prints de WhatsApp, notificações Pix e Oferta Direta com Mockups) e **237 a 256** (lote de 20 releituras criativas 1:1 a partir das ideias de `criativos/inspiracoes/` em novos cenários e objetos sem copiar a aparência literal, 02/11: 14 sem preço e 6 com R$ 27,90 nos números 238, 243, 248, 251, 255 e 256). Próximo número livre: 257.
 - **Pasta `criativos-entenda/`: numeração própria, começa em 1. Último número rodado foi 19** (em `rodados/`). Criativos prontos para rodar na raiz: **20 e 21**, e novos adicionados: **22 a 39**. Próximo número livre: 40.
 - Garantia correta: **7 dias**.
 
@@ -231,6 +268,11 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 03/11/2026 | **Auditoria Completa dos 23 Módulos (69 Aulas) + Portal `/proprietario` no Ar + Ocultação Temporária do Consultor IA:** Revisados e expandidos todos os 23 módulos ativos (`membros/data/courses-db.js`, 69 aulas completas sem páginas curtas ou resíduos de impressão), incluindo tutoriais passo a passo tela a tela de emissão de todos os documentos rurais nos sistemas oficiais (Matrícula ONR `registrodeimoveis.org.br`, CCIR e DCR `sncr.serpro.gov.br` / `dcr.incra.gov.br`, CNIR `cnir.serpro.gov.br`, CAFIR/e-CAC, PGD ITR e CND Rural `gov.br/receitafederal`, ADAWeb e Certidão de Embargos `servicos.ibama.gov.br`, CAR/SICAR `car.gov.br`, SIGEF `sigef.incra.gov.br` e CAF `caf.mda.gov.br`), além de 23 mensagens finais únicas sobre Jesus. Publicado `proprietario/index.html` (`/proprietario`), integrado Webhook Novark em produção e desativado/escondido 100% do Consultor Rural IA (`ENABLE_AI_CONSULTANT = false`), mantendo todo o código documentado para lançamento futuro. |
+| 02/11/2026 | **Lote de 20 Releituras Criativas (237.jpg a 256.jpg):** Gerados e inspecionados visualmente 1 por 1 mais 20 criativos quadrados (1:1) em `criativos/imagens/`, extraindo os mecanismos visuais e persuasivos das 20 referências de `criativos/inspiracoes/` em novos cenários, objetos e paletas sem copiar a aparência literal (6 peças com `R$ 27,90` nos números 238, 243, 248, 251, 255 e 256, e 14 peças sem preço na tela; `250.jpg` e `255.jpg` regerados para eliminar rótulos em inglês). Próximo número livre atualizado para `257`. |
+| 02/11/2026 | **Sessão de 50 Criativos Variados (187.jpg a 236.jpg):** Gerados e auditados individualmente 50 novos criativos quadrados (1:1) em `criativos/imagens/` para a oferta Consultor Rural, com 30% (15 peças) exibindo `R$ 27,90` e 70% (35 peças) sem preço na tela, cobrindo 10 famílias visuais distintas inspiradas em `criativos/inspiracoes/` e `/criativos-meta-ads` (zero marcas reais de imprensa, zero datas, zero travessões e 11 peças regeradas na auditoria visual). Próximo número livre atualizado para `237`. |
+| 30/10/2026 | **Área de Membros Web (`/membros`) + Backend (`/api/*`) + Supabase SQL (`supabase-setup.sql`) + Consultor Rural IA 24h:** Criada a área de membros estilo Apple + Netflix em paleta verde com todos os 21 entregáveis transcritos em 24 módulos (`membros/data/courses-db.js`), login por e-mail de compra + senha `rural123`, webhook (`/api/webhook`), trava automática de 7 dias pós-compra, painel admin e chat de IA blindado contra payloads binários/hex/SQLi/XSS/prompt injection. |
+| 30/10/2026 | **Entregáveis em PDF dos 3 Order Bumps (9 PDFs, 99 páginas no total):** Criados 3 PDFs de 11 páginas para cada Order Bump (`ob1-consultor-profissional`, `ob2-modelos-prontos` e `ob3-guia-20-servicos`) em `entregaveis-lucre/`, com fontes HTML e `style.css` em `fonte-pdfs/order-bumps/`. |
 | 29/10/2026 | **Criação da rota `/w` (`w.html`):** Duplicação da página principal nova (`index.html`) com o mesmo layout novo, áudio `nova-hero.mp3`, ticket R$ 27,90 e Pixel Utmify, criada para teste de novo checkout. Rewrite adicionado no `vercel.json`. Tabela geral de páginas e tickets atualizada. |
 | 28/10/2026 | **Criação da rota `/an` (`an.html`):** Cópia da versão com layout do Dave (`vdave.mp3`, mockup clássico) no ticket original de R$ 27,90, com o checkout `jxiib47t` e Pixel Utmify idêntico à principal. |
 | 28/10/2026 | **Lotes de Criativos 162 a 186:** Criativos gerados para a oferta principal: 162 a 166 (estilo notícia Instagram), 167 a 171 (estilo Advantage+ Meta) e 172 a 186 (formatos campeões e 5 conceitos inéditos). Salvos em `criativos/imagens/`. |

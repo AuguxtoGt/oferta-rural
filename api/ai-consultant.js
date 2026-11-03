@@ -530,6 +530,16 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 200, { ok: true });
   }
 
+  // Consultor IA desativado ate o lancamento futuro (para reativar, defina ENABLE_AI_CONSULTANT=true no ambiente)
+  loadEnv();
+  if (process.env.ENABLE_AI_CONSULTANT !== 'true') {
+    return sendJson(res, 503, {
+      ok: false,
+      disabled: true,
+      error: 'O Consultor Rural IA esta reservado para lancamento futuro.'
+    });
+  }
+
   const session = extractSessionFromReq(req);
 
   if (req.method === 'GET') {
