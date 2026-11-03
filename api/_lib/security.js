@@ -8,7 +8,7 @@ let lastEnvMtimeMs = 0;
 
 /**
  * Carrega variaveis do arquivo .env na raiz do projeto sem precisar de pacotes externos.
- * Recarrega automaticamente caso o arquivo .env seja salvo/editado.
+ * Recarrega automaticamente caso o arquivo .env seja salvo/editado em desenvolvimento.
  */
 function loadEnv() {
   const candidates = [
@@ -40,7 +40,9 @@ function loadEnv() {
         ) {
           val = val.slice(1, -1);
         }
-        process.env[key] = val;
+        if (process.env[key] === undefined || !isProductionEnv()) {
+          process.env[key] = val;
+        }
       }
       break;
     } catch (_err) {
@@ -49,14 +51,47 @@ function loadEnv() {
   }
 }
 
+function isProductionEnv() {
+  return Boolean(
+    process.env.VERCEL === '1' ||
+      process.env.VERCEL_ENV === 'production' ||
+      process.env.NODE_ENV === 'production'
+  );
+}
+
 loadEnv();
+
+// Segredo efemero aleatorio gerado por processo apenas para localhost caso .env nao tenha AUTH_SECRET
+const DEV_EPHEMERAL_SECRET = crypto.randomBytes(32).toString('hex');
 
 function getAuthSecret() {
   loadEnv();
-  return (
-    process.env.AUTH_SECRET ||
-    'rural_consultor_secret_key_2026_blindado_32chars_min'
-  );
+  const configured = String(process.env.AUTH_SECRET || '').trim();
+  if (configured && configured.length >= 32) {
+    return configured;
+  }
+  if (isProductionEnv()) {
+    throw new Error('Configuracao de seguranca incompleta (AUTH_SECRET).');
+  }
+  return configured || DEV_EPHEMERAL_SECRET;
+}
+
+/**
+ * Comparacao em tempo constante resistente a vazamento de comprimento via SHA-256.
+ */
+function safeCompareString(provided, expected) {
+  if (
+    typeof provided !== 'string' ||
+    typeof expected !== 'string' ||
+    !provided ||
+    !expected
+  ) {
+    return false;
+  }
+  const hashA = crypto.createHash('sha256').update(provided, 'utf8').digest();
+  const hashB = crypto.createHash('sha256').update(expected, 'utf8').digest();
+  const match = crypto.timingSafeEqual(hashA, hashB);
+  return match && provided.length === expected.length;
 }
 
 /**
@@ -102,11 +137,7 @@ function verifyPassword(password, storedHash) {
       return crypto.timingSafeEqual(bufA, bufB);
     }
 
-    // Fallback de comparacao segura caso exista hash legado
-    const bufA = Buffer.from(storedHash, 'utf8');
-    const bufB = Buffer.from(plain, 'utf8');
-    if (bufA.length !== bufB.length) return false;
-    return crypto.timingSafeEqual(bufA, bufB);
+    return safeCompareString(plain, storedHash);
   } catch (_err) {
     return false;
   }
@@ -133,12 +164,13 @@ function base64UrlDecode(str) {
 }
 
 /**
- * Assina token de sessao com HMAC-SHA256 e validade padrao de 7 dias.
+ * Assina token de sessao com HMAC-SHA256, nonce aleatorio (jti) e validade padrao de 7 dias.
  */
 function signSession(payload, maxAgeMs = 7 * 24 * 60 * 60 * 1000) {
   const now = Date.now();
   const data = {
     ...payload,
+    jti: crypto.randomBytes(16).toString('hex'),
     iat: now,
     exp: now + maxAgeMs
   };
@@ -170,15 +202,12 @@ function verifySession(token) {
         .digest()
     );
 
-    const bufA = Buffer.from(encodedSig, 'utf8');
-    const bufB = Buffer.from(expectedSig, 'utf8');
-    if (bufA.length !== bufB.length) return null;
-    if (!crypto.timingSafeEqual(bufA, bufB)) return null;
+    if (!safeCompareString(encodedSig, expectedSig)) return null;
 
     const decodedJson = base64UrlDecode(encodedPayload);
     const payload = JSON.parse(decodedJson);
     if (!payload || typeof payload !== 'object') return null;
-    if (typeof payload.exp === 'number' && Date.now() > payload.exp) {
+    if (typeof payload.exp !== 'number' || Date.now() > payload.exp) {
       return null;
     }
     return payload;
@@ -209,10 +238,17 @@ function parseCookies(cookieHeader) {
 }
 
 /**
- * Le e valida a sessao a partir de Authorization Bearer, x-session-token ou cookie rr_session.
+ * Le e valida a sessao apenas via cookie HttpOnly rr_session ou header Authorization Bearer / x-session-token.
+ * Nunca aceita token em query string (evita vazamento em logs e Referer).
  */
 function extractSessionFromReq(req) {
   if (!req || !req.headers) return null;
+
+  const cookies = parseCookies(req.headers.cookie);
+  if (cookies.rr_session) {
+    const session = verifySession(cookies.rr_session);
+    if (session) return session;
+  }
 
   const authHeader = req.headers.authorization || req.headers.Authorization;
   if (typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
@@ -227,48 +263,46 @@ function extractSessionFromReq(req) {
     if (session) return session;
   }
 
-  const cookies = parseCookies(req.headers.cookie);
-  if (cookies.rr_session) {
-    const session = verifySession(cookies.rr_session);
-    if (session) return session;
-  }
-
-  if (req.query && typeof req.query.session_token === 'string') {
-    const session = verifySession(req.query.session_token);
-    if (session) return session;
-  }
-
   return null;
 }
 
-function setSessionCookie(res, token, maxAgeSec = 7 * 24 * 60 * 60) {
+function isHttpsRequest(req) {
+  if (isProductionEnv()) return true;
+  if (!req || !req.headers) return false;
+  const proto = String(req.headers['x-forwarded-proto'] || '').toLowerCase();
+  return proto.includes('https');
+}
+
+function setSessionCookie(res, token, maxAgeSec = 7 * 24 * 60 * 60, req = null) {
   if (!res || typeof res.setHeader !== 'function') return;
-  const cookieStr = `rr_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}`;
+  const secureAttr = isHttpsRequest(req) ? '; Secure' : '';
+  const cookieStr = `rr_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax${secureAttr}; Max-Age=${maxAgeSec}`;
   res.setHeader('Set-Cookie', cookieStr);
 }
 
-function clearSessionCookie(res) {
+function clearSessionCookie(res, req = null) {
   if (!res || typeof res.setHeader !== 'function') return;
+  const secureAttr = isHttpsRequest(req) ? '; Secure' : '';
   res.setHeader(
     'Set-Cookie',
-    'rr_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'
+    `rr_session=; Path=/; HttpOnly; SameSite=Lax${secureAttr}; Max-Age=0`
   );
 }
 
 /**
- * Rate Limiter em memoria por IP + Rota.
+ * Rate Limiter em memoria por chave (IP + Rota / E-mail).
  */
 const rateLimitStore = new Map();
 
 function getClientIp(req) {
   if (!req || !req.headers) return '127.0.0.1';
+  const vercelIp = req.headers['x-vercel-forwarded-for'] || req.headers['x-real-ip'];
+  if (typeof vercelIp === 'string' && vercelIp.trim()) {
+    return vercelIp.split(',')[0].trim();
+  }
   const xff = req.headers['x-forwarded-for'];
   if (typeof xff === 'string' && xff.trim()) {
     return xff.split(',')[0].trim();
-  }
-  const realIp = req.headers['x-real-ip'];
-  if (typeof realIp === 'string' && realIp.trim()) {
-    return realIp.trim();
   }
   return (req.socket && req.socket.remoteAddress) || '127.0.0.1';
 }
@@ -330,7 +364,6 @@ function validateAndSanitizeAiInput(rawText) {
     return { ok: false, category: 'invalid_type', reason: DEFAULT_BLOCK_REASON };
   }
 
-  // 1. Bloqueio imediato de bytes de controle nao imprimiveis (antes do trim para pegar null bytes)
   if (/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(rawText)) {
     return { ok: false, category: 'control_chars', reason: DEFAULT_BLOCK_REASON };
   }
@@ -347,15 +380,14 @@ function validateAndSanitizeAiInput(rawText) {
     };
   }
 
-  // 2. Bloqueio de sequencias binarias, hexadecimais, URL-encoded massivo, Base64 longo ou excesso de simbolos de codigo
   const binaryPatterns = [
-    /(?:[01]{8}\s*){3,}/, // 3 ou mais octetos binarios (ex: 01000001 01000010 01000011)
-    /[01]{24,}/, // 24+ bits seguidos
-    /(?:\\x[0-9a-fA-F]{2}){3,}/i, // Sequencia de bytes hexadecimais \x41\x42\x43
-    /(?:0x[0-9a-fA-F]{2,}\s*){4,}/i, // Sequencia 0x41 0x42 0x43 0x44
-    /(?:%[0-9a-fA-F]{2}){6,}/i, // URL encoding suspeito em cadeia
-    /(?:\\u[0-9a-fA-F]{4}){4,}/i, // Unicode escape injection
-    /\b[A-Za-z0-9+/]{64,}={0,2}\b/ // Bloco Base64 longo
+    /(?:[01]{8}\s*){3,}/,
+    /[01]{24,}/,
+    /(?:\\x[0-9a-fA-F]{2}){3,}/i,
+    /(?:0x[0-9a-fA-F]{2,}\s*){4,}/i,
+    /(?:%[0-9a-fA-F]{2}){6,}/i,
+    /(?:\\u[0-9a-fA-F]{4}){4,}/i,
+    /\b[A-Za-z0-9+/]{64,}={0,2}\b/
   ];
 
   for (const pattern of binaryPatterns) {
@@ -364,13 +396,11 @@ function validateAndSanitizeAiInput(rawText) {
     }
   }
 
-  // Excesso de simbolos tipicos de codigo ({}[];<>)
   const codeSymbols = trimmed.match(/[{}\[\];<>\\`$]/g);
   if (codeSymbols && codeSymbols.length > 4) {
     return { ok: false, category: 'code_symbols', reason: DEFAULT_BLOCK_REASON };
   }
 
-  // 3. Bloqueio de SQL Injection, XSS, Path Traversal e Command Injection
   const lowerRaw = trimmed.toLowerCase();
   const normalized = normalizeForInspection(trimmed);
 
@@ -421,7 +451,6 @@ function validateAndSanitizeAiInput(rawText) {
     return { ok: false, category: 'sqli_xss_regex', reason: DEFAULT_BLOCK_REASON };
   }
 
-  // 4. Bloqueio de Prompt Injection, Jailbreak e Extracao de Segredos
   const promptInjectionPhrases = [
     'ignore previous instructions',
     'ignore all instructions',
@@ -461,15 +490,19 @@ function validateAndSanitizeAiInput(rawText) {
     }
   }
 
-  // Checagem isolada para sigla DAN (Jailbreak "DAN")
-  if (/\bdan\b/.test(normalized) && (normalized.includes('modo') || normalized.includes('mode') || normalized.includes('act as') || normalized.includes('agora voce'))) {
+  if (
+    /\bdan\b/.test(normalized) &&
+    (normalized.includes('modo') ||
+      normalized.includes('mode') ||
+      normalized.includes('act as') ||
+      normalized.includes('agora voce'))
+  ) {
     return { ok: false, category: 'jailbreak_dan', reason: DEFAULT_BLOCK_REASON };
   }
   if (/\bDAN\b/.test(trimmed)) {
     return { ok: false, category: 'jailbreak_dan', reason: DEFAULT_BLOCK_REASON };
   }
 
-  // Sanitiza espacos multiplos e neutraliza caracteres especiais residuais
   const cleanText = trimmed
     .replace(/[<>]/g, '')
     .replace(/\s+/g, ' ')
@@ -486,11 +519,18 @@ function applySecurityHeaders(res) {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  if (isProductionEnv()) {
+    res.setHeader(
+      'Strict-Transport-Security',
+      'max-age=63072000; includeSubDomains; preload'
+    );
+  }
 }
 
 /**
- * Envia JSON padronizado garantindo ausencia de travessoes acidentais.
+ * Envia JSON padronizado.
  */
 function sendJson(res, statusCode, payload) {
   applySecurityHeaders(res);
@@ -509,6 +549,9 @@ function parseRequestBody(req, maxBytes = 102400) {
     if (req.body !== undefined && req.body !== null) {
       if (typeof req.body === 'object') return resolve(req.body);
       if (typeof req.body === 'string') {
+        if (Buffer.byteLength(req.body, 'utf8') > maxBytes) {
+          return reject(new Error('Payload excede o limite permitido.'));
+        }
         try {
           return resolve(req.body.trim() ? JSON.parse(req.body) : {});
         } catch (_e) {
@@ -522,7 +565,7 @@ function parseRequestBody(req, maxBytes = 102400) {
     req.on('data', (chunk) => {
       bytes += chunk.length;
       if (bytes > maxBytes) {
-        reject(new Error('Payload excede o limite de seguranca permitido.'));
+        reject(new Error('Payload excede o limite permitido.'));
         return;
       }
       raw += chunk.toString('utf8');
@@ -532,7 +575,6 @@ function parseRequestBody(req, maxBytes = 102400) {
       try {
         resolve(JSON.parse(raw));
       } catch (_err) {
-        // Suporta form-urlencoded caso algum gateway envie nesse formato
         try {
           const params = new URLSearchParams(raw);
           const obj = {};
@@ -545,13 +587,15 @@ function parseRequestBody(req, maxBytes = 102400) {
         }
       }
     });
-    req.on('error', (err) => reject(err));
+    req.on('error', () => reject(new Error('Erro ao ler requisicao.')));
   });
 }
 
 module.exports = {
   loadEnv,
+  isProductionEnv,
   getAuthSecret,
+  safeCompareString,
   hashPassword,
   verifyPassword,
   signSession,

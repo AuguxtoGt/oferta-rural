@@ -172,7 +172,7 @@
   };
 
   const state = {
-    token: localStorage.getItem('rr_token') || '',
+    canSimulateDemo: false,
     user: null,
     daysSincePurchase: 0,
     dripConfig: [],
@@ -232,9 +232,6 @@
       { 'Content-Type': 'application/json' },
       options.headers || {}
     );
-    if (state.token) {
-      headers['Authorization'] = `Bearer ${state.token}`;
-    }
     try {
       const response = await fetch(url, {
         ...options,
@@ -583,8 +580,7 @@
   }
 
   async function loadCatalogAndSession() {
-    const emailParam = state.user && state.user.email ? `?email=${encodeURIComponent(state.user.email)}` : '';
-    const res = await apiFetch(`/api/content${emailParam}`);
+    const res = await apiFetch('/api/content');
     if (res.ok && res.data) {
       if (res.data.dripConfig) state.dripConfig = res.data.dripConfig;
       if (res.data.checkoutUrls) state.checkoutUrls = res.data.checkoutUrls;
@@ -611,44 +607,30 @@
 
   async function quickSwitch(email, simKey = 'vip') {
     closeProfileMenu();
-    highlightSimMenu(simKey);
 
     const res = await apiFetch('/api/auth', {
       method: 'POST',
       body: JSON.stringify({ action: 'quick_switch', email })
     });
 
-    if (res.ok && res.data && res.data.user) {
-      state.token = res.data.token || state.token;
-      if (state.token) localStorage.setItem('rr_token', state.token);
-      state.user = res.data.user;
-      state.daysSincePurchase = res.data.daysSincePurchase ?? 0;
-      state.dripConfig = res.data.dripConfig || state.dripConfig;
-      state.checkoutUrls = res.data.checkoutUrls || state.checkoutUrls;
-    } else {
-      state.user = {
-        email,
-        perfil: email === 'proprietario@rural.com' ? 'proprietario' : 'consultor',
-        nome:
-          email === 'proprietario@rural.com'
-            ? 'Antônio Fazendeiro - Proprietário Rural'
-            : email === 'vip@rural.com'
-              ? 'Aluno VIP Completo'
-              : email === 'aluno8dias@rural.com'
-                ? 'Aluno 8+ Dias'
-                : 'Aluno Dia 1',
-        status: 'ativo',
-        acesso_principal: true,
-        acesso_ob1_profissional: email !== 'aluno@rural.com' && email !== 'proprietario@rural.com',
-        acesso_ob2_modelos: email === 'vip@rural.com' || email === 'proprietario@rural.com',
-        acesso_ob3_20servicos: email === 'vip@rural.com',
-        acesso_upsell_negocio: email === 'vip@rural.com',
-        acesso_ia_consultor: email === 'vip@rural.com' || email === 'proprietario@rural.com',
-        liberar_trava_7dias_manual: email === 'vip@rural.com' || email === 'proprietario@rural.com',
-        progresso_aulas: email === 'proprietario@rural.com' ? ['__perfil:proprietario'] : []
-      };
-      state.daysSincePurchase = email === 'aluno@rural.com' ? 0 : 12;
+    if (!res.ok || !res.data || !res.data.user) {
+      showToast(
+        (res.data && res.data.error) ||
+          'Modo de demonstracao disponivel apenas para o administrador.'
+      );
+      if (!state.user) {
+        showLoginScreen();
+      }
+      return;
     }
+
+    highlightSimMenu(simKey);
+    state.user = res.data.user;
+    state.canSimulateDemo = Boolean(res.data.canSimulateDemo);
+    state.daysSincePurchase = res.data.daysSincePurchase ?? 0;
+    state.dripConfig = res.data.dripConfig || state.dripConfig;
+    state.checkoutUrls = res.data.checkoutUrls || state.checkoutUrls;
+    syncDemoUiVisibility();
 
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('app-shell').classList.remove('hidden');
@@ -718,12 +700,12 @@
       return;
     }
 
-    state.token = res.data.token || '';
-    if (state.token) localStorage.setItem('rr_token', state.token);
     state.user = res.data.user;
+    state.canSimulateDemo = Boolean(res.data.canSimulateDemo);
     state.daysSincePurchase = res.data.daysSincePurchase ?? 0;
     state.dripConfig = res.data.dripConfig || [];
     state.checkoutUrls = res.data.checkoutUrls || {};
+    syncDemoUiVisibility();
 
     document.getElementById('login-view').classList.add('hidden');
     document.getElementById('app-shell').classList.remove('hidden');
@@ -739,8 +721,12 @@
       method: 'POST',
       body: JSON.stringify({ action: 'logout' })
     });
-    localStorage.removeItem('rr_token');
-    state.token = '';
+    try {
+      localStorage.removeItem('rr_token');
+    } catch (_e) {}
+    state.user = null;
+    state.canSimulateDemo = false;
+    syncDemoUiVisibility();
     showLoginScreen();
   }
 
@@ -1152,9 +1138,12 @@
     const mod = state.modules.find((m) => m.id === modId);
     if (!mod) return;
 
-    const emailParam =
-      state.user && state.user.email ? `&email=${encodeURIComponent(state.user.email)}` : '';
-    const res = await apiFetch(`/api/content?moduleId=${encodeURIComponent(modId)}${emailParam}`);
+    const res = await apiFetch(`/api/content?moduleId=${encodeURIComponent(modId)}`);
+
+    if (!res.ok && res.status === 401) {
+      showLoginScreen();
+      return;
+    }
 
     if (!res.ok && res.status === 403 && res.data) {
       if (res.data.lockReason === 'DRIP_7_DAYS') {
@@ -1162,6 +1151,11 @@
       } else {
         openPurchaseModal(mod);
       }
+      return;
+    }
+
+    if (!res.ok) {
+      showToast('Nao foi possivel carregar o modulo. Faca login novamente.');
       return;
     }
 
@@ -1516,7 +1510,6 @@
       method: 'PUT',
       body: JSON.stringify({
         action: 'toggle_lesson',
-        email: state.user ? state.user.email : 'vip@rural.com',
         lessonId: lesson.id
       })
     });
@@ -2174,8 +2167,7 @@
     const res = await apiFetch('/api/ai-consultant', {
       method: 'POST',
       body: JSON.stringify({
-        question,
-        email: state.user ? state.user.email : 'vip@rural.com'
+        question
       })
     });
 
@@ -2216,11 +2208,10 @@
      ======================================================================== */
   function isDemoEnvironment() {
     const host = (window.location.hostname || '').toLowerCase();
-    const search = (window.location.search || '').toLowerCase();
     return (
       host === 'localhost' ||
       host === '127.0.0.1' ||
-      search.includes('demo=1') ||
+      Boolean(state.canSimulateDemo) ||
       Boolean(state.user && state.user.isAdmin)
     );
   }
@@ -2272,13 +2263,20 @@
       }
     }
 
+    try {
+      localStorage.removeItem('rr_token');
+    } catch (_e) {}
+
     const authRes = await apiFetch('/api/auth');
     if (authRes.ok && authRes.data && authRes.data.authenticated && authRes.data.user) {
       state.user = authRes.data.user;
+      state.canSimulateDemo = Boolean(authRes.data.canSimulateDemo);
       state.daysSincePurchase = authRes.data.daysSincePurchase ?? 0;
       state.dripConfig = authRes.data.dripConfig || [];
       state.checkoutUrls = authRes.data.checkoutUrls || {};
       syncDemoUiVisibility();
+      document.getElementById('login-view').classList.add('hidden');
+      document.getElementById('app-shell').classList.remove('hidden');
       const email = state.user.email;
       const simKey =
         state.user.perfil === 'proprietario' || email === 'proprietario@rural.com'

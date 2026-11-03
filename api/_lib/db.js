@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { loadEnv, hashPassword } = require('./security');
+const { loadEnv, isProductionEnv, hashPassword } = require('./security');
 
 loadEnv();
 
@@ -323,16 +323,20 @@ function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
 
+function getConfiguredAdminEmail() {
+  loadEnv();
+  const raw = normalizeEmail(process.env.ADMIN_EMAIL || '');
+  if (raw) return raw;
+  return isProductionEnv() ? '' : 'admin@regularizerural.com.br';
+}
+
 function normalizeUserRecord(u) {
   if (!u) return null;
   const email = normalizeEmail(u.email);
-  const adminEmail = normalizeEmail(
-    process.env.ADMIN_EMAIL || 'admin@regularizerural.com.br'
-  );
+  const adminEmail = getConfiguredAdminEmail();
   const isAdmin = Boolean(
-    u.isAdmin ||
-      email === adminEmail ||
-      email === 'admin@regularizerural.com.br'
+    (adminEmail && email === adminEmail) ||
+      (!isProductionEnv() && u.isAdmin === true)
   );
 
   // Para a conta de demonstracao Dia 1, mantem no Dia 1 caso nao tenha sido editada manualmente pelo Admin
@@ -381,13 +385,14 @@ function normalizeUserRecord(u) {
 /**
  * Busca um aluno pelo e-mail (Supabase REST API + fallback local).
  */
-async function getUserByEmail(email) {
+async function getUserByEmail(email, options = {}) {
   loadEnv();
   const cleanEmail = normalizeEmail(email);
   if (!cleanEmail) return null;
 
-  const configuredAdminEmail = normalizeEmail(
-    process.env.ADMIN_EMAIL || 'admin@regularizerural.com.br'
+  const configuredAdminEmail = getConfiguredAdminEmail();
+  const allowDemoFallback = Boolean(
+    !isProductionEnv() || options.allowDemo === true
   );
 
   if (isSupabaseConfigured()) {
@@ -399,21 +404,13 @@ async function getUserByEmail(email) {
         return normalizeUserRecord(rows[0]);
       }
     } catch (_err) {
-      // Fallback para o banco local caso a tabela ainda nao tenha sido criada no Supabase
+      // Fallback para o banco local caso necessario
     }
   }
 
-  const db = ensureLocalDb();
-  const found = (db.users || []).find(
-    (u) => normalizeEmail(u.email) === cleanEmail
-  );
-  if (found) {
-    return normalizeUserRecord(found);
-  }
-
-  if (cleanEmail === configuredAdminEmail) {
+  if (configuredAdminEmail && cleanEmail === configuredAdminEmail) {
     const thirtyDaysAgoIso = new Date(Date.now() - 30 * 86400000).toISOString();
-    const adminUser = normalizeUserRecord({
+    return normalizeUserRecord({
       id: '44444444-4444-4444-8444-444444444444',
       email: cleanEmail,
       nome: 'Administrador Geral',
@@ -429,7 +426,18 @@ async function getUserByEmail(email) {
       data_primeira_compra: thirtyDaysAgoIso,
       liberar_trava_7dias_manual: true
     });
-    return adminUser;
+  }
+
+  if (!allowDemoFallback) {
+    return null;
+  }
+
+  const db = ensureLocalDb();
+  const found = (db.users || []).find(
+    (u) => normalizeEmail(u.email) === cleanEmail
+  );
+  if (found) {
+    return normalizeUserRecord(found);
   }
 
   if (cleanEmail === 'proprietario@rural.com') {
@@ -1130,6 +1138,34 @@ function sanitizeUserForClient(user, dripConfig) {
   };
 }
 
+/**
+ * Registra evento de seguranca (falha de login, tentativa admin negada, rate limit) em webhook_logs e console estruturado.
+ */
+async function logSecurityEvent({ evento, email = '', ip = '127.0.0.1', detalhe = {} }) {
+  try {
+    console.warn(
+      JSON.stringify({
+        type: 'security_audit',
+        evento,
+        email: normalizeEmail(email),
+        ip,
+        detalhe,
+        ts: new Date().toISOString()
+      })
+    );
+    await addWebhookLog({
+      gateway: 'security_audit',
+      evento: String(evento || 'security_event').slice(0, 80),
+      email: normalizeEmail(email).slice(0, 180),
+      produtos_liberados: [],
+      payload: detalhe || {},
+      ip_origem: String(ip || '127.0.0.1').slice(0, 80)
+    });
+  } catch (_err) {
+    // Falha de telemetria nunca derruba a requisicao
+  }
+}
+
 module.exports = {
   INITIAL_DRIP_MODULES,
   TRACK_TO_ACCESS_KEY,
@@ -1142,6 +1178,7 @@ module.exports = {
   getDripConfig,
   updateDripConfig,
   addWebhookLog,
+  logSecurityEvent,
   getWebhookLogs,
   computeAccessStatus,
   getCheckoutUrls,

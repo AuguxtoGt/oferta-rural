@@ -2,6 +2,9 @@
 
 const {
   loadEnv,
+  isProductionEnv,
+  safeCompareString,
+  hashPassword,
   verifyPassword,
   signSession,
   extractSessionFromReq,
@@ -19,6 +22,7 @@ const {
   getDripConfig,
   updateDripConfig,
   getWebhookLogs,
+  logSecurityEvent,
   computeAccessStatus,
   getCheckoutUrls,
   sanitizeUserForClient
@@ -30,38 +34,76 @@ const DEMO_EMAILS = new Set([
   'vip@rural.com',
   'aluno@rural.com',
   'aluno8dias@rural.com',
-  'proprietario@rural.com',
-  'admin@regularizerural.com.br'
+  'proprietario@rural.com'
 ]);
+
+const DUMMY_SCRYPT_HASH = hashPassword(
+  'constant_time_dummy_verify_2026',
+  '0123456789abcdef0123456789abcdef'
+);
+
+const GENERIC_LOGIN_ERROR =
+  'E-mail ou senha invalidos. Utilize o mesmo e-mail da compra e a sua senha de acesso.';
 
 function checkStudentPassword(inputPassword, user) {
   loadEnv();
   const provided = String(inputPassword || '').trim();
-  if (!provided) return false;
+  if (!provided || !user) return false;
 
-  const defaultPass = process.env.DEFAULT_STUDENT_PASSWORD || 'rural123';
-  const adminPass = process.env.ADMIN_PASSWORD || 'adminrural2026';
-  const configuredAdminEmail = String(
-    process.env.ADMIN_EMAIL || 'admin@regularizerural.com.br'
-  )
-    .trim()
-    .toLowerCase();
-
-  // Se for o admin customizado na .env, exige a senha do admin configurada na .env
-  if (
-    user.isAdmin &&
-    user.email === configuredAdminEmail &&
-    configuredAdminEmail !== 'admin@regularizerural.com.br'
-  ) {
-    return provided === adminPass;
+  if (user.isAdmin) {
+    const adminPass = String(
+      process.env.ADMIN_PASSWORD || (isProductionEnv() ? '' : 'adminrural2026')
+    ).trim();
+    if (!adminPass) return false;
+    return safeCompareString(provided, adminPass);
   }
 
-  if (user.isAdmin && provided === adminPass) return true;
-  if (provided === defaultPass) return true;
+  const defaultPass = String(
+    process.env.DEFAULT_STUDENT_PASSWORD || 'rural123'
+  ).trim();
+  if (defaultPass && safeCompareString(provided, defaultPass)) {
+    return true;
+  }
   if (user.senha_hash && verifyPassword(provided, user.senha_hash)) {
     return true;
   }
   return false;
+}
+
+async function resolveSessionActor(req) {
+  const session = extractSessionFromReq(req);
+  if (!session || !session.email) {
+    return { session: null, user: null, isOriginAdmin: false };
+  }
+
+  let isOriginAdmin = false;
+  let adminOriginEmail = '';
+  if (session.adminOriginEmail) {
+    const originAdmin = await getUserByEmail(session.adminOriginEmail, {
+      allowDemo: false
+    });
+    if (
+      originAdmin &&
+      originAdmin.status === 'ativo' &&
+      originAdmin.isAdmin === true
+    ) {
+      isOriginAdmin = true;
+      adminOriginEmail = originAdmin.email;
+    }
+  }
+
+  const allowDemo = !isProductionEnv() || isOriginAdmin;
+  const user = await getUserByEmail(session.email, { allowDemo });
+  if (!user || user.status !== 'ativo') {
+    return { session, user: null, isOriginAdmin: false, adminOriginEmail: '' };
+  }
+
+  if (user.isAdmin === true) {
+    isOriginAdmin = true;
+    adminOriginEmail = user.email;
+  }
+
+  return { session, user, isOriginAdmin, adminOriginEmail };
 }
 
 module.exports = async function handler(req, res) {
@@ -73,33 +115,40 @@ module.exports = async function handler(req, res) {
 
   // GET /api/auth -> Retorna sessao atual + dados atualizados do usuario + dripConfig + checkoutUrls
   if (req.method === 'GET') {
-    const session = extractSessionFromReq(req);
-    const dripConfig = await getDripConfig();
+    const rl = checkRateLimit(ip, 'auth_get', 90, 60000);
+    if (!rl.allowed) {
+      return sendJson(res, 429, {
+        ok: false,
+        error: 'Muitas requisicoes seguidas. Aguarde alguns instantes.'
+      });
+    }
 
-    if (!session || !session.email) {
+    const dripConfig = await getDripConfig();
+    const actor = await resolveSessionActor(req);
+
+    if (!actor.session || !actor.session.email) {
       return sendJson(res, 200, {
         ok: false,
         authenticated: false,
+        canSimulateDemo: !isProductionEnv(),
         dripConfig,
         checkoutUrls: getCheckoutUrls('')
       });
     }
 
-    const user = await getUserByEmail(session.email);
-    if (!user || user.status !== 'ativo') {
-      clearSessionCookie(res);
+    if (!actor.user) {
+      clearSessionCookie(res, req);
       return sendJson(res, 401, {
         ok: false,
         authenticated: false,
-        error:
-          user && user.status !== 'ativo'
-            ? 'O acesso deste e-mail encontra-se suspenso ou reembolsado.'
-            : 'Sessao expirada ou usuario nao encontrado.',
+        canSimulateDemo: !isProductionEnv(),
+        error: 'Sessao expirada ou conta inativa.',
         dripConfig,
         checkoutUrls: getCheckoutUrls('')
       });
     }
 
+    const user = actor.user;
     const access = computeAccessStatus(user, dripConfig);
     const sanitizedUser = sanitizeUserForClient(user, dripConfig);
     const checkoutUrls = getCheckoutUrls(user.email);
@@ -107,6 +156,7 @@ module.exports = async function handler(req, res) {
     const responsePayload = {
       ok: true,
       authenticated: true,
+      canSimulateDemo: Boolean(!isProductionEnv() || actor.isOriginAdmin),
       user: sanitizedUser,
       daysSincePurchase: access.daysSincePurchase,
       access,
@@ -114,7 +164,8 @@ module.exports = async function handler(req, res) {
       checkoutUrls
     };
 
-    if (req.query && (req.query.admin_list === '1' || user.isAdmin)) {
+    // Somente administradores reais recebem listagem de usuarios e logs
+    if (user.isAdmin === true) {
       const allUsers = await listAllUsers();
       responsePayload.adminData = {
         users: allUsers.map((u) => sanitizeUserForClient(u, dripConfig)),
@@ -130,18 +181,18 @@ module.exports = async function handler(req, res) {
   if (req.method === 'POST') {
     let body = {};
     try {
-      body = await parseRequestBody(req);
-    } catch (err) {
+      body = await parseRequestBody(req, 16384);
+    } catch (_err) {
       return sendJson(res, 400, {
         ok: false,
-        error: err.message || 'Requisicao invalida.'
+        error: 'Requisicao invalida.'
       });
     }
 
     const action = String(body.action || 'login').toLowerCase();
 
     if (action === 'logout') {
-      clearSessionCookie(res);
+      clearSessionCookie(res, req);
       return sendJson(res, 200, {
         ok: true,
         message: 'Sessao encerrada com sucesso.'
@@ -149,29 +200,48 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'quick_switch') {
+      const rlSwitch = checkRateLimit(ip, 'auth_quick_switch', 15, 60000);
+      if (!rlSwitch.allowed) {
+        return sendJson(res, 429, {
+          ok: false,
+          error: 'Muitas trocas seguidas. Aguarde alguns segundos.'
+        });
+      }
+
       const targetEmail = String(body.email || '')
         .trim()
-        .toLowerCase();
-      if (!targetEmail) {
-        return sendJson(res, 400, {
-          ok: false,
-          error: 'Informe o e-mail do perfil para alternar.'
+        .toLowerCase()
+        .slice(0, 180);
+      if (!targetEmail || !DEMO_EMAILS.has(targetEmail)) {
+        await logSecurityEvent({
+          evento: 'quick_switch_invalid_target',
+          email: targetEmail,
+          ip
         });
-      }
-
-      const currentSession = extractSessionFromReq(req);
-      const isAllowedDemo =
-        DEMO_EMAILS.has(targetEmail) ||
-        Boolean(currentSession && currentSession.isAdmin);
-
-      if (!isAllowedDemo) {
         return sendJson(res, 403, {
           ok: false,
-          error: 'Troca rapida permitida apenas para perfis de demonstracao ou administrador.'
+          error: 'Troca rapida restrita aos perfis de demonstracao.'
         });
       }
 
-      const user = await getUserByEmail(targetEmail);
+      const actor = await resolveSessionActor(req);
+      const allowedToSwitch = Boolean(
+        !isProductionEnv() || actor.isOriginAdmin === true
+      );
+
+      if (!allowedToSwitch) {
+        await logSecurityEvent({
+          evento: 'quick_switch_blocked_prod',
+          email: targetEmail,
+          ip
+        });
+        return sendJson(res, 403, {
+          ok: false,
+          error: 'Modo de demonstracao desativado em producao.'
+        });
+      }
+
+      const user = await getUserByEmail(targetEmail, { allowDemo: true });
       if (!user) {
         return sendJson(res, 404, {
           ok: false,
@@ -182,103 +252,132 @@ module.exports = async function handler(req, res) {
       const dripConfig = await getDripConfig();
       const access = computeAccessStatus(user, dripConfig);
       const sanitizedUser = sanitizeUserForClient(user, dripConfig);
-      const token = signSession({
+      const sessionPayload = {
         email: user.email,
         nome: user.nome,
-        isAdmin: Boolean(user.isAdmin)
-      });
+        isAdmin: false
+      };
+      if (actor.isOriginAdmin && actor.adminOriginEmail) {
+        sessionPayload.adminOriginEmail = actor.adminOriginEmail;
+      }
 
-      setSessionCookie(res, token);
+      const token = signSession(sessionPayload);
+      setSessionCookie(res, token, undefined, req);
 
-      const responsePayload = {
+      return sendJson(res, 200, {
         ok: true,
         authenticated: true,
-        token,
+        canSimulateDemo: true,
         user: sanitizedUser,
         daysSincePurchase: access.daysSincePurchase,
         access,
         dripConfig,
         checkoutUrls: getCheckoutUrls(user.email)
-      };
-
-      if (user.isAdmin) {
-        const allUsers = await listAllUsers();
-        responsePayload.adminData = {
-          users: allUsers.map((u) => sanitizeUserForClient(u, dripConfig)),
-          webhookLogs: await getWebhookLogs(40),
-          dripConfig
-        };
-      }
-
-      return sendJson(res, 200, responsePayload);
+      });
     }
 
     // action === 'login'
-    const rl = checkRateLimit(ip, 'auth_login', 25, 60000);
-    if (!rl.allowed) {
-      return sendJson(res, 429, {
-        ok: false,
-        error: `Muitas tentativas de login. Aguarde ${rl.retryAfterSec} segundos e tente novamente.`
-      });
-    }
-
     const email = String(body.email || '')
       .trim()
-      .toLowerCase();
-    const password = String(body.password || body.senha || '').trim();
+      .toLowerCase()
+      .slice(0, 180);
+    const password = String(body.password || body.senha || '')
+      .trim()
+      .slice(0, 200);
 
-    if (!email || !email.includes('@')) {
-      return sendJson(res, 400, {
+    const rlIp = checkRateLimit(ip, 'auth_login_ip', 8, 600000);
+    const rlAcct = email
+      ? checkRateLimit(`${ip}:${email}`, 'auth_login_acct', 6, 600000)
+      : { allowed: true, retryAfterSec: 0 };
+
+    if (!rlIp.allowed || !rlAcct.allowed) {
+      const waitSec = Math.max(rlIp.retryAfterSec || 0, rlAcct.retryAfterSec || 0);
+      await logSecurityEvent({
+        evento: 'login_rate_limited',
+        email,
+        ip,
+        detalhe: { waitSec }
+      });
+      return sendJson(res, 429, {
         ok: false,
-        error: 'Digite um e-mail valido utilizado na sua compra.'
+        error: `Muitas tentativas de login. Aguarde ${waitSec} segundos e tente novamente.`
       });
     }
 
-    if (!password) {
+    if (!email || !email.includes('@') || !password) {
       return sendJson(res, 400, {
         ok: false,
-        error: 'Digite a senha de acesso (senha padrao: rural123).'
+        error: 'Informe seu e-mail de compra e sua senha de acesso.'
       });
     }
 
-    const user = await getUserByEmail(email);
+    const user = await getUserByEmail(email, { allowDemo: !isProductionEnv() });
     if (!user) {
+      verifyPassword(password, DUMMY_SCRYPT_HASH);
+      await logSecurityEvent({
+        evento: 'login_failed_unknown_email',
+        email,
+        ip
+      });
       return sendJson(res, 401, {
         ok: false,
-        error:
-          'Este e-mail nao possui uma compra ativa registrada. Use o mesmo e-mail utilizado no checkout.'
+        error: GENERIC_LOGIN_ERROR
+      });
+    }
+
+    const passwordValid = checkStudentPassword(password, user);
+    if (!passwordValid) {
+      await logSecurityEvent({
+        evento: 'login_failed_bad_password',
+        email,
+        ip,
+        detalhe: { isAdminTarget: Boolean(user.isAdmin) }
+      });
+      return sendJson(res, 401, {
+        ok: false,
+        error: GENERIC_LOGIN_ERROR
       });
     }
 
     if (user.status !== 'ativo') {
+      await logSecurityEvent({
+        evento: 'login_blocked_inactive_user',
+        email,
+        ip,
+        detalhe: { status: user.status }
+      });
       return sendJson(res, 403, {
         ok: false,
         error: 'O acesso deste e-mail encontra-se suspenso ou reembolsado.'
       });
     }
 
-    if (!checkStudentPassword(password, user)) {
-      return sendJson(res, 401, {
+    let token;
+    try {
+      token = signSession({
+        email: user.email,
+        nome: user.nome,
+        isAdmin: Boolean(user.isAdmin),
+        ...(user.isAdmin ? { adminOriginEmail: user.email } : {})
+      });
+    } catch (err) {
+      console.error('[auth_sign_error]', err);
+      return sendJson(res, 500, {
         ok: false,
-        error: 'Senha incorreta. Utilize a senha padrao rural123 enviada na confirmacao.'
+        error: 'Erro interno ao iniciar sessao.'
       });
     }
 
     const dripConfig = await getDripConfig();
     const access = computeAccessStatus(user, dripConfig);
     const sanitizedUser = sanitizeUserForClient(user, dripConfig);
-    const token = signSession({
-      email: user.email,
-      nome: user.nome,
-      isAdmin: Boolean(user.isAdmin)
-    });
 
-    setSessionCookie(res, token);
+    setSessionCookie(res, token, undefined, req);
 
     const responsePayload = {
       ok: true,
       authenticated: true,
-      token,
+      canSimulateDemo: Boolean(!isProductionEnv() || user.isAdmin),
       user: sanitizedUser,
       daysSincePurchase: access.daysSincePurchase,
       access,
@@ -286,7 +385,7 @@ module.exports = async function handler(req, res) {
       checkoutUrls: getCheckoutUrls(user.email)
     };
 
-    if (user.isAdmin) {
+    if (user.isAdmin === true) {
       const allUsers = await listAllUsers();
       responsePayload.adminData = {
         users: allUsers.map((u) => sanitizeUserForClient(u, dripConfig)),
@@ -300,42 +399,53 @@ module.exports = async function handler(req, res) {
 
   // PUT /api/auth -> toggle_lesson, admin_save_user, admin_save_drip
   if (req.method === 'PUT') {
-    let body = {};
-    try {
-      body = await parseRequestBody(req);
-    } catch (err) {
-      return sendJson(res, 400, {
+    const rlPut = checkRateLimit(ip, 'auth_put', 30, 60000);
+    if (!rlPut.allowed) {
+      return sendJson(res, 429, {
         ok: false,
-        error: err.message || 'Requisicao invalida.'
+        error: 'Muitas operacoes seguidas. Aguarde alguns instantes.'
       });
     }
 
-    const session = extractSessionFromReq(req);
+    let body = {};
+    try {
+      body = await parseRequestBody(req, 32768);
+    } catch (_err) {
+      return sendJson(res, 400, {
+        ok: false,
+        error: 'Requisicao invalida.'
+      });
+    }
+
+    const actor = await resolveSessionActor(req);
+    if (!actor.user) {
+      await logSecurityEvent({
+        evento: 'unauthenticated_put_auth',
+        ip,
+        detalhe: { action: String(body.action || '').slice(0, 40) }
+      });
+      return sendJson(res, 401, {
+        ok: false,
+        error: 'Sessao nao autenticada. Faca login novamente.'
+      });
+    }
+
     const action = String(body.action || '').toLowerCase();
 
     if (action === 'toggle_lesson') {
-      const targetEmail =
-        (session && session.email) ||
-        String(body.email || '')
-          .trim()
-          .toLowerCase();
       const lessonId = String(body.lessonId || '').trim();
-
-      if (!targetEmail || !lessonId) {
+      if (
+        !lessonId ||
+        lessonId.length > 64 ||
+        !/^[a-zA-Z0-9_:-]+$/.test(lessonId)
+      ) {
         return sendJson(res, 400, {
           ok: false,
-          error: 'Sessao e lessonId sao obrigatorios para salvar progresso.'
+          error: 'Identificador de aula invalido.'
         });
       }
 
-      const user = await getUserByEmail(targetEmail);
-      if (!user) {
-        return sendJson(res, 404, {
-          ok: false,
-          error: 'Aluno nao encontrado.'
-        });
-      }
-
+      const user = actor.user;
       const currentProgress = Array.isArray(user.progresso_aulas)
         ? [...user.progresso_aulas]
         : [];
@@ -344,6 +454,12 @@ module.exports = async function handler(req, res) {
       if (existsIdx >= 0) {
         currentProgress.splice(existsIdx, 1);
       } else {
+        if (currentProgress.length >= 300) {
+          return sendJson(res, 400, {
+            ok: false,
+            error: 'Limite maximo de registros de progresso atingido.'
+          });
+        }
         currentProgress.push(lessonId);
       }
 
@@ -360,10 +476,26 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    if (action === 'admin_save_user' || action === 'admin_save_drip') {
+      if (actor.user.isAdmin !== true) {
+        await logSecurityEvent({
+          evento: 'unauthorized_admin_action',
+          email: actor.user.email,
+          ip,
+          detalhe: { action }
+        });
+        return sendJson(res, 403, {
+          ok: false,
+          error: 'Acesso restrito ao administrador.'
+        });
+      }
+    }
+
     if (action === 'admin_save_user') {
       const targetEmail = String(body.email || '')
         .trim()
-        .toLowerCase();
+        .toLowerCase()
+        .slice(0, 180);
       if (!targetEmail || !targetEmail.includes('@')) {
         return sendJson(res, 400, {
           ok: false,
@@ -371,10 +503,21 @@ module.exports = async function handler(req, res) {
         });
       }
 
+      const allowedStatuses = new Set(['ativo', 'reembolsado', 'bloqueado']);
+      const safeStatus = allowedStatuses.has(String(body.status || '').toLowerCase())
+        ? String(body.status).toLowerCase()
+        : 'ativo';
+
       const updatedUser = await updateUserAccess(targetEmail, {
-        nome: body.nome,
-        telefone: body.telefone,
-        status: body.status || 'ativo',
+        nome:
+          body.nome !== undefined
+            ? String(body.nome).trim().slice(0, 120)
+            : undefined,
+        telefone:
+          body.telefone !== undefined
+            ? String(body.telefone).trim().slice(0, 40)
+            : undefined,
+        status: safeStatus,
         acesso_principal: body.acesso_principal,
         acesso_ob1_profissional: body.acesso_ob1_profissional,
         acesso_ob2_modelos: body.acesso_ob2_modelos,
@@ -383,6 +526,13 @@ module.exports = async function handler(req, res) {
         acesso_ia_consultor: body.acesso_ia_consultor,
         liberar_trava_7dias_manual: body.liberar_trava_7dias_manual,
         daysAgo: body.daysAgo
+      });
+
+      await logSecurityEvent({
+        evento: 'admin_save_user',
+        email: actor.user.email,
+        ip,
+        detalhe: { targetEmail, status: safeStatus }
       });
 
       const dripConfig = await getDripConfig();
@@ -397,18 +547,36 @@ module.exports = async function handler(req, res) {
     }
 
     if (action === 'admin_save_drip') {
-      const moduloId = String(body.moduloId || body.modulo_id || '').trim();
-      if (!moduloId) {
+      const moduloId = String(body.moduloId || body.modulo_id || '')
+        .trim()
+        .slice(0, 40);
+      if (!moduloId || !/^[a-zA-Z0-9_-]+$/.test(moduloId)) {
         return sendJson(res, 400, {
           ok: false,
-          error: 'Informe o moduloId para atualizar a configuracao.'
+          error: 'Informe um moduloId valido para atualizar a configuracao.'
         });
       }
 
       const updatedDrip = await updateDripConfig(moduloId, {
-        dias_para_liberar: body.dias_para_liberar,
-        codigo_video: body.codigo_video,
-        titulo: body.titulo
+        dias_para_liberar: Math.min(
+          365,
+          Math.max(0, Number(body.dias_para_liberar) || 0)
+        ),
+        codigo_video:
+          body.codigo_video !== undefined
+            ? String(body.codigo_video).trim().slice(0, 200)
+            : undefined,
+        titulo:
+          body.titulo !== undefined
+            ? String(body.titulo).trim().slice(0, 160)
+            : undefined
+      });
+
+      await logSecurityEvent({
+        evento: 'admin_save_drip',
+        email: actor.user.email,
+        ip,
+        detalhe: { moduloId }
       });
 
       return sendJson(res, 200, {

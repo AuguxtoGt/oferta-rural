@@ -1,9 +1,7 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
 const {
+  isProductionEnv,
   extractSessionFromReq,
   getClientIp,
   checkRateLimit,
@@ -20,15 +18,10 @@ const {
 
 let bundledCoursesDb = null;
 try {
-  bundledCoursesDb = require('../membros/data/courses-db.js');
+  bundledCoursesDb = require('./_lib/courses-db.js');
 } catch (_e) {
   bundledCoursesDb = null;
 }
-
-const COURSES_DB_PATH = path.resolve(
-  __dirname,
-  '../membros/data/courses-db.js'
-);
 
 const DEFAULT_TRACKS = [
   {
@@ -75,9 +68,6 @@ const DEFAULT_TRACKS = [
   }
 ];
 
-let cachedCoursesDb = null;
-let cachedMtimeMs = 0;
-
 function buildFallbackCatalog() {
   const modules = INITIAL_DRIP_MODULES.map((m, idx) => ({
     id: m.modulo_id,
@@ -107,97 +97,28 @@ function buildFallbackCatalog() {
 }
 
 function loadCoursesDatabase() {
-  try {
-    if (!fs.existsSync(COURSES_DB_PATH)) {
-      if (bundledCoursesDb && Array.isArray(bundledCoursesDb.modules)) {
-        return {
-          tracks: Array.isArray(bundledCoursesDb.tracks) ? bundledCoursesDb.tracks : DEFAULT_TRACKS,
-          modules: bundledCoursesDb.modules
-        };
-      }
-      return buildFallbackCatalog();
-    }
-
-    const stat = fs.statSync(COURSES_DB_PATH);
-    if (cachedCoursesDb && stat.mtimeMs === cachedMtimeMs) {
-      return cachedCoursesDb;
-    }
-
-    const rawCode = fs.readFileSync(COURSES_DB_PATH, 'utf8');
-    const sandbox = {
-      window: {},
-      self: {},
-      global: {},
-      globalThis: {},
-      module: { exports: {} },
-      exports: {},
-      console
+  if (bundledCoursesDb && Array.isArray(bundledCoursesDb.modules)) {
+    return {
+      tracks: Array.isArray(bundledCoursesDb.tracks)
+        ? bundledCoursesDb.tracks
+        : DEFAULT_TRACKS,
+      modules: bundledCoursesDb.modules
     };
-
-    const transformedCode =
-      rawCode
-        .replace(/^\s*export\s+default\s+/gm, 'module.exports = ')
-        .replace(/^\s*export\s+const\s+/gm, 'const ') +
-      '\n;if (typeof COURSES_DB !== "undefined") { window.COURSES_DB = COURSES_DB; }' +
-      '\n;if (typeof MODULES_DB !== "undefined") { window.MODULES_DB = MODULES_DB; }';
-
-    vm.createContext(sandbox);
-    vm.runInContext(transformedCode, sandbox, { timeout: 3000 });
-
-    const extracted =
-      (sandbox.module &&
-        sandbox.module.exports &&
-        Object.keys(sandbox.module.exports).length > 0 &&
-        sandbox.module.exports) ||
-      sandbox.window.COURSES_DB ||
-      sandbox.window.MODULES_DB ||
-      sandbox.globalThis.COURSES_DB ||
-      null;
-
-    if (!extracted) {
-      return buildFallbackCatalog();
-    }
-
-    let tracks = DEFAULT_TRACKS;
-    let rawModules = [];
-
-    if (Array.isArray(extracted)) {
-      rawModules = extracted;
-    } else if (typeof extracted === 'object') {
-      if (Array.isArray(extracted.tracks)) tracks = extracted.tracks;
-      else if (Array.isArray(extracted.trilhas)) tracks = extracted.trilhas;
-
-      if (Array.isArray(extracted.modules)) rawModules = extracted.modules;
-      else if (Array.isArray(extracted.modulos)) rawModules = extracted.modulos;
-      else if (Array.isArray(extracted.courses)) rawModules = extracted.courses;
-      else if (Array.isArray(extracted.tracks)) {
-        // Caso os modulos estejam aninhados dentro de cada track
-        const nested = [];
-        for (const t of extracted.tracks) {
-          if (Array.isArray(t.modules)) {
-            for (const m of t.modules) {
-              nested.push({ ...m, trilha: m.trilha || m.track || t.id });
-            }
-          }
-        }
-        if (nested.length > 0) rawModules = nested;
-      }
-    }
-
-    if (!rawModules || rawModules.length === 0) {
-      return buildFallbackCatalog();
-    }
-
-    cachedCoursesDb = { tracks, modules: rawModules };
-    cachedMtimeMs = stat.mtimeMs;
-    return cachedCoursesDb;
-  } catch (_err) {
-    return buildFallbackCatalog();
   }
+  return buildFallbackCatalog();
 }
 
-function normalizeModuleWithAccess(rawMod, index, dripMap, user, daysSincePurchase, bypassDrip, checkoutUrls) {
-  const modId = rawMod.id || rawMod.modulo_id || `mod-${String(index + 1).padStart(2, '0')}`;
+function normalizeModuleWithAccess(
+  rawMod,
+  index,
+  dripMap,
+  user,
+  daysSincePurchase,
+  bypassDrip,
+  checkoutUrls
+) {
+  const modId =
+    rawMod.id || rawMod.modulo_id || `mod-${String(index + 1).padStart(2, '0')}`;
   const dripRow = dripMap.get(modId) || {};
 
   const trilha =
@@ -208,14 +129,15 @@ function normalizeModuleWithAccess(rawMod, index, dripMap, user, daysSincePurcha
     'principal';
 
   const accessKey =
-    rawMod.accessKey ||
-    TRACK_TO_ACCESS_KEY[trilha] ||
-    'acesso_principal';
+    rawMod.accessKey || TRACK_TO_ACCESS_KEY[trilha] || 'acesso_principal';
 
   const dripDays =
     dripRow.dias_para_liberar !== undefined
       ? Math.max(0, Number(dripRow.dias_para_liberar) || 0)
-      : Math.max(0, Number(rawMod.dripDays ?? rawMod.dias_para_liberar ?? 0) || 0);
+      : Math.max(
+          0,
+          Number(rawMod.dripDays ?? rawMod.dias_para_liberar ?? 0) || 0
+        );
 
   const videoCode =
     dripRow.codigo_video !== undefined && dripRow.codigo_video !== ''
@@ -223,7 +145,7 @@ function normalizeModuleWithAccess(rawMod, index, dripMap, user, daysSincePurcha
       : rawMod.videoCode || rawMod.codigo_video || '';
 
   const hasPurchase = Boolean(
-    user && (user.isAdmin || user[accessKey] === true)
+    user && user.status === 'ativo' && (user.isAdmin || user[accessKey] === true)
   );
 
   let unlocked = false;
@@ -256,6 +178,7 @@ function normalizeModuleWithAccess(rawMod, index, dripMap, user, daysSincePurcha
     title: rawMod.title || dripRow.titulo || rawMod.titulo || modId,
     subtitle: rawMod.subtitle || rawMod.subtitulo || '',
     description: rawMod.description || rawMod.descricao || '',
+    category: rawMod.category || '',
     coverCategory: rawMod.coverCategory || '',
     coverColor: rawMod.coverColor || '#14532d',
     coverAccent: rawMod.coverAccent || '#4ade80',
@@ -271,7 +194,8 @@ function normalizeModuleWithAccess(rawMod, index, dripMap, user, daysSincePurcha
     unlocked,
     lockReason,
     daysRemaining,
-    checkoutUrl: checkoutUrls[trilha] || checkoutUrls[accessKey] || checkoutUrls.principal,
+    checkoutUrl:
+      checkoutUrls[trilha] || checkoutUrls[accessKey] || checkoutUrls.principal,
     lessonCount: rawLessons.length,
     rawLessons
   };
@@ -300,6 +224,30 @@ function formatFullLesson(lesson, index, modId) {
   };
 }
 
+async function resolveAuthenticatedContentUser(req) {
+  const session = extractSessionFromReq(req);
+  if (!session || !session.email) return null;
+
+  let isOriginAdmin = false;
+  if (session.adminOriginEmail) {
+    const originAdmin = await getUserByEmail(session.adminOriginEmail, {
+      allowDemo: false
+    });
+    if (
+      originAdmin &&
+      originAdmin.status === 'ativo' &&
+      originAdmin.isAdmin === true
+    ) {
+      isOriginAdmin = true;
+    }
+  }
+
+  const allowDemo = !isProductionEnv() || isOriginAdmin;
+  const user = await getUserByEmail(session.email, { allowDemo });
+  if (!user || user.status !== 'ativo') return null;
+  return user;
+}
+
 module.exports = async function handler(req, res) {
   const ip = getClientIp(req);
   const rl = checkRateLimit(ip, 'content_api', 120, 60000);
@@ -321,14 +269,7 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const session = extractSessionFromReq(req);
-  const fallbackDemoEmail =
-    req.query && typeof req.query.email === 'string'
-      ? req.query.email.trim().toLowerCase()
-      : '';
-
-  const userEmail = (session && session.email) || fallbackDemoEmail;
-  const user = userEmail ? await getUserByEmail(userEmail) : null;
+  const user = await resolveAuthenticatedContentUser(req);
   const dripConfig = await getDripConfig();
   const dripMap = new Map(dripConfig.map((d) => [d.modulo_id, d]));
 
@@ -341,7 +282,11 @@ module.exports = async function handler(req, res) {
     modules: (rawCatalog.modules || []).filter((m) => {
       if (aiEnabled) return true;
       const mid = String(m.id || m.modulo_id || '');
-      return mid !== 'mod-24' && m.trilha !== 'ia' && m.accessKey !== 'acesso_ia_consultor';
+      return (
+        mid !== 'mod-24' &&
+        m.trilha !== 'ia' &&
+        m.accessKey !== 'acesso_ia_consultor'
+      );
     })
   };
 
@@ -415,9 +360,8 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  // Caso 2: Catalogo completo de trilhas e modulos (sem entregar HTML de modulos bloqueados)
-  const includeUnlockedHtml =
-    req.query && req.query.full === '1';
+  // Caso 2: Catalogo completo de trilhas e modulos (nunca entrega HTML de modulos bloqueados ou sem sessao)
+  const includeUnlockedHtml = Boolean(user && req.query && req.query.full === '1');
 
   const modulesOut = catalog.modules.map((rawMod, idx) => {
     const evaluated = normalizeModuleWithAccess(

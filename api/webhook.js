@@ -1,8 +1,8 @@
 'use strict';
 
-const crypto = require('crypto');
 const {
   loadEnv,
+  safeCompareString,
   extractSessionFromReq,
   getClientIp,
   checkRateLimit,
@@ -10,8 +10,10 @@ const {
   parseRequestBody
 } = require('./_lib/security');
 const {
+  getUserByEmail,
   upsertUserFromWebhook,
   addWebhookLog,
+  logSecurityEvent,
   getWebhookLogs,
   sanitizeUserForClient,
   getDripConfig
@@ -29,65 +31,69 @@ function normalizeText(val) {
 
 function safeCompareSecret(provided, expected) {
   if (!provided || !expected) return false;
-  try {
-    const bufA = Buffer.from(String(provided).trim(), 'utf8');
-    const bufB = Buffer.from(String(expected).trim(), 'utf8');
-    if (bufA.length !== bufB.length) return false;
-    return crypto.timingSafeEqual(bufA, bufB);
-  } catch (_e) {
-    return false;
-  }
+  return safeCompareString(String(provided).trim(), String(expected).trim());
 }
 
-function verifyWebhookAuth(req, body = {}) {
+async function verifyWebhookAuth(req, body = {}) {
   loadEnv();
-  const expectedSecret =
-    process.env.WEBHOOK_SECRET || 'whsec_rural_2026_seguro';
+  const expectedSecret = String(process.env.WEBHOOK_SECRET || '').trim();
 
-  const queryToken = req.query && (req.query.token || req.query.secret);
-  if (safeCompareSecret(queryToken, expectedSecret)) {
-    return { valid: true, method: 'query_token' };
-  }
+  if (expectedSecret) {
+    const queryToken = req.query && (req.query.token || req.query.secret);
+    if (safeCompareSecret(queryToken, expectedSecret)) {
+      return { valid: true, method: 'query_token' };
+    }
 
-  const headers = req.headers || {};
-  const headerCandidates = [
-    headers['x-webhook-token'],
-    headers['x-novark-token'],
-    headers['x-wiven-token'],
-    headers['x-kiwify-token'],
-    headers['x-hotmart-hottok'],
-    headers['x-perfectpay-token']
-  ];
+    const headers = req.headers || {};
+    const headerCandidates = [
+      headers['x-webhook-token'],
+      headers['x-novark-token'],
+      headers['x-wiven-token'],
+      headers['x-kiwify-token'],
+      headers['x-hotmart-hottok'],
+      headers['x-perfectpay-token']
+    ];
 
-  for (const h of headerCandidates) {
-    if (safeCompareSecret(h, expectedSecret)) {
-      return { valid: true, method: 'header_token' };
+    for (const h of headerCandidates) {
+      if (safeCompareSecret(h, expectedSecret)) {
+        return { valid: true, method: 'header_token' };
+      }
+    }
+
+    const authHeader = headers.authorization || headers.Authorization;
+    if (typeof authHeader === 'string') {
+      const tokenPart = authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7).trim()
+        : authHeader.trim();
+      if (safeCompareSecret(tokenPart, expectedSecret)) {
+        return { valid: true, method: 'bearer_token' };
+      }
+    }
+
+    if (
+      safeCompareSecret(
+        body.token || body.webhook_token || body.hottok,
+        expectedSecret
+      )
+    ) {
+      return { valid: true, method: 'body_token' };
     }
   }
 
-  const authHeader = headers.authorization || headers.Authorization;
-  if (typeof authHeader === 'string') {
-    const tokenPart = authHeader.startsWith('Bearer ')
-      ? authHeader.slice(7).trim()
-      : authHeader.trim();
-    if (safeCompareSecret(tokenPart, expectedSecret)) {
-      return { valid: true, method: 'bearer_token' };
-    }
-  }
-
-  if (
-    safeCompareSecret(body.token || body.webhook_token || body.hottok, expectedSecret)
-  ) {
-    return { valid: true, method: 'body_token' };
-  }
-
-  // Permite disparo de teste autenticado pelo Admin da Area de Membros
+  // Permite disparo de teste autenticado exclusivamente por sessao real de Administrador validada no banco
   const session = extractSessionFromReq(req);
-  if (session && (session.isAdmin || body.is_admin_simulation === true)) {
-    return { valid: true, method: 'admin_session' };
+  if (session && session.email) {
+    const caller = await getUserByEmail(session.email, { allowDemo: false });
+    if (caller && caller.status === 'ativo' && caller.isAdmin === true) {
+      return { valid: true, method: 'admin_session' };
+    }
   }
 
-  return { valid: false, method: null };
+  return {
+    valid: false,
+    method: null,
+    misconfigured: !expectedSecret
+  };
 }
 
 function extractSlugFromEnvUrl(urlStr) {
@@ -97,8 +103,8 @@ function extractSlugFromEnvUrl(urlStr) {
   return (parts[parts.length - 1] || '').toLowerCase().trim();
 }
 
-function detectGateway(req, body = {}) {
-  if (body.gateway) return String(body.gateway).toLowerCase();
+function detectGateway(_req, body = {}) {
+  if (body.gateway) return String(body.gateway).toLowerCase().slice(0, 40);
   const rawStr = JSON.stringify(body).toLowerCase();
   if (
     rawStr.includes('novark') ||
@@ -109,7 +115,8 @@ function detectGateway(req, body = {}) {
     rawStr.includes('483r78iu') ||
     rawStr.includes('fotl08p9') ||
     rawStr.includes('p0ptqz86') ||
-    rawStr.includes('bet5bxrw')
+    rawStr.includes('bet5bxrw') ||
+    rawStr.includes('agwfds26')
   ) {
     return 'novark';
   }
@@ -163,9 +170,9 @@ function extractCustomerInfo(body = {}) {
     '';
 
   return {
-    email: String(email || '').trim().toLowerCase(),
-    nome: String(nome || 'Aluno Consultor Rural').trim(),
-    telefone: String(telefone || '').trim()
+    email: String(email || '').trim().toLowerCase().slice(0, 180),
+    nome: String(nome || 'Aluno Consultor Rural').trim().slice(0, 120),
+    telefone: String(telefone || '').trim().slice(0, 40)
   };
 }
 
@@ -213,7 +220,7 @@ function detectWebhookEvent(body = {}) {
       return {
         eventType: norm.includes('chargeback') ? 'chargeback' : 'refunded',
         userStatus: 'reembolsado',
-        rawEvent: String(rawEvent)
+        rawEvent: String(rawEvent).slice(0, 120)
       };
     }
   }
@@ -247,14 +254,14 @@ function detectWebhookEvent(body = {}) {
     return {
       eventType: 'pending_ignored',
       userStatus: 'ignorado',
-      rawEvent: String(rawEvent)
+      rawEvent: String(rawEvent).slice(0, 120)
     };
   }
 
   return {
     eventType: 'approved',
     userStatus: 'ativo',
-    rawEvent: String(rawEvent)
+    rawEvent: String(rawEvent).slice(0, 120)
   };
 }
 
@@ -268,7 +275,6 @@ function extractProductGrants(body = {}) {
     acesso_ia_consultor: false
   };
 
-  // Coleta todos os textos e codigos de produtos, ofertas e order bumps presentes no JSON
   const descriptors = [];
   const pushVal = (v) => {
     if (!v) return;
@@ -325,7 +331,9 @@ function extractProductGrants(body = {}) {
   loadEnv();
   const slugPrincipal = extractSlugFromEnvUrl(process.env.CHECKOUT_PRINCIPAL_URL);
   const slugPrincipal37 = extractSlugFromEnvUrl(process.env.CHECKOUT_PRINCIPAL_URL_37);
-  const slugEntenda = extractSlugFromEnvUrl(process.env.CHECKOUT_ENTENDA_URL || 'https://pay.novarkbr.com/agwfds26');
+  const slugEntenda = extractSlugFromEnvUrl(
+    process.env.CHECKOUT_ENTENDA_URL || 'https://pay.novarkbr.com/agwfds26'
+  );
   const slugOb1 = extractSlugFromEnvUrl(
     process.env.CHECKOUT_OB1_URL_CONSULTOR_RURAL || process.env.CHECKOUT_OB1_URL
   );
@@ -467,7 +475,11 @@ function extractProductGrants(body = {}) {
   grants.isSubProductOnly = Boolean(matchedAnySubProduct && !matchedMainCourse);
 
   // Pacote Completo / VIP
-  if (combined.includes('pacote vip') || combined.includes('acesso total') || combined.includes('completo vip')) {
+  if (
+    combined.includes('pacote vip') ||
+    combined.includes('acesso total') ||
+    combined.includes('completo vip')
+  ) {
     grants.acesso_principal = true;
     grants.acesso_ob1_profissional = true;
     grants.acesso_ob2_modelos = true;
@@ -476,7 +488,7 @@ function extractProductGrants(body = {}) {
     grants.acesso_ia_consultor = true;
   }
 
-  // Flags explicitas enviadas em body.grants (ex.: simulador Admin ou integracao direta)
+  // Flags explicitas enviadas em body.grants (somente quando autenticado via token/admin)
   if (body.grants && typeof body.grants === 'object') {
     const g = body.grants;
     if (g.acesso_principal !== undefined)
@@ -515,28 +527,23 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method === 'GET') {
-    const authCheck = verifyWebhookAuth(req, {});
-    const includeLogs = req.query && req.query.logs === '1' && authCheck.valid;
+    const authCheck = await verifyWebhookAuth(req, {});
+    if (!authCheck.valid) {
+      return sendJson(res, 200, {
+        ok: true,
+        service: 'Regularize Rural - Webhook Receiver',
+        status: 'online'
+      });
+    }
+
+    const includeLogs = req.query && req.query.logs === '1';
     const logs = includeLogs ? await getWebhookLogs(30) : undefined;
 
     return sendJson(res, 200, {
       ok: true,
-      service: 'Regularize Rural - Webhook Receiver (Novark / Wiven / Gateways)',
+      service: 'Regularize Rural - Webhook Receiver',
       status: 'online',
-      defaultStudentPassword: process.env.DEFAULT_STUDENT_PASSWORD || 'rural123',
-      instructions: {
-        endpoint: '/api/webhook?token=SEU_WEBHOOK_SECRET',
-        method: 'POST',
-        supportedGateways: ['Novark', 'Wiven', 'Kiwify', 'Hotmart', 'PerfectPay'],
-        mappedCheckouts: {
-          principal: ['jxiib47t', 'kg1a7jgt', '0RSKIQY', 'agwfds26'],
-          ob1_consultor_profissional: ['t61jpbxl'],
-          ob2_modelos_prontos: ['ty2kxpf2'],
-          ob3_guia_20_servicos: ['483r78iu'],
-          combo_3_order_bumps: ['fotl08p9'],
-          upsell_negocio_rural: ['p0ptqz86', 'bet5bxrw']
-        }
-      },
+      authenticated: true,
       logs
     });
   }
@@ -550,20 +557,30 @@ module.exports = async function handler(req, res) {
 
   let body = {};
   try {
-    body = await parseRequestBody(req);
-  } catch (err) {
+    body = await parseRequestBody(req, 102400);
+  } catch (_err) {
     return sendJson(res, 400, {
       ok: false,
-      error: err.message || 'Corpo da requisicao invalido.'
+      error: 'Corpo da requisicao invalido.'
     });
   }
 
-  const authCheck = verifyWebhookAuth(req, body);
+  const authCheck = await verifyWebhookAuth(req, body);
   if (!authCheck.valid) {
+    if (authCheck.misconfigured) {
+      console.error('[webhook_config_error] WEBHOOK_SECRET ausente no ambiente.');
+      return sendJson(res, 500, {
+        ok: false,
+        error: 'Configuracao de seguranca do webhook ausente no servidor.'
+      });
+    }
+    await logSecurityEvent({
+      evento: 'webhook_invalid_token',
+      ip
+    });
     return sendJson(res, 401, {
       ok: false,
-      error:
-        'Token de seguranca do Webhook invalido ou ausente. Informe ?token=... na URL ou o header x-webhook-token.'
+      error: 'Token de seguranca do Webhook invalido ou ausente.'
     });
   }
 
@@ -626,19 +643,19 @@ module.exports = async function handler(req, res) {
       ok: true,
       message:
         eventInfo.userStatus === 'ativo'
-          ? `Acesso liberado com sucesso para ${customer.email} com a senha padrao ${process.env.DEFAULT_STUDENT_PASSWORD || 'rural123'}.`
+          ? `Acesso liberado com sucesso para ${customer.email}.`
           : `Acesso suspenso/reembolsado para ${customer.email}.`,
       gateway,
       event: eventInfo.eventType,
-      defaultPassword: process.env.DEFAULT_STUDENT_PASSWORD || 'rural123',
       unlockedProducts: unlockedList,
       user: sanitizeUserForClient(userRecord, dripConfig),
       logId: logEntry.id
     });
   } catch (err) {
+    console.error('[webhook_processing_error]', err);
     return sendJson(res, 500, {
       ok: false,
-      error: err.message || 'Erro interno ao processar webhook.'
+      error: 'Erro interno ao processar webhook.'
     });
   }
 };
