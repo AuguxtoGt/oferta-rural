@@ -14,6 +14,7 @@
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="apple-touch-icon" href="/favicon.svg" />
+  <link rel="preload" as="image" href="/v2/vsl-poster.webp" fetchpriority="high" />
   <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#ffffff;--bg2:#f9fafb;--bg3:#f3f4f6;--red:#166534;--red2:#16a34a;--white:#ffffff;--gray:#4b5563;--gray2:#e5e7eb;--green:#22c55e;--gold:#f5a623}
@@ -161,11 +162,19 @@ details[open] summary::after{transform:rotate(45deg)}
 .footer-links{margin-bottom:12px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
 .footer-warning{margin-top:12px;color:#555;font-size:.72rem}
 
-/* AUDIO PLAYER */
-.audio-widget{max-width:480px;margin:28px auto 0;background:#f0fdf4;border:1px solid rgba(22,101,52,.2);border-radius:14px;padding:14px 16px;text-align:left;position:relative;z-index:1001}
-.audio-widget-label{font-size:.78rem;font-weight:700;color:#166534;display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.audio-widget-label svg{flex-shrink:0}
-.audio-widget-sub{font-size:.72rem;color:var(--gray);margin-bottom:12px}
+/* VSL 9:16 PLAYER */
+.vsl-wrap{max-width:336px;width:100%;aspect-ratio:9/16;margin:20px auto 0;border-radius:18px;overflow:hidden;position:relative;background:#0a1a0d;box-shadow:0 20px 52px rgba(22,101,52,.22),0 4px 16px rgba(0,0,0,.12);border:2px solid rgba(22,101,52,.22);cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.vsl-wrap video{width:100%;height:100%;object-fit:cover;display:block}
+.vsl-unmute{position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);background:rgba(10,26,13,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:2px solid #22c55e;border-radius:14px;padding:11px 16px;color:#fff;text-align:center;width:82%;max-width:248px;box-shadow:0 12px 32px rgba(0,0,0,.45);animation:vslPulse 1.8s ease-in-out infinite;pointer-events:none;transition:opacity .22s ease}
+.vsl-unmute.hidden{opacity:0;visibility:hidden;animation:none}
+.vsl-unmute-icon{width:36px;height:36px;border-radius:50%;background:#16a34a;display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+.vsl-unmute-title{font-size:.82rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;line-height:1.2;margin-bottom:3px}
+.vsl-unmute-sub{font-size:.76rem;color:#bbf7d0;font-weight:600;line-height:1.25}
+@keyframes vslPulse{0%,100%{transform:translate(-50%,-50%) scale(1);box-shadow:0 12px 32px rgba(0,0,0,.45),0 0 0 0 rgba(34,197,94,.45)}50%{transform:translate(-50%,-50%) scale(1.03);box-shadow:0 14px 36px rgba(0,0,0,.55),0 0 0 10px rgba(34,197,94,0)}}
+.vsl-pause-badge{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;background:rgba(10,26,13,.8);border:2px solid rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .18s ease;pointer-events:none}
+.vsl-pause-badge.visible{opacity:1;visibility:visible}
+.vsl-progress-track{position:absolute;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.22);pointer-events:none}
+.vsl-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#22c55e,#16a34a);transition:width .2s linear}
 
 
 
@@ -234,16 +243,20 @@ summary::after{position:absolute;right:18px}
   <h1>Lucre de <span>R$800 a R$2.400 por mês</span> como Consultor Rural, somente com passo a passo, <span>sem precisar de experiência</span> e em poucos dias</h1>
   <p class="sub">Todo produtor rural tem <strong style="color:#111827">CCIR, ITR e CAR</strong> para resolver, e quase ninguém sabe fazer. Aprenda uma vez, cobre de cada cliente e ganhe de novo todo ano.</p>
 
-  <!-- AUDIO WIDGET -->
-  <div class="audio-widget" id="audioWidget">
-    <div class="audio-widget-label">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-      Ouça antes de acessar o método
+  <!-- VSL 9:16 -->
+  <div class="vsl-wrap" id="vslWrap" role="button" tabindex="0" aria-label="Assistir apresentacao com som">
+    <video id="heroVsl" src="/v2/vsl-rural.mp4" poster="/v2/vsl-poster.webp" width="720" height="1280" autoplay muted loop playsinline webkit-playsinline preload="metadata"></video>
+    <div class="vsl-unmute" id="vslUnmuteBtn">
+      <div class="vsl-unmute-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      </div>
+      <div class="vsl-unmute-title">Seu vídeo já começou</div>
+      <div class="vsl-unmute-sub">Toque para ouvir com som</div>
     </div>
-    <div class="audio-widget-sub">Como funciona o Consultor Rural e por que o mercado está esperando por você.</div>
-    <audio id="heroAudio" controls autoplay preload="auto" style="width:100%;margin-top:8px;border-radius:8px;accent-color:#166534;">
-      <source src="/nova-hero.mp3" type="audio/mpeg" />
-    </audio>
+    <div class="vsl-pause-badge" id="vslPauseBadge">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="#ffffff"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+    </div>
+    <div class="vsl-progress-track"><div class="vsl-progress-bar" id="vslProgressBar"></div></div>
   </div>
   <div class="hero-hint">Veja quem já está faturando<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="4" x2="12" y2="20"/><polyline points="5 13 12 20 19 13"/></svg></div>
 </section>
@@ -714,18 +727,52 @@ carousel.addEventListener('scroll',()=>{
 });
 startAuto();
 
-// AUDIO: tenta autoplay; se o navegador bloquear, toca no primeiro toque/rolagem
+// VSL 9:16: inicia muda como previa viva; no primeiro toque reinicia do 0:00 com som
 (function(){
-  var a=document.getElementById('heroAudio');
-  if(!a)return;
-  a.defaultPlaybackRate=1.2;a.playbackRate=1.2;
-  ['loadedmetadata','play'].forEach(function(e){a.addEventListener(e,function(){a.playbackRate=1.2;});});
-  var p=a.play();
-  function start(){a.play().then(rm).catch(function(){});}
-  function rm(){['click','touchstart','scroll','keydown'].forEach(function(e){window.removeEventListener(e,start,true);});}
-  if(p&&p.catch){p.then(rm).catch(function(){
-    ['click','touchstart','scroll','keydown'].forEach(function(e){window.addEventListener(e,start,{capture:true,passive:true});});
-  });}
+  var wrap=document.getElementById('vslWrap');
+  var vid=document.getElementById('heroVsl');
+  var unmute=document.getElementById('vslUnmuteBtn');
+  var pauseBadge=document.getElementById('vslPauseBadge');
+  var bar=document.getElementById('vslProgressBar');
+  if(!wrap||!vid)return;
+  var hasUnmuted=false;
+  var p=vid.play();
+  if(p&&p.catch){p.catch(function(){});}
+
+  function handleActivate(){
+    if(!hasUnmuted){
+      hasUnmuted=true;
+      vid.loop=false;
+      vid.muted=false;
+      vid.volume=1;
+      try{vid.currentTime=0;}catch(_e){}
+      unmute.classList.add('hidden');
+      pauseBadge.classList.remove('visible');
+      var sp=vid.play();
+      if(sp&&sp.catch){sp.catch(function(){});}
+      return;
+    }
+    if(vid.paused||vid.ended){
+      if(vid.ended){try{vid.currentTime=0;}catch(_e){}}
+      vid.play();
+      pauseBadge.classList.remove('visible');
+    }else{
+      vid.pause();
+      pauseBadge.classList.add('visible');
+    }
+  }
+
+  wrap.addEventListener('click',handleActivate);
+  wrap.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();handleActivate();}});
+  vid.addEventListener('timeupdate',function(){
+    if(!hasUnmuted||!vid.duration)return;
+    var pct=Math.min(100,(vid.currentTime/vid.duration)*100);
+    bar.style.width=pct.toFixed(1)+'%';
+  });
+  vid.addEventListener('ended',function(){
+    bar.style.width='100%';
+    pauseBadge.classList.add('visible');
+  });
 })();
 
 // FAQ fecha os outros ao abrir um

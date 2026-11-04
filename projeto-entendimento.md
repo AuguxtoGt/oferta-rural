@@ -70,7 +70,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | Rota / Página | Arquivo | Oferta e Layout | Áudio | Ticket | Checkout Novark | Rastreamento |
 |---|---|---|---|---|---|---|
 | `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
-| `/v2` | `v2/index.html` | Variante Área de Membros + VSL | `nova-hero.mp3` (aguardando MP4) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) |
+| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) |
 | `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) |
 | `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
 | `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) |
