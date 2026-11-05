@@ -437,13 +437,15 @@ function extractProductGrants(body = {}) {
     grants.acesso_ob3_20servicos = true;
   }
 
-  // Upsell: Negocio Rural do Zero / Negocio de Sucesso / Acelerador (p0ptqz86 / bet5bxrw)
+  // Upsell: Negocio Rural do Zero / Negocio de Sucesso / Primeiros Clientes / Acelerador (p0ptqz86 / bet5bxrw)
   if (
     (slugUpsell && combined.includes(slugUpsell)) ||
     combined.includes('p0ptqz86') ||
     combined.includes('bet5bxrw') ||
     combined.includes('negocio rural') ||
     combined.includes('negocio de sucesso') ||
+    combined.includes('primeiros clientes') ||
+    combined.includes('linha de credito rural') ||
     combined.includes('upsell') ||
     combined.includes('acelerador')
   ) {
