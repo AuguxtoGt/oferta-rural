@@ -1,7 +1,7 @@
 # 📊 Projeto Entendimento — Oferta 13 (Imóvel Rural em Dia)
 
 > Documento de referência rápida para entender o projeto, a oferta e a estrutura.
-> Atualizado em: 2026-11-05
+> Atualizado em: 2026-11-06
 
 ---
 
@@ -74,7 +74,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) |
 | `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
 | `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) |
-| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4 e 5, sem Utmify) |
+| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4, Rural 5 e Rural Dolar, sem Utmify) |
 | `/entenda` | `entenda.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) |
 | Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Gateway Novark direto |
 | Upsell 2 | `upsell2.html` | Negócio Rural do Zero | - | *A definir* | *Sem checkout* | Sem pixel |
@@ -103,7 +103,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | `w.html` | `/w` | **Duplicação da página principal nova (`index.html`) com checkout Wiven**: mantém layout novo, áudio `nova-hero.mp3`, ticket **R$ 27,90** e Pixel Utmify/UTMs. Checkout Wiven (`https://checkout.wiven.com.br/checkout/cmvtzzy2y07e701q3pwyg0mj3?offer=0RSKIQY`) |
 | `an.html` | `/an` | **Versão com layout antigo (do Dave) no ticket de R$ 27,90**: áudio `vdave.mp3`, copy anterior, mockup clássico, checkout Novark `jxiib47t`. Pixel Utmify e UTMs |
 | `consultor.html` | `/consultor` | **Versão com layout antigo (do Dave) no ticket de R$ 37,90**: áudio `vdave.mp3`, copy anterior, mockup clássico, checkout Novark `kg1a7jgt`. Pixel Utmify e UTMs |
-| `2.html` | `/2` | **Versão com layout antigo (do Dave) isolada para teste de Meta Pixel nativo**: áudio `vdave.mp3`, copy anterior, ticket **R$ 37,90**, checkout Novark `kg1a7jgt`. **Sem Utmify**, com 2 Meta Pixels nativos (`2794376007657993` e `1088370370664674`) e `InitiateCheckout` nativo no botão |
+| `2.html` | `/2` | **Versão com layout antigo (do Dave) isolada para teste de Meta Pixel nativo**: áudio `vdave.mp3`, copy anterior, ticket **R$ 37,90**, checkout Novark `kg1a7jgt`. **Sem Utmify**, com 3 Meta Pixels nativos (`2794376007657993`, `1088370370664674` e `1495289149453037`) e `InitiateCheckout` nativo no botão |
 | `entenda.html` / `entenda-sem-se-perder.html` | `/entenda` | **Oferta "Entenda sem se perder"**: foco direto no dono da terra que quer regularizar seus próprios documentos (sem promessa de renda como consultor). Áudio `audio-pagina-entendasemseperder.mp3`, carrossel de 8 depoimentos de donos de terra, ticket **R$ 27,90**, checkout Novark `agwfds26`. Pixel Utmify e UTMs |
 | `upsell.html` | Oferta especial pós-compra |
 | `upclientes.html` | Upsell do kit para conseguir clientes |
@@ -171,9 +171,9 @@ A pedido do usuario (03/11/2026), o **Consultor Rural IA 24h** (chat tira-duvida
 
 ### Página `/2` (`2.html`)
 - **Sem Utmify e sem UTMs.** As vendas dessa página chegam sem atribuição de campanha.
-- **Meta Pixel nativo (ativo):** um único código base com 2 pixels, **RURAL 4** (`2794376007657993`) e **RURAL 5** (`1088370370664674`), e um só `fbq('track','PageView')` (evita PageView duplicado), mais os `noscript` dos dois.
-- **IC:** `onclick="fbq('track','InitiateCheckout');"` no botão `#btn-checkout`, que vale para os 2 pixels. Na Novark, a opção **"Disparar InitiateCheckout na abertura"** deve ficar **desligada**, para não contar o IC em dobro.
-- **Compra:** os dois pixels (RURAL 5 `1088370370664674` e RURAL 4 `2794376007657993`) estão cadastrados na Novark, que envia a compra para ambos. Em cada um, a opção "Disparar InitiateCheckout na abertura" deve ficar desligada.
+- **Meta Pixel nativo (ativo):** um único código base com 3 pixels, **RURAL 4** (`2794376007657993`), **RURAL 5** (`1088370370664674`) e **RURAL DOLAR** (`1495289149453037`), e um só `fbq('track','PageView')` (evita PageView duplicado), mais os `noscript` dos três.
+- **IC:** `onclick="fbq('track','InitiateCheckout');"` no botão `#btn-checkout`, que vale para os 3 pixels. Na Novark, a opção **"Disparar InitiateCheckout na abertura"** deve ficar **desligada**, para não contar o IC em dobro.
+- **Compra:** os pixels (`1088370370664674`, `2794376007657993` e `1495289149453037`) devem estar cadastrados na Novark no produto `kg1a7jgt` com "Disparar InitiateCheckout na abertura" desligado para enviar a compra de volta para todos.
 
 ### Desativados / removidos
 - Pixels 1, 2 e 3 (Dólar) separados da Utmify: removidos (substituídos pelo pixel único).
@@ -269,6 +269,7 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 06/11/2026 | **Adição do 3º Meta Pixel nativo (`1495289149453037`) na página `/2` (`2.html`):** Incluído `fbq('init', '1495289149453037')` e respectivo `<noscript>` junto aos pixels `2794376007657993` e `1088370370664674`, mantendo disparo único de `PageView` e `InitiateCheckout` no botão `#btn-checkout`, além de OpenGraph próprio para `/2` e limpeza de travessão/emoji residuais. |
 | 05/11/2026 | **Importação Histórica de 903 Compradores Rurais no Supabase (`alunos_membros` = 908 registros):** Processado o relatório completo da Novark (`vendas_2026-11-05.csv`, 944 linhas: 931 vendas rurais pagas desde 23/09/2026 e 13 vendas de outros nichos excluídas). Inseridos **853 alunos antigos faltantes** com senha padrão `rural123` (`scrypt` individual) e atualizados os **50 já existentes** sem sobrescrever senhas nem progresso, mapeando pelo produto e valor exato quem comprou `OB1` (236), `OB2` (249), `OB3` (250), `Upsell / Primeiros Clientes` (12) e `Entenda / proprietario` (20), além da `data_primeira_compra` real (772 alunos já com mais de 7 dias destravados na hora). Adicionado também reconhecimento automático de `Primeiros Clientes` e `Linha de Crédito Rural` no `api/webhook.js`. |
 | 04/11/2026 | **Lote de 5 Criativos da Plataforma / Área de Membros (`257.jpg` a `261.jpg`) + VSL 9:16 na `/v2`:** Comprimida a VSL vertical em `v2/vsl-rural.mp4` (9,7 MB H.264 `yuv420p` + poster `vsl-poster.webp`) com player customizado na `/v2` publicada em produção. Gerados e auditados individualmente 5 novos criativos `1:1` (`1080x1080` JPEG, 100% sem preço na arte para uso tanto na `/v2` de R$ 37,90 quanto na `/` de R$ 27,90) em `criativos/imagens/`, focados exclusivamente nos módulos, ferramentas interativas e modelos copiáveis da área de membros (`257` inspirado em `insp22`, `258` em `insp3`, `259` em `insp16`, `260` em `insp12` e `261` em `insp21`; `257` regerado para remover marca na tampa do tablet). Próximo número livre atualizado para `262`. |
 | 04/11/2026 | **Teste de conversao da pagina principal (`/v2`, R$ 37,90 -> `kg1a7jgt`):** funil Utmify de 7 dias (4.453 cliques, 4.046 views, 422 ICs = 10,4% das views, 232 vendas iniciadas, 128 aprovadas; CPA R$ 32,84, ROAS 1,06) mostrou 3 degraus fracos multiplicados: view para IC (10,4%), IC para venda iniciada (55%) e iniciada para aprovada (55%). Criada a variante `v2/index.html` (URL limpa `/v2`, `noindex`, OG proprio) configurada no ticket **R$ 37,90** com checkout Novark `https://pay.novarkbr.com/kg1a7jgt` (`REGULARIZAR POR R$37,90`), botao depois dos depoimentos levando para `#oferta`, secao `O que voce recebe` e oferta reescritas para descrever a area de membros (11 modulos, 33 aulas, 3 ferramentas) e FAQ corrigido (nao e mais PDF). Microsoft Clarity instalado em `/` e `/v2` com `Project ID` pendente (placeholder `SEU_ID_CLARITY`, variavel `variante` = `controle` ou `v2`). Adicionado cache de `mp4` no `vercel.json` aguardando upload da VSL. **Atencao no Utmify:** ajustar a regra de IC de `"REGULARIZAR POR R$27,90"` para `"REGULARIZAR POR R$"` para rastrear tanto `/` (R$ 27,90) quanto `/v2` e `/consultor` (R$ 37,90). **Pendencia de coerencia:** a pagina `/` promete `Tabela Sugerida de Precos`, `Bonus 1: Modelo de Contrato para Consultores` e `Bonus 2: Contrato de Prestacao de Servico`, mas na area de membros esses itens existem apenas nos Order Bumps (mod-14 e mod-17), nao na trilha principal. |
