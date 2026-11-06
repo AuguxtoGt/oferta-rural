@@ -16,6 +16,7 @@ motion-rural/
 docs/
 .vercel
 _antigos_backup/
+_backup_antes_wexor/
 .env
 .env.*
 !.env.example
