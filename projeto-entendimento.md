@@ -69,14 +69,14 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 
 | Rota / Página | Arquivo | Oferta e Layout | Áudio | Ticket | Checkout Novark | Rastreamento |
 |---|---|---|---|---|---|---|
-| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4, Rural 5 e Rural Dolar) + Wexor.fy Pixel e UTMs (`pix-1793940018832`) |
-| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy Pixel (`pix-1793940018832`, modo blindado) |
-| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Wexor.fy Pixel e UTMs (`pix-1793940018832`) + Gateway Novark |
+| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) |
+| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) |
+| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) |
+| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4, Rural 5 e Rural Dolar, sem Utmify) |
+| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) |
+| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Gateway Novark direto |
 | Upsell 2 | `upsell2.html` | Negócio Rural do Zero | - | *A definir* | *Sem checkout* | Sem pixel (rascunho não vinculado) |
 
 - **ARPU real:** R$ 33,03 (em 08/10/2026)
@@ -169,16 +169,15 @@ A pedido do usuario (03/11/2026), o **Consultor Rural IA 24h** (chat tira-duvida
 - **Pixels da Meta vinculados na Utmify:** `1395221742238189`, `885028918027856 (Rural 2)` e `1495289149453037 (Rural Dolar)`.
 - **IC:** regra "Contém texto" com `REGULARIZAR POR R$27,90`, que deve bater **exatamente** com o texto do botão `#btn-checkout`. Se mudar o texto do botão, atualize a regra na Utmify. A classe `btn-checkout-utmfy` continua no botão, mas não é usada por essa regra.
 
-### Página `/2` (`2.html`) e Upsells (`upsell.html` / `upclientes.html`)
-- **Sem Utmify**, mas agora com **Wexor.fy Pixel + UTMs** (`pix-1793940018832`, dashboard `low-br`) ativos para persistir UTMs e decorar os links de checkout na `/2` e nos upsells.
-- **Meta Pixel nativo na `/2` (ativo):** um único código base com 3 pixels, **RURAL 4** (`2794376007657993`), **RURAL 5** (`1088370370664674`) e **RURAL DOLAR** (`1495289149453037`), e um só `fbq('track','PageView')` (evita PageView duplicado), mais os `noscript` dos três.
-- **IC na `/2`:** `onclick="fbq('track','InitiateCheckout');"` no botão `#btn-checkout`, que vale para os 3 pixels. Na Novark, a opção **"Disparar InitiateCheckout na abertura"** deve ficar **desligada**, para não contar o IC em dobro.
-- **Compra na `/2`:** os pixels (`1088370370664674`, `2794376007657993` e `1495289149453037`) devem estar cadastrados na Novark no produto `kg1a7jgt` com "Disparar InitiateCheckout na abertura" desligado para enviar a compra de volta para todos.
+### Página `/2` (`2.html`)
+- **Sem Utmify e sem UTMs.** As vendas dessa página chegam sem atribuição de campanha.
+- **Meta Pixel nativo (ativo):** um único código base com 3 pixels, **RURAL 4** (`2794376007657993`), **RURAL 5** (`1088370370664674`) e **RURAL DOLAR** (`1495289149453037`), e um só `fbq('track','PageView')` (evita PageView duplicado), mais os `noscript` dos três.
+- **IC:** `onclick="fbq('track','InitiateCheckout');"` no botão `#btn-checkout`, que vale para os 3 pixels. Na Novark, a opção **"Disparar InitiateCheckout na abertura"** deve ficar **desligada**, para não contar o IC em dobro.
+- **Compra:** os pixels (`1088370370664674`, `2794376007657993` e `1495289149453037`) devem estar cadastrados na Novark no produto `kg1a7jgt` com "Disparar InitiateCheckout na abertura" desligado para enviar a compra de volta para todos.
 
-### Coexistência Wexor.fy (`pix-1793940018832`) + Utmify (Modo Blindado, 06/11/2026)
-- **Nas 7 páginas com Utmify** (`index.html`, `v2/index.html`, `w.html`, `an.html`, `consultor.html`, `entenda.html`, `entenda-sem-se-perder.html`): entra apenas o **Pixel do Wexor.fy ajustado** (gravando `window.wexorPixelId = "pix-1793940018832"` sem tocar em `window.pixelId = "6ac42ec78067b4499c7d80ba"` da Utmify), mantendo o `utms/latest.js` da Utmify como único decorador dos links de checkout (`utm_source=FBjLj...` e `src=FBjLj...`) e compartilhando o mesmo `localStorage.lead`.
-- **Nas 3 páginas sem Utmify** (`2.html`, `upsell.html`, `upclientes.html`): entram **Pixel + UTMs do Wexor.fy**.
-- **Backup pré-Wexor pronto para reversão:** cópia integral em `_backup_antes_wexor/` (com script `_backup_antes_wexor/restaurar-antes-wexor.sh`, ignorada no Git e na Vercel) e tag Git `backup-antes-wexor` apontando para o commit `27a56d5` no GitHub.
+### Aprendizado importante para próxima instalação do Wexor.fy junto com Utmify (06/11/2026)
+- As páginas foram **restauradas para o backup pré-Wexor (`27a56d5`)**.
+- **Regra obrigatória quando reinstalarmos o Wexor.fy junto com a Utmify:** se a Utmify (ou o HTML da `/2`) já dispara os Pixels da Meta no navegador, o Wexor.fy **NÃO PODE** ter IDs de Pixel da Meta nem no `CFG.metaPixelIds` (painel do Wexor.fy) nem no `window.wexorMetaPixels` (dentro do snippet HTML). Se tiver, o Wexor.fy injeta o `fbevents.js` e dispara `fbq('init', ...)` + `fbq('track', ...)` por conta própria com outro `eventID`, gerando eventos duplicados na Meta e disparando o detector `MetaPixelDetector` da Utmify.
 
 ### Desativados / removidos
 - Pixels 1, 2 e 3 (Dólar) separados da Utmify: removidos (substituídos pelo pixel único).
