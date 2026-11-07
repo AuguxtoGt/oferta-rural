@@ -1256,7 +1256,7 @@
         const isDone = completed.has(lesson.id);
         const isActive = idx === state.currentLessonIndex;
         const shortLessonTitle = sanitizeCleanText(lesson.title)
-          .replace(/^Parte\s+\d+:\s*/i, '')
+          .replace(/^(Parte|Aula)\s+\d+:\s*/i, '')
           .replace(/\(Etapas\s+\d+\s+a\s+\d+\)/i, '')
           .trim();
 
@@ -1409,6 +1409,16 @@
    * e torna todos os .check-item e .check li interativos com persistencia em localStorage.
    */
   function enhanceWorkbookInteractivity(container, lessonId) {
+    // 0. Filtra blocos exclusivos por perfil (/membros consultor vs /proprietario dono da terra)
+    const isProp = isProprietarioMode();
+    container.querySelectorAll('[data-role-only]').forEach((el) => {
+      const role = el.getAttribute('data-role-only');
+      const hide =
+        (role === 'proprietario' && !isProp) ||
+        (role === 'consultor' && isProp);
+      el.classList.toggle('hidden', hide);
+    });
+
     // 1. Envolve tabelas soltas em .apple-table-wrap
     container.querySelectorAll('table').forEach((tbl) => {
       if (!tbl.parentElement.classList.contains('apple-table-wrap')) {
