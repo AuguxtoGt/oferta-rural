@@ -1,7 +1,7 @@
 # 📊 Projeto Entendimento — Oferta 13 (Imóvel Rural em Dia)
 
 > Documento de referência rápida para entender o projeto, a oferta e a estrutura.
-> Atualizado em: 2026-11-06
+> Atualizado em: 2026-11-07
 
 ---
 
@@ -69,14 +69,14 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 
 | Rota / Página | Arquivo | Oferta e Layout | Áudio | Ticket | Checkout Novark | Rastreamento |
 |---|---|---|---|---|---|---|
-| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
-| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) |
-| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) |
-| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) |
-| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) |
-| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4, Rural 5 e Rural Dolar, sem Utmify) |
-| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) |
-| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Gateway Novark direto |
+| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs + Clarity) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Meta Pixel Nativo (Rural 4, Rural 5 e Rural Dolar) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (Pixel 3 RURAL + UTMs) + Wexor.fy (`pix-1794022936290` + UTMs) |
+| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Wexor.fy (`pix-1794022936290` + UTMs) + Gateway Novark direto |
 | Upsell 2 | `upsell2.html` | Negócio Rural do Zero | - | *A definir* | *Sem checkout* | Sem pixel (rascunho não vinculado) |
 
 - **ARPU real:** R$ 33,03 (em 08/10/2026)
@@ -163,21 +163,20 @@ A pedido do usuario (03/11/2026), o **Consultor Rural IA 24h** (chat tira-duvida
 
 **Aprendizado:** vários scripts de pixel da Utmify na mesma página se sobrescrevem, porque todos usam o mesmo `window.pixelId`. Por isso o IC e o page view falhavam. A solução foi usar **um único pixel da Utmify** com os pixels da Meta vinculados no painel.
 
-### Página `/` (`index.html`)
-- **Utmify (ativo):** 1 script de pixel ("3 RURAL", ID `6ac42ec78067b4499c7d80ba`) e o script de UTMs (`latest.js`), no `<head>`.
-- **A `/entenda` usa o mesmo pixel e as mesmas UTMs da `/`** (commit `df38231` restaurou o head idêntico ao do `index.html`).
+### Páginas com Coexistência Utmify + Wexor.fy (`/`, `/v2`, `/w`, `/an`, `/consultor`, `/entenda`)
+- **Utmify (ativo):** 1 script de pixel ("3 RURAL", ID `6ac42ec78067b4499c7d80ba`) e o script de UTMs (`latest.js` com `data-utmify-prevent-xcod-sck` e `data-utmify-prevent-subids`) no `<head>`.
+- **Wexor.fy (ativo em coexistência blindada):** Pixel `pix-1794022936290` (dashboard `low-br`, `wexorfy.vercel.app/api/scripts/pixel.js?id=pix-1794022936290&d=low-br`, sem `wexorMetaPixels` no snippet) e UTMs `v3.1` (`utms.js` com `data-wexor-platform="novark_outra"`).
+- **Proteção contra Race Condition (`localStorage.lead` HTTP 400):** como o `pixel.js` da Utmify aguarda `lookupIps(5e3)` (200ms a 5s) antes de gravar `localStorage.lead` e o Wexor.fy gravava `{ _id }` sem `pixelId` no instante `0ms` (fazendo a API da Utmify recusar o `PageView` com `HTTP 400 lead.pixelId is a required field`), todas as 7 páginas com Utmify usam: (1) guarda pré-Utmify que limpa qualquer `localStorage.lead` incompleto sem `pixelId`, e (2) loader `utmifyReady()` que só injeta `pixel.js` e `utms.js` do Wexor.fy após `lead._id && lead.pixelId` existir (com fallback em `6,6s` caso adblocker bloqueie a Utmify). Assim os dois sistemas compartilham exatamente o mesmo `lead._id` (`jLj<id>`).
 - **Pixels da Meta vinculados na Utmify:** `1395221742238189`, `885028918027856 (Rural 2)` e `1495289149453037 (Rural Dolar)`.
-- **IC:** regra "Contém texto" com `REGULARIZAR POR R$27,90`, que deve bater **exatamente** com o texto do botão `#btn-checkout`. Se mudar o texto do botão, atualize a regra na Utmify. A classe `btn-checkout-utmfy` continua no botão, mas não é usada por essa regra.
+- **IC:** regra "Contém texto" com `REGULARIZAR POR R$27,90` (ou `REGULARIZAR POR R$` para cobrir `/v2` e `/consultor`), que deve bater com o texto do botão `#btn-checkout`.
 
-### Página `/2` (`2.html`)
-- **Sem Utmify e sem UTMs.** As vendas dessa página chegam sem atribuição de campanha.
-- **Meta Pixel nativo (ativo):** um único código base com 3 pixels, **RURAL 4** (`2794376007657993`), **RURAL 5** (`1088370370664674`) e **RURAL DOLAR** (`1495289149453037`), e um só `fbq('track','PageView')` (evita PageView duplicado), mais os `noscript` dos três.
-- **IC:** `onclick="fbq('track','InitiateCheckout');"` no botão `#btn-checkout`, que vale para os 3 pixels. Na Novark, a opção **"Disparar InitiateCheckout na abertura"** deve ficar **desligada**, para não contar o IC em dobro.
-- **Compra:** os pixels (`1088370370664674`, `2794376007657993` e `1495289149453037`) devem estar cadastrados na Novark no produto `kg1a7jgt` com "Disparar InitiateCheckout na abertura" desligado para enviar a compra de volta para todos.
+### Página `/2` (`2.html`) e Upsells (`upsell.html` / `upclientes.html`)
+- **Na `/2` (`2.html`):** sem Utmify; usa **Meta Pixel nativo** com 3 pixels (**RURAL 4** `2794376007657993`, **RURAL 5** `1088370370664674` e **RURAL DOLAR** `1495289149453037`, um único `fbq('track','PageView')` e `onclick="fbq('track','InitiateCheckout');"` no `#btn-checkout`) **+ Wexor.fy Pixel (`pix-1794022936290`) e UTMs (`utms.js`)** direto no `<head>`, garantindo atribuição completa de campanha nos links `pay.novarkbr.com/kg1a7jgt`.
+- **Nos Upsells (`upsell.html` e `upclientes.html`):** Wexor.fy Pixel (`pix-1794022936290`) + UTMs (`utms.js`) direto no `<head>` para preservar `utm_source` (`jLj<id>`), `xcod` e `sck` nos botões `pay.novarkbr.com/bet5bxrw`.
+- **Na Novark (`kg1a7jgt`):** os pixels (`1088370370664674`, `2794376007657993` e `1495289149453037`) devem estar cadastrados com **"Disparar InitiateCheckout na abertura" desligado** para não duplicar IC.
 
-### Aprendizado importante para próxima instalação do Wexor.fy junto com Utmify (06/11/2026)
-- As páginas foram **restauradas para o backup pré-Wexor (`27a56d5`)**.
-- **Regra obrigatória quando reinstalarmos o Wexor.fy junto com a Utmify:** se a Utmify (ou o HTML da `/2`) já dispara os Pixels da Meta no navegador, o Wexor.fy **NÃO PODE** ter IDs de Pixel da Meta nem no `CFG.metaPixelIds` (painel do Wexor.fy) nem no `window.wexorMetaPixels` (dentro do snippet HTML). Se tiver, o Wexor.fy injeta o `fbevents.js` e dispara `fbq('init', ...)` + `fbq('track', ...)` por conta própria com outro `eventID`, gerando eventos duplicados na Meta e disparando o detector `MetaPixelDetector` da Utmify.
+### Regra obrigatória no painel do Wexor.fy (`CFG.metaPixelIds`)
+- Enquanto a Utmify (nas 7 páginas) ou o Meta Pixel nativo (na `/2`) dispararem eventos da Meta no navegador, o pixel `pix-1794022936290` no painel do Wexor.fy (`wexorfy.vercel.app`) **NÃO PODE ter IDs de Pixel da Meta cadastrados** (`CFG.metaPixelIds` deve ficar vazio `[]`), e o snippet HTML permanece sem `window.wexorMetaPixels`. Caso contrário, o servidor do Wexor.fy embute `CFG.metaPixelIds` no `pixel.js`, injeta `fbevents.js` por conta própria com outro `eventID`, duplica eventos na Meta e aciona o `MetaPixelDetector` da Utmify.
 
 ### Desativados / removidos
 - Pixels 1, 2 e 3 (Dólar) separados da Utmify: removidos (substituídos pelo pixel único).
@@ -241,7 +240,7 @@ Copias em `~/Downloads/criativos-board/` (53 a 57), `~/Downloads/criativos-board
 | Front | HTML + CSS + JS vanilla |
 | Deploy | GitHub → Vercel |
 | Pagamento | Novark |
-| Tracking | Utmify (pixel único) na `/` e na `/entenda`, e Meta Pixel nativo na `/2` |
+| Tracking | Coexistência Utmify (`6ac42ec78067b4499c7d80ba`) + Wexor.fy (`pix-1794022936290` + UTMs) nas 7 páginas, Meta Pixel nativo + Wexor.fy na `/2`, e Wexor.fy nos Upsells |
 
 ---
 
@@ -273,6 +272,7 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 07/11/2026 | **Instalação do Wexor.fy Pixel (`pix-1794022936290`, dashboard `low-br`) + UTMs (`utms.js` v3.1) em Coexistência com Utmify nas 10 Páginas:** Instalado nas 7 páginas com Utmify (`index.html`, `v2/index.html`, `w.html`, `an.html`, `consultor.html`, `entenda.html`, `entenda-sem-se-perder.html`) com guarda pré-Utmify e loader `utmifyReady()` para eliminar a race condition em `localStorage.lead` (`HTTP 400 lead.pixelId is a required field`) e unificar o `lead._id` (`jLj<id>`), e instalado direto no `<head>` das 3 páginas sem Utmify (`2.html`, `upsell.html`, `upclientes.html`) sem `wexorMetaPixels` no snippet. Aplicada também limpeza completa de travessões/emojis residuais e OpenGraph próprio em todas as 10 páginas. |
 | 06/11/2026 | **Nova Aula 01 no Módulo 01 (`mod-01-aula-00` em `api/_lib/courses-db.js`):** Criada a aula de abertura *"Precisa de Faculdade para Emitir CCIR, ITR ou CAR?"* explicando que o preenchimento de rotina nos sistemas oficiais não exige diploma superior (proprietário ou prestador de serviços) e detalhando as únicas 3 exceções que exigem CREA/CFT com ART/TRT (Georreferenciamento no SIGEF, plantas/laudos técnicos assinados e PRADA), com blocos dinâmicos por perfil (`data-role-only` em `membros/app.js` para `/membros` e `/proprietario`), preservação dos IDs `mod-01-aula-01` a `03` dos 908 alunos e atualização de `33` para `34 aulas` em `v2/index.html` (total geral: 70 aulas). |
 | 06/11/2026 | **Adição do 3º Meta Pixel nativo (`1495289149453037`) na página `/2` (`2.html`):** Incluído `fbq('init', '1495289149453037')` e respectivo `<noscript>` junto aos pixels `2794376007657993` e `1088370370664674`, mantendo disparo único de `PageView` e `InitiateCheckout` no botão `#btn-checkout`, além de OpenGraph próprio para `/2` e limpeza de travessão/emoji residuais. |
 | 05/11/2026 | **Importação Histórica de 903 Compradores Rurais no Supabase (`alunos_membros` = 908 registros):** Processado o relatório completo da Novark (`vendas_2026-11-05.csv`, 944 linhas: 931 vendas rurais pagas desde 23/09/2026 e 13 vendas de outros nichos excluídas). Inseridos **853 alunos antigos faltantes** com senha padrão `rural123` (`scrypt` individual) e atualizados os **50 já existentes** sem sobrescrever senhas nem progresso, mapeando pelo produto e valor exato quem comprou `OB1` (236), `OB2` (249), `OB3` (250), `Upsell / Primeiros Clientes` (12) e `Entenda / proprietario` (20), além da `data_primeira_compra` real (772 alunos já com mais de 7 dias destravados na hora). Adicionado também reconhecimento automático de `Primeiros Clientes` e `Linha de Crédito Rural` no `api/webhook.js`. |
