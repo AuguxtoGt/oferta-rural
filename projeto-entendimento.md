@@ -69,14 +69,14 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 
 | Rota / Página | Arquivo | Oferta e Layout | Áudio | Ticket | Checkout Novark | Rastreamento |
 |---|---|---|---|---|---|---|
-| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1 + Clarity) |
-| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
-| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Wexor.fy (`pix-1794022936290` + 5 Pixels Meta/CAPI + UTMs v3.1) |
+| `/` | `index.html` | Principal Nova (Consultor) | `nova-hero.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
+| `/v2` | `v2/index.html` | Variante Área de Membros + VSL 9:16 | `v2/vsl-rural.mp4` (9,7 MB H.264) | **R$ 37,90** | `kg1a7jgt` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs + Clarity) |
+| `/w` | `w.html` | Cópia da Principal Nova | `nova-hero.mp3` | **R$ 27,90** | Wiven (`0RSKIQY`) | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
+| `/an` | `an.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 27,90** | `jxiib47t` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
+| `/consultor` | `consultor.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
+| `/2` | `2.html` | Layout Antigo (Dave) | `vdave.mp3` | **R$ 37,90** | `kg1a7jgt` | 3 Meta Pixels nativos (`2794376007657993`, `1088370370664674`, `1495289149453037`) + UTMs |
+| `/entenda` | `entenda.html` / `entenda-sem-se-perder.html` | Dono da Terra (sem lucro) | `audio-pagina-...mp3` | **R$ 27,90** | `agwfds26` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
+| Upsell 1 | `upsell.html` / `upclientes.html` | Kit de Prospecção | - | **R$ 67,00** | `bet5bxrw` | Utmify (`6ac42ec78067b4499c7d80ba` + UTMs) |
 | Upsell 2 | `upsell2.html` | Negócio Rural do Zero | - | *A definir* | *Sem checkout* | Sem pixel (rascunho não vinculado) |
 
 - **ARPU real:** R$ 33,03 (em 08/10/2026)
@@ -108,7 +108,7 @@ Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCI
 | `upsell.html` | Oferta especial pós-compra |
 | `upclientes.html` | Upsell do kit para conseguir clientes |
 | `upsell2.html` | **Upsell "Negócio Rural do Zero"** (página de oferta pós-compra, entregável `UPSELL_Negocio_Rural_do_Zero.pdf`). Ver seção abaixo |
-| `membros/index.html` | `/membros` | **Área de Membros Web ("Formação Consultor Rural" - Ofertas de Lucrar)**: design minimalista estilo Apple Light/Dark em paleta Verde Floresta e `Plus Jakarta Sans`, **23 módulos ativos (70 aulas densas)** em 6 trilhas (com passo a passo completo tela a tela de emissão de Matrícula ONR, CCIR/DCR, CAFIR/CNIR/ITR/CND, ADA/IBAMA, CAR/SICAR, SIGEF, CAF e Certidões, modelos editáveis/copiáveis e 23 mensagens finais únicas sobre Jesus), ferramentas interativas (Calculadora de Honorários, Auditoria Cruzada e Simulador de Meta), trava de 7 dias (`dripDays: 7`) pós-compra e vitrine de Order Bumps/Combo (`fotl08p9`)/Upsell |
+| `membros/index.html` | `/membros` | **Área de Membros Web ("Formação Consultor Rural" - Ofertas de Lucrar)**: design minimalista estilo Apple Light/Dark em paleta Verde Floresta e `Plus Jakarta Sans`, **23 módulos ativos (70 aulas densas) + 5 vídeo-aulas no YouTube Não Listado** nos Módulos 01 a 05 (`vkfm83l7etM`, `oX35mlvcQ_0`, `zH9O5e1-ycw`, `NG791XF23_w`, `3Mjgfs6Aebk`), 6 trilhas (com passo a passo completo tela a tela de emissão de Matrícula ONR, CCIR/DCR, CAFIR/CNIR/ITR/CND, ADA/IBAMA, CAR/SICAR, SIGEF, CAF e Certidões, modelos editáveis/copiáveis e 23 mensagens finais únicas sobre Jesus), ferramentas interativas (Calculadora de Honorários, Auditoria Cruzada e Simulador de Meta), trava de 7 dias (`dripDays: 7`) pós-compra e vitrine de Order Bumps/Combo (`fotl08p9`)/Upsell |
 | `proprietario/index.html` | `/proprietario` | **Portal do Proprietário Rural ("Imóvel Rural em Dia - Entenda")**: área de membros dedicada para compradores do checkout `agwfds26` (`/entenda`), com OpenGraph próprio, linguagem 100% focada no dono da terra (sem falar de prospecção ou honorários), 3 trilhas adaptadas e ferramenta interativa "Diagnóstico do Meu Imóvel" |
 | `api/auth.js`, `api/webhook.js`, `api/content.js`, `api/ai-consultant.js` | `/api/*` | **Backend Serverless (Vercel Functions) + Servidor Local (`server-membros.js` na porta `8090`)**: login por e-mail de compra + senha padrão `rural123`, webhook automático Novark ativo em produção (`Pedido Aprovado`, `Pedido Cancelado`, `Mudança de Status`, incluindo Combo dos 3 Order Bumps `fotl08p9`), banco dual Supabase REST (`ijozopseljwuoloqucvn`) + fallback local JSON (`data/members-db.json`). Endpoints de IA desativados por trava de ambiente até o lançamento futuro |
 | `supabase-setup.sql` | - | **Setup SQL completo do Supabase**: tabelas `alunos_membros`, `webhook_logs` e `config_modulos_drip`, políticas RLS e `GRANT SELECT, INSERT, UPDATE, DELETE` no esquema `public` |

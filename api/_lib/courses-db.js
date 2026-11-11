@@ -71,7 +71,7 @@
       "trackId": "trilha-principal",
       "accessKey": "acesso_principal",
       "dripDays": 0,
-      "videoCode": "VID_M01",
+      "videoCode": "https://youtu.be/vkfm83l7etM",
       "duration": "99 min",
       "lessonsCount": 4,
       "lessons": [
@@ -126,7 +126,7 @@
       "trackId": "trilha-principal",
       "accessKey": "acesso_principal",
       "dripDays": 0,
-      "videoCode": "VID_M02",
+      "videoCode": "https://youtu.be/oX35mlvcQ_0",
       "duration": "74 min",
       "lessonsCount": 3,
       "lessons": [
@@ -173,7 +173,7 @@
       "trackId": "trilha-principal",
       "accessKey": "acesso_principal",
       "dripDays": 0,
-      "videoCode": "VID_M03",
+      "videoCode": "https://youtu.be/zH9O5e1-ycw",
       "duration": "76 min",
       "lessonsCount": 3,
       "lessons": [
@@ -220,7 +220,7 @@
       "trackId": "trilha-principal",
       "accessKey": "acesso_principal",
       "dripDays": 0,
-      "videoCode": "VID_M04",
+      "videoCode": "https://youtu.be/NG791XF23_w",
       "duration": "80 min",
       "lessonsCount": 3,
       "lessons": [
@@ -267,7 +267,7 @@
       "trackId": "trilha-principal",
       "accessKey": "acesso_principal",
       "dripDays": 0,
-      "videoCode": "VID_M05",
+      "videoCode": "https://youtu.be/3Mjgfs6Aebk",
       "duration": "75 min",
       "lessonsCount": 3,
       "lessons": [

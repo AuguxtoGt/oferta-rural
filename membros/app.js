@@ -171,6 +171,70 @@
     24: { shortTitle: 'Guia Oficial do Consultor Rural IA', tag: 'INTELIGÊNCIA ARTIFICIAL', art: 'ia' }
   };
 
+  const MODULE_YOUTUBE_VIDEOS = {
+    'mod-01': {
+      youtubeId: 'vkfm83l7etM',
+      url: 'https://youtu.be/vkfm83l7etM',
+      title: '1. Os 4 Grandes Documentos Rurais e a Regra de Ouro'
+    },
+    'mod-02': {
+      youtubeId: 'oX35mlvcQ_0',
+      url: 'https://youtu.be/oX35mlvcQ_0',
+      title: '2. Passo a Passo do CCIR no INCRA (SNCR e DCR)'
+    },
+    'mod-03': {
+      youtubeId: 'zH9O5e1-ycw',
+      url: 'https://youtu.be/zH9O5e1-ycw',
+      title: '3. Passo a Passo do ITR, CIB, CNIR e Certidão no e-CAC'
+    },
+    'mod-04': {
+      youtubeId: 'NG791XF23_w',
+      url: 'https://youtu.be/NG791XF23_w',
+      title: '4. Passo a Passo do CAR no SICAR e Reserva Legal'
+    },
+    'mod-05': {
+      youtubeId: '3Mjgfs6Aebk',
+      url: 'https://youtu.be/3Mjgfs6Aebk',
+      title: '5. Retificação de Área Rural e Pasta Bancária'
+    }
+  };
+
+  function extractYouTubeId(raw) {
+    const str = String(raw || '').trim();
+    if (!str) return '';
+    const mShort = str.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+    if (mShort) return mShort[1];
+    const mLong = str.match(/youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=|shorts\/)([a-zA-Z0-9_-]{11})/);
+    if (mLong) return mLong[1];
+    if (/^[a-zA-Z0-9_-]{11}$/.test(str)) return str;
+    return '';
+  }
+
+  function resolveModuleVideo(mod) {
+    if (!mod) return null;
+    const mapped = MODULE_YOUTUBE_VIDEOS[mod.id];
+    const ytFromCode = extractYouTubeId(mod.videoCode);
+    const youtubeId = ytFromCode || (mapped ? mapped.youtubeId : '');
+    if (youtubeId) {
+      return {
+        type: 'youtube',
+        youtubeId,
+        embedUrl: `https://www.youtube.com/embed/${youtubeId}?rel=0&modestbranding=1&playsinline=1`,
+        watchUrl: `https://youtu.be/${youtubeId}`,
+        title: (mapped && mapped.title) || mod.title || `Vídeo do Módulo ${mod.number}`
+      };
+    }
+    const code = String(mod.videoCode || '').trim();
+    if (code.endsWith('.mp4') || code.endsWith('.webm') || code.startsWith('/')) {
+      return {
+        type: 'direct',
+        src: code,
+        title: mod.title || `Vídeo do Módulo ${mod.number}`
+      };
+    }
+    return null;
+  }
+
   const state = {
     canSimulateDemo: false,
     user: null,
@@ -543,6 +607,15 @@
         }
       }
 
+      const rawDripVideo = String(dripRow.codigo_video || '').trim();
+      const isLegacyVideoPlaceholder = /^(V0\d_|VID_M\d+)/i.test(rawDripVideo);
+      const effectiveVideoCode =
+        (rawDripVideo && !isLegacyVideoPlaceholder ? rawDripVideo : '') ||
+        (MODULE_YOUTUBE_VIDEOS[id] ? MODULE_YOUTUBE_VIDEOS[id].url : '') ||
+        m.videoCode ||
+        localMod.videoCode ||
+        '';
+
       return {
         id,
         number: numStr,
@@ -554,7 +627,7 @@
         subtitle: sanitizeCleanText(m.subtitle || localMod.subtitle || ''),
         category: sanitizeCleanText(shortMeta.tag || localMod.category || m.category || 'MÓDULO PRÁTICO'),
         dripDays,
-        videoCode: dripRow.codigo_video || m.videoCode || localMod.videoCode || '',
+        videoCode: effectiveVideoCode,
         pdfUrl: localMod.pdfUrl || m.pdfUrl || '',
         unlocked,
         lockReason,
@@ -1027,12 +1100,15 @@
 
           let lockOverlayHtml = '';
           let captionHtml = '';
+          const hasVideo = Boolean(resolveModuleVideo(mod));
 
           if (mod.unlocked) {
             if (prog.pct === 100) {
-              captionHtml = `<span class="book-caption caption-done">${SVG_ICONS.check}<span>${prog.total} aulas · Concluído</span></span>`;
+              captionHtml = `<span class="book-caption caption-done">${SVG_ICONS.check}<span>${hasVideo ? 'Vídeo + ' : ''}${prog.total} aulas · Concluído</span></span>`;
             } else if (prog.done > 0) {
-              captionHtml = `<span class="book-caption">${prog.done} de ${prog.total} aulas</span>`;
+              captionHtml = `<span class="book-caption">${hasVideo ? SVG_ICONS.play + '<span>Vídeo · ' : '<span>'}${prog.done} de ${prog.total} aulas</span></span>`;
+            } else if (hasVideo) {
+              captionHtml = `<span class="book-caption">${SVG_ICONS.play}<span>Vídeo + ${prog.total} ${prog.total === 1 ? 'aula' : 'aulas'}</span></span>`;
             } else {
               captionHtml = `<span class="book-caption">${prog.total} ${prog.total === 1 ? 'aula' : 'aulas'}</span>`;
             }
@@ -1204,32 +1280,54 @@
     const stage = document.getElementById('cls-video-stage');
     if (!stage) return;
 
-    const code = String(mod.videoCode || '').trim();
-    const isDirectVideo =
-      code.endsWith('.mp4') ||
-      code.endsWith('.webm') ||
-      code.startsWith('http') ||
-      code.startsWith('/');
+    const videoMeta = resolveModuleVideo(mod);
 
-    if (isDirectVideo) {
+    if (!videoMeta) {
+      stage.innerHTML = '';
+      stage.classList.add('hidden');
+      return;
+    }
+
+    stage.classList.remove('hidden');
+
+    if (videoMeta.type === 'youtube') {
       stage.innerHTML = `
-        <div class="apple-video-frame">
-          <video controls preload="metadata" src="${escapeHtml(code)}">
-            Seu navegador não suporta vídeo HTML5.
-          </video>
+        <div class="apple-video-card">
+          <div class="apple-video-header">
+            <div class="apple-video-header-left">
+              <span class="apple-video-badge">${SVG_ICONS.play}<span>Vídeo-Aula · Módulo ${mod.number}</span></span>
+              <span class="apple-video-title">${escapeHtml(videoMeta.title)}</span>
+            </div>
+            <a
+              href="${escapeHtml(videoMeta.watchUrl)}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="apple-video-yt-link"
+            >
+              <span>Assistir no YouTube</span>
+              ${SVG_ICONS.arrowRight}
+            </a>
+          </div>
+          <div class="apple-video-frame">
+            <iframe
+              src="${escapeHtml(videoMeta.embedUrl)}"
+              title="${escapeHtml(videoMeta.title)}"
+              loading="lazy"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
         </div>
       `;
     } else {
       stage.innerHTML = `
-        <div class="video-coming-soon-card">
-          <div class="video-coming-left">
-            <span class="video-coming-icon">${SVG_ICONS.play}</span>
-            <div class="video-coming-text">
-              <strong>Vídeo complementar em breve</strong>
-              <span>Estude pelo guia visual estruturado, tabelas e modelos copiáveis abaixo.</span>
-            </div>
+        <div class="apple-video-card">
+          <div class="apple-video-frame">
+            <video controls preload="metadata" src="${escapeHtml(videoMeta.src)}">
+              Seu navegador não suporta vídeo HTML5.
+            </video>
           </div>
-          <span class="video-coming-tag">Módulo ${mod.number}</span>
         </div>
       `;
     }

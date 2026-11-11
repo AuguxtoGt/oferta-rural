@@ -11,12 +11,12 @@ const PRIMARY_DB_PATH = path.resolve(__dirname, '../../data/members-db.json');
 const TMP_DB_PATH = '/tmp/regularize-rural-members-db.json';
 
 const INITIAL_DRIP_MODULES = [
-  { modulo_id: 'mod-01', titulo: 'CCIR e SNCR/INCRA Passo a Passo do Zero', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'V01_CCIR' },
-  { modulo_id: 'mod-02', titulo: 'ITR, CIB, CNIR e DITR 2026 na Receita Federal', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'V02_ITR' },
-  { modulo_id: 'mod-03', titulo: 'CAR e SICAR 2026: Inscricao, Mapas e Retificacao', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'V03_CAR' },
-  { modulo_id: 'mod-04', titulo: 'Manual Pratico 2026: Rota dos 26 Estados + DF', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'V04_ESTADOS' },
-  { modulo_id: 'mod-05', titulo: 'Modelos Editaveis de Solicitacao de Retificacao de Area', trilha: 'principal', dias_para_liberar: 7, codigo_video: 'V05_RETIFICACAO' },
-  { modulo_id: 'mod-06', titulo: 'Guia de Acesso ao Credito Rural Pos-Regularizacao', trilha: 'principal', dias_para_liberar: 7, codigo_video: 'V06_CREDITO' },
+  { modulo_id: 'mod-01', titulo: 'Manual Pratico CCIR, ITR e CAR 2026', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'https://youtu.be/vkfm83l7etM' },
+  { modulo_id: 'mod-02', titulo: 'Emissao de CCIR no INCRA', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'https://youtu.be/oX35mlvcQ_0' },
+  { modulo_id: 'mod-03', titulo: 'Declaracao de ITR, CNIR e CND', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'https://youtu.be/zH9O5e1-ycw' },
+  { modulo_id: 'mod-04', titulo: 'Cadastro Ambiental (CAR e SICAR)', trilha: 'principal', dias_para_liberar: 0, codigo_video: 'https://youtu.be/NG791XF23_w' },
+  { modulo_id: 'mod-05', titulo: 'Retificacao de Area Rural', trilha: 'principal', dias_para_liberar: 7, codigo_video: 'https://youtu.be/3Mjgfs6Aebk' },
+  { modulo_id: 'mod-06', titulo: 'Guia de Acesso ao Credito Rural Pos-Regularizacao', trilha: 'principal', dias_para_liberar: 7, codigo_video: '' },
   { modulo_id: 'mod-07', titulo: 'Bonus 01: Checklist Completo de Documentos por Objetivo', trilha: 'principal', dias_para_liberar: 0, codigo_video: '' },
   { modulo_id: 'mod-08', titulo: 'Bonus 02: Calendario Anual de Prazos do Imovel Rural', trilha: 'principal', dias_para_liberar: 0, codigo_video: '' },
   { modulo_id: 'mod-09', titulo: 'Bonus 03: Guia de Erros Comuns e Como Corrigir', trilha: 'principal', dias_para_liberar: 0, codigo_video: '' },

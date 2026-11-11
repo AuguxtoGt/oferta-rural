@@ -139,9 +139,11 @@ function normalizeModuleWithAccess(
           Number(rawMod.dripDays ?? rawMod.dias_para_liberar ?? 0) || 0
         );
 
+  const rawDripVideo = String(dripRow.codigo_video || '').trim();
+  const isLegacyPlaceholder = /^(V0\d_|VID_M\d+)/i.test(rawDripVideo);
   const videoCode =
-    dripRow.codigo_video !== undefined && dripRow.codigo_video !== ''
-      ? dripRow.codigo_video
+    rawDripVideo && !isLegacyPlaceholder
+      ? rawDripVideo
       : rawMod.videoCode || rawMod.codigo_video || '';
 
   const hasPurchase = Boolean(
