@@ -17,6 +17,7 @@ docs/
 .vercel
 _antigos_backup/
 _backup_antes_wexor/
+consultorrural/
 .env
 .env.*
 !.env.example

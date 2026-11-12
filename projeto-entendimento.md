@@ -1,7 +1,7 @@
 # 📊 Projeto Entendimento — Oferta 13 (Imóvel Rural em Dia)
 
 > Documento de referência rápida para entender o projeto, a oferta e a estrutura.
-> Atualizado em: 2026-11-09
+> Atualizado em: 2026-11-12
 
 ---
 
@@ -9,10 +9,12 @@
 
 Funil de venda direta de infoprodutos de **regularização de imóvel rural (CCIR, ITR e CAR)**, com **duas ofertas** no mesmo site: a principal, com ângulo de **renda extra como Consultor Rural** (`/`), e a nova **"Entenda sem se perder"** (`/entenda`), com ângulo de **entender e organizar os próprios documentos**. Site estático (HTML/CSS/JS puro), sem framework.
 
-- **Pasta local:** `/Users/gustavoaugusto/Desktop/oferta13`
+- **Pasta local:** `/Users/gustavoaugusto/Desktop/oferta13` (e pasta separada de deploy das páginas de vendas em `/Users/gustavoaugusto/Desktop/oferta13/consultorrural`)
 - **Repositório:** https://github.com/AuguxtoGt/oferta-rural (branch `main`)
-- **Hospedagem:** Vercel (`vercel.json` com `cleanUrls`)
-- **Site no ar:** https://regularizerural.vercel.app/ (página `/`, versão nova, com Utmify, R$ 27,90), https://regularizerural.vercel.app/w (cópia da principal nova, com Utmify, R$ 27,90, para teste de checkout), https://regularizerural.vercel.app/an (versão antiga com áudio do Dave, Utmify, R$ 27,90), https://regularizerural.vercel.app/consultor (versão antiga com áudio do Dave, Utmify, R$ 37,90), https://regularizerural.vercel.app/2 (versão antiga com áudio do Dave, Meta Pixel nativo, R$ 37,90) e https://regularizerural.vercel.app/entenda (nova oferta foco no dono da terra, com Utmify, rota via rewrite no `vercel.json`)
+- **Hospedagem:** Vercel (`vercel.json` com `cleanUrls`) em 2 projetos separados:
+  1. **Domínio novo exclusivo das páginas de vendas (`gutto/consultorrural`):** https://consultorrural.vercel.app/ (`/`, `/v2`, `/2`, `/w`, `/an`, `/consultor`, `/entenda`, `/upsell`, `/upclientes`), com redirecionamento automático de `/membros` e `/proprietario` para `regularizerural.vercel.app`.
+  2. **Domínio original com Área de Membros + Webhook (`gutto/oferta-rural`):** https://regularizerural.vercel.app/ (mantém `/membros`, `/proprietario`, `/api/webhook` e todas as rotas ativas).
+- **Rastreamento:** 100% Wexor.fy (`pix-1794022936290` no dashboard `low-br` com 5 Pixels Meta + CAPI + `utms.js` v3.1) em todas as páginas de ambos os domínios.
 - **Checkout:** Novark (`pay.novarkbr.com`)
 
 ---
@@ -268,6 +270,7 @@ Rodado com `/marketing-board-completo` em 08/10/2026. Relatório completo: `foun
 
 | Data | Mudança |
 |---|---|
+| 12/11/2026 | **Novo Projeto e Domínio Exclusivo para Páginas de Vendas (`https://consultorrural.vercel.app/`):** Duplicadas todas as páginas de vendas e mídias estáticas para a pasta isolada `consultorrural/` e publicado um segundo projeto independente na Vercel (`gutto/consultorrural`) com o domínio `https://consultorrural.vercel.app/` (`/`, `/v2`, `/2`, `/w`, `/an`, `/consultor`, `/entenda`, `/upsell` e `/upclientes`), OpenGraph atualizado para o novo domínio, rastreamento 100% Wexor.fy (`pix-1794022936290` + `utms.js` v3.1) e redirecionamento automático de `/membros` e `/proprietario` para `https://regularizerural.vercel.app` (onde permanecem a Área de Membros e o Webhook). Criado também o script `consultorrural/atualizar-deploy.sh` para sincronizar e republicar com 1 comando. |
 | 09/11/2026 | **Migração 100% para Wexor.fy (Remoção Completa da Utmify e do Meta Pixel Nativo da `/2`):** Removidos todos os scripts da Utmify nas 7 páginas principais e o bloco de Meta Pixel nativo isolado de `2.html`, padronizando todas as 10 páginas (`index.html`, `v2/index.html`, `2.html`, `w.html`, `an.html`, `consultor.html`, `entenda.html`, `entenda-sem-se-perder.html`, `upsell.html` e `upclientes.html`) exclusivamente com os 2 scripts originais do Wexor.fy direto no `<head>` (`pix-1794022936290` com os 5 Pixels da Meta + CAPI reativados no painel `low-br` e `utms.js` v3.1). |
 | 07/11/2026 | **Instalação do Wexor.fy Pixel (`pix-1794022936290`, dashboard `low-br`) + UTMs (`utms.js` v3.1) em Coexistência com Utmify nas 10 Páginas:** Instalado nas 7 páginas com Utmify (`index.html`, `v2/index.html`, `w.html`, `an.html`, `consultor.html`, `entenda.html`, `entenda-sem-se-perder.html`) com guarda pré-Utmify e loader `utmifyReady()` para eliminar a race condition em `localStorage.lead` (`HTTP 400 lead.pixelId is a required field`) e unificar o `lead._id` (`jLj<id>`), e instalado direto no `<head>` das 3 páginas sem Utmify (`2.html`, `upsell.html`, `upclientes.html`) sem `wexorMetaPixels` no snippet. Aplicada também limpeza completa de travessões/emojis residuais e OpenGraph próprio em todas as 10 páginas. |
 | 06/11/2026 | **Nova Aula 01 no Módulo 01 (`mod-01-aula-00` em `api/_lib/courses-db.js`):** Criada a aula de abertura *"Precisa de Faculdade para Emitir CCIR, ITR ou CAR?"* explicando que o preenchimento de rotina nos sistemas oficiais não exige diploma superior (proprietário ou prestador de serviços) e detalhando as únicas 3 exceções que exigem CREA/CFT com ART/TRT (Georreferenciamento no SIGEF, plantas/laudos técnicos assinados e PRADA), com blocos dinâmicos por perfil (`data-role-only` em `membros/app.js` para `/membros` e `/proprietario`), preservação dos IDs `mod-01-aula-01` a `03` dos 908 alunos e atualização de `33` para `34 aulas` em `v2/index.html` (total geral: 70 aulas). |
