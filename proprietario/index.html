@@ -254,6 +254,38 @@
         </div>
       </section>
 
+      <!-- FAIXA EXECUTIVA DE INDICADORES REAIS DO ALUNO -->
+      <section id="home-kpi-strip" class="home-kpi-strip" aria-label="Indicadores de estudo e ferramentas">
+        <div class="home-kpi-grid">
+          <div class="home-kpi-card">
+            <span class="home-kpi-label">Progresso Geral</span>
+            <strong id="kpi-overall-pct" class="home-kpi-value">0%</strong>
+            <div class="home-kpi-track">
+              <div id="kpi-overall-bar" class="home-kpi-fill" style="width: 0%"></div>
+            </div>
+            <span id="kpi-overall-sub" class="home-kpi-sub">Das aulas liberadas na sua conta</span>
+          </div>
+
+          <div class="home-kpi-card">
+            <span class="home-kpi-label">Aulas Concluídas</span>
+            <strong id="kpi-lessons-done" class="home-kpi-value">0 / 70</strong>
+            <span id="kpi-mods-unlocked" class="home-kpi-sub">23 módulos estruturados</span>
+          </div>
+
+          <div class="home-kpi-card">
+            <span class="home-kpi-label">Checklists Práticos</span>
+            <strong id="kpi-checks-done" class="home-kpi-value">0 itens</strong>
+            <span class="home-kpi-sub">Conferências marcadas nas aulas</span>
+          </div>
+
+          <button type="button" class="home-kpi-card home-kpi-card-action" onclick="window.RRApp.navigate('tools')">
+            <span id="kpi-tools-eyebrow" class="home-kpi-label">Central Operacional</span>
+            <strong id="kpi-tools-count" class="home-kpi-value">4 Ferramentas</strong>
+            <span id="kpi-tools-cta" class="home-kpi-sub">Diagnóstico, área, ITR e ficha .CSV</span>
+          </button>
+        </div>
+      </section>
+
       <!-- VITRINE DE TRILHAS E CAPAS DE MODULOS (ESTILO APPLE BOOKS / APPLE TV+) -->
       <section id="tracks-container" class="tracks-showcase" aria-label="Trilhas de Módulos">
         <!-- Renderizado dinamicamente via app.js -->
@@ -372,32 +404,45 @@
     <section id="view-tools" class="app-view hidden">
       <div class="tools-container">
         <header class="tools-hero">
-          <span id="tools-eyebrow" class="apple-hero-eyebrow">FERRAMENTAS OPERACIONAIS</span>
-          <h1 id="tools-title" class="tools-main-title">Planilhas e Calculadoras de Campo.</h1>
-          <p id="tools-subtitle" class="tools-main-subtitle">Simule honorários por hectare, faça a auditoria cruzada dos 4 documentos do imóvel e planeje sua meta mensal.</p>
+          <span id="tools-eyebrow" class="apple-hero-eyebrow">DIAGNÓSTICO E FERRAMENTAS DO PROPRIETÁRIO</span>
+          <h1 id="tools-title" class="tools-main-title">Planilhas Práticas da Sua Propriedade.</h1>
+          <p id="tools-subtitle" class="tools-main-subtitle">Confira divergências nos 4 documentos da sua terra, converta medidas agrárias para hectares, simule o ITR anual e organize seus protocolos em .CSV.</p>
 
-          <div id="tools-nav-pills" class="tools-nav-pills" role="tablist">
-            <a href="#tool-calc-honorarios" class="chip-option active">1. Calculadora de Honorários</a>
-            <a href="#tool-auditoria-cruzada" class="chip-option">2. Auditoria Cruzada (4 Órgãos)</a>
-            <a href="#tool-meta-financeira" class="chip-option">3. Meta Financeira Mensal</a>
+          <div id="tools-nav-pills" class="tools-segmented-bar" role="tablist" aria-label="Planilhas interativas">
+            <button type="button" id="pill-tab-honorarios" class="tool-pill-btn" data-tool-tab="tab-honorarios" data-role-only="consultor" onclick="window.RRApp.switchToolTab('tab-honorarios')">01 Honorários</button>
+            <button type="button" id="pill-tab-auditoria" class="tool-pill-btn active" data-tool-tab="tab-auditoria" onclick="window.RRApp.switchToolTab('tab-auditoria')">02 Auditoria 4 Órgãos</button>
+            <button type="button" id="pill-tab-meta" class="tool-pill-btn" data-tool-tab="tab-meta" data-role-only="consultor" onclick="window.RRApp.switchToolTab('tab-meta')">03 Meta 12 Meses</button>
+            <button type="button" id="pill-tab-conversor" class="tool-pill-btn" data-tool-tab="tab-conversor" onclick="window.RRApp.switchToolTab('tab-conversor')">04 Conversor de Área</button>
+            <button type="button" id="pill-tab-itr" class="tool-pill-btn" data-tool-tab="tab-itr" onclick="window.RRApp.switchToolTab('tab-itr')">05 Simulador ITR</button>
+            <button type="button" id="pill-tab-crm" class="tool-pill-btn" data-tool-tab="tab-crm" onclick="window.RRApp.switchToolTab('tab-crm')">06 Carteira CRM</button>
           </div>
         </header>
 
-        <!-- PLANILHA 1: CALCULADORA INTERATIVA DE HONORARIOS E PACOTES RURAIS -->
-        <section id="tool-calc-honorarios" class="interactive-sheet tool-sheet-card">
-          <div class="sheet-header">
+        <!-- PLANILHA 01: CALCULADORA INTERATIVA DE HONORARIOS E PACOTES RURAIS -->
+        <section id="tool-calc-honorarios" data-tool-panel="tab-honorarios" class="interactive-sheet tool-sheet-card hidden">
+          <div class="sheet-header-row">
             <div>
               <span class="sheet-eyebrow">PLANILHA INTERATIVA 01</span>
               <h2 class="sheet-title">Calculadora de Honorários e Pacotes Rurais</h2>
-              <p class="sheet-desc">Selecione o porte do imóvel em hectares e os serviços desejados para gerar os valores de Serviço Avulso, Pacote Essencial, Pacote Completo e Entrada de 50%.</p>
+              <p class="sheet-desc">Simule valores referenciais por porte em hectares, complexidade técnica e pacotes com entrada de 50%.</p>
             </div>
-            <button type="button" class="btn-apple-primary" onclick="window.RRApp.copyPricingProposal(this)">
-              <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              <span>Copiar Orçamento</span>
-            </button>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportPricingCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Excel (.CSV)</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.copyPricingProposal(this)">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copiar Proposta</span>
+              </button>
+            </div>
           </div>
 
           <div class="sheet-grid-2">
@@ -411,7 +456,7 @@
               <div class="form-group">
                 <div class="label-row">
                   <label for="calc-hectares">Porte do imóvel em hectares (ha)</label>
-                  <strong id="calc-hectares-badge" class="sheet-value-pill">45 ha (Pequeno / Médio Porte)</strong>
+                  <strong id="calc-hectares-badge" class="sheet-value-pill">45 ha · Pequeno Porte (até 50 ha)</strong>
                 </div>
                 <input type="range" id="calc-hectares-range" class="apple-range" min="5" max="1500" step="5" value="45" oninput="window.RRApp.syncHectaresInput(this.value, 'range')">
                 <div class="range-input-row">
@@ -452,35 +497,59 @@
               </div>
             </div>
 
-            <!-- Resultados Calculados em Tempo Real -->
+            <!-- Resultados Calculados em Tempo Real + Grafico SVG -->
             <div class="sheet-results-panel">
-              <div class="pricing-cards-grid">
-                <div class="pricing-result-card">
-                  <span class="pricing-card-tag">OPÇÃO 1 · SERVIÇO AVULSO</span>
-                  <strong id="res-val-avulso" class="pricing-card-amount">R$ 350</strong>
-                  <span class="pricing-card-sub">Por demanda unitária ou diagnóstico técnico inicial</span>
+              <div class="sheet-exec-summary">
+                <div class="sheet-hero-kpi">
+                  <span class="sheet-hero-kpi-tag">PACOTE COMPLETO RECOMENDADO</span>
+                  <strong id="res-val-completo" class="sheet-hero-kpi-val">R$ 1.920</strong>
+                  <span id="res-val-saldo" class="sheet-hero-kpi-sub">50% na abertura (R$ 960) + R$ 960 na entrega dos protocolos</span>
                 </div>
 
-                <div class="pricing-result-card">
-                  <span class="pricing-card-tag">OPÇÃO 2 · PACOTE ESSENCIAL</span>
-                  <strong id="res-val-essencial" class="pricing-card-amount">R$ 980</strong>
-                  <span class="pricing-card-sub">Diagnóstico + Regularização base de 2 órgãos</span>
-                </div>
-
-                <div class="pricing-result-card pricing-card-featured">
-                  <span class="pricing-card-tag">OPÇÃO 3 · PACOTE COMPLETO</span>
-                  <strong id="res-val-completo" class="pricing-card-amount">R$ 1.650</strong>
-                  <span class="pricing-card-sub">Solução completa dos serviços selecionados + Pasta final</span>
-                </div>
-
-                <div class="pricing-result-card pricing-card-split">
-                  <span class="pricing-card-tag">CONDIÇÃO DE FECHAMENTO (50% + 50%)</span>
-                  <strong id="res-val-entrada" class="pricing-card-amount">R$ 825</strong>
-                  <span id="res-val-saldo" class="pricing-card-sub">50% na assinatura + R$ 825 na entrega dos protocolos</span>
+                <div class="sheet-sub-kpis">
+                  <div class="sheet-sub-kpi">
+                    <span>Serviço Avulso</span>
+                    <strong id="res-val-avulso">R$ 380</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Pacote Essencial</span>
+                    <strong id="res-val-essencial">R$ 1.000</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Entrada Imediata (50%)</span>
+                    <strong id="res-val-entrada">R$ 960</strong>
+                  </div>
                 </div>
               </div>
 
-              <div class="script-box" style="margin-top: 16px;">
+              <div class="sheet-chart-card">
+                <div class="sheet-chart-head">
+                  <strong>Comparativo Visual de Honorários e Condição 50/50</strong>
+                  <span>Escala proporcional automática em reais (R$)</span>
+                </div>
+                <div id="pricing-svg-chart" class="sheet-chart-svg-wrap"></div>
+              </div>
+            </div>
+          </div>
+
+          <details class="sheet-details">
+            <summary>Ver memória de cálculo por serviço e texto pronto da proposta comercial</summary>
+            <div class="sheet-details-body">
+              <div class="apple-table-wrap">
+                <table class="apple-spec-table">
+                  <thead>
+                    <tr>
+                      <th>Item / Escopo</th>
+                      <th>Valor Base</th>
+                      <th>Fator Porte / Complexidade</th>
+                      <th>Subtotal Estimado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pricing-breakdown-tbody"></tbody>
+                </table>
+              </div>
+
+              <div class="script-box">
                 <div class="script-box-header">
                   <span class="script-box-title">Proposta Comercial Gerada Automaticamente</span>
                   <button type="button" class="btn-copy-pill" onclick="window.RRApp.copyPricingProposal(this)">
@@ -488,37 +557,72 @@
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                     </svg>
-                    <span>Copiar Orçamento</span>
+                    <span>Copiar Proposta</span>
                   </button>
                 </div>
                 <pre id="calc-proposal-preview" class="script-pre"></pre>
               </div>
             </div>
-          </div>
+          </details>
         </section>
 
-        <!-- PLANILHA 2: AUDITORIA CRUZADA DO IMOVEL (MATRICULA X CCIR X ITR X CAR) -->
-        <section id="tool-auditoria-cruzada" class="interactive-sheet tool-sheet-card">
-          <div class="sheet-header">
+        <!-- PLANILHA 02: AUDITORIA CRUZADA DOS 4 ORGAOS (MATRICULA X CCIR X ITR X CAR) -->
+        <section id="tool-auditoria-cruzada" data-tool-panel="tab-auditoria" class="interactive-sheet tool-sheet-card">
+          <div class="sheet-header-row">
             <div>
-              <span class="sheet-eyebrow">PLANILHA INTERATIVA 02</span>
-              <h2 class="sheet-title">Auditoria Cruzada do Imóvel (Matrícula x CCIR x ITR x CAR)</h2>
-              <p class="sheet-desc">Digite o nome do titular, CPF/CNPJ e área em hectares nos 4 documentos. A planilha aponta automaticamente onde está a divergência e qual requerimento usar.</p>
+              <span id="audit-eyebrow" class="sheet-eyebrow">FERRAMENTA INTERATIVA 01</span>
+              <h2 id="audit-title" class="sheet-title">Diagnóstico dos 4 Documentos da Sua Terra (Matrícula x CCIR x ITR x CAR)</h2>
+              <p id="audit-desc" class="sheet-desc">Compare titularidade, CPF/CNPJ e área em hectares nos 4 cadastros oficiais com tolerância operacional de 2%.</p>
             </div>
             <div class="sheet-header-actions">
-              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('divergent')">
-                <span>Carregar Exemplo com Divergência</span>
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportAuditCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Diagnóstico (.CSV)</span>
               </button>
-              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('clean')">
-                <span>Exemplo 100% Regular</span>
-              </button>
-              <button type="button" class="btn-apple-primary" onclick="window.RRApp.copyAuditReport(this)">
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.copyAuditReport(this)">
                 <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
-                <span>Copiar Laudo</span>
+                <span>Copiar Diagnóstico</span>
               </button>
+            </div>
+          </div>
+
+          <div class="sheet-exec-grid">
+            <div class="sheet-exec-summary">
+              <div class="sheet-hero-kpi">
+                <span class="sheet-hero-kpi-tag">ÍNDICE DE CONFORMIDADE CADASTRAL</span>
+                <strong id="audit-score-pct" class="sheet-hero-kpi-val">33%</strong>
+                <span id="audit-score-sub" class="sheet-hero-kpi-sub">Conferência cruzada entre Cartório, INCRA, Receita Federal e SICAR</span>
+              </div>
+
+              <div class="sheet-sub-kpis">
+                <div class="sheet-sub-kpi">
+                  <span>Órgãos com Divergência</span>
+                  <strong id="audit-issues-count">2 de 3</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span>Maior Diferença de Área</span>
+                  <strong id="audit-max-diff-ha">4,50 ha</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span>Área Base (Matrícula)</span>
+                  <strong id="audit-base-ha">64,50 ha</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="sheet-chart-card">
+              <div class="sheet-chart-head">
+                <strong>Comparativo de Área Declarada nos 4 Documentos (ha)</strong>
+                <span>Faixa destacada indica margem operacional de 2% sobre a Matrícula</span>
+              </div>
+              <div id="audit-svg-chart" class="sheet-chart-svg-wrap"></div>
             </div>
           </div>
 
@@ -583,47 +687,532 @@
             </table>
           </div>
 
-          <div id="audit-summary-banner" class="audit-summary-banner">
-            <!-- Preenchido dinamicamente pelo app.js -->
-          </div>
+          <div id="audit-summary-banner" class="audit-summary-banner"></div>
+
+          <details class="sheet-details">
+            <summary>Carregar cenários prontos de teste e visualizar resumo para envio</summary>
+            <div class="sheet-details-body">
+              <div class="sheet-header-actions" style="justify-content: flex-start; margin-bottom: 14px;">
+                <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('divergent')">
+                  <span>Carregar Caso com Divergência</span>
+                </button>
+                <button type="button" class="btn-apple-secondary" onclick="window.RRApp.loadAuditPreset('clean')">
+                  <span>Carregar Imóvel 100% Alinhado</span>
+                </button>
+              </div>
+
+              <div class="script-box">
+                <div class="script-box-header">
+                  <span class="script-box-title">Resumo Técnico da Auditoria Cadastral</span>
+                  <button type="button" class="btn-copy-pill" onclick="window.RRApp.copyAuditReport(this)">
+                    <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>
+                    <span>Copiar Diagnóstico</span>
+                  </button>
+                </div>
+                <pre id="audit-report-preview" class="script-pre"></pre>
+              </div>
+            </div>
+          </details>
         </section>
 
-        <!-- PLANILHA 3: META FINANCEIRA MENSAL DO CONSULTOR -->
-        <section id="tool-meta-financeira" class="interactive-sheet tool-sheet-card">
-          <div class="sheet-header">
+        <!-- PLANILHA 03: SIMULADOR DE META MENSAL E CARTEIRA RECORRENTE 12 MESES -->
+        <section id="tool-meta-financeira" data-tool-panel="tab-meta" data-role-only="consultor" class="interactive-sheet tool-sheet-card hidden">
+          <div class="sheet-header-row">
             <div>
               <span class="sheet-eyebrow">PLANILHA INTERATIVA 03</span>
-              <h2 class="sheet-title">Simulador de Meta Financeira Mensal do Consultor</h2>
-              <p class="sheet-desc">Escolha sua meta mensal de faturamento para calcular quantos atendimentos você precisa fechar por mês e por semana em cada modalidade.</p>
+              <h2 class="sheet-title">Simulador de Meta Mensal e Carteira Recorrente 12 Meses</h2>
+              <p class="sheet-desc">Projete quantos atendimentos fechar por mês e visualize o efeito bola de neve da renovação anual de ITR e CCIR.</p>
             </div>
-            <div class="goal-preset-pills">
-              <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(2000)">Meta R$ 2.000</button>
-              <button type="button" class="chip-option active" onclick="window.RRApp.setMonthlyGoal(5000)">Meta R$ 5.000</button>
-              <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(10000)">Meta R$ 10.000</button>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportGoalCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Projeção 12M (.CSV)</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.resetGoalDefaults()">
+                <span>Restaurar Padrão</span>
+              </button>
             </div>
           </div>
 
-          <div class="goal-controls-row">
+          <div class="goal-preset-pills" style="margin-bottom: 18px; justify-content: flex-start;">
+            <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(3000)">Meta R$ 3.000</button>
+            <button type="button" class="chip-option active" onclick="window.RRApp.setMonthlyGoal(5000)">Meta R$ 5.000</button>
+            <button type="button" class="chip-option" onclick="window.RRApp.setMonthlyGoal(10000)">Meta R$ 10.000</button>
+          </div>
+
+          <div class="goal-controls-grid-5">
             <div class="form-group">
-              <label for="goal-target-input">Meta mensal desejada (R$)</label>
+              <label for="goal-target-input">Meta mensal base R$</label>
               <input type="number" id="goal-target-input" class="apple-input" step="500" min="500" max="100000" value="5000" oninput="window.RRApp.recalculateGoal()">
             </div>
             <div class="form-group">
-              <label for="goal-ticket-avulso">Ticket médio Serviço Rápido (CCIR / ITR / CND)</label>
+              <label for="goal-ticket-avulso">Ticket Serviço Rápido R$</label>
               <input type="number" id="goal-ticket-avulso" class="apple-input" step="50" min="100" value="300" oninput="window.RRApp.recalculateGoal()">
             </div>
             <div class="form-group">
-              <label for="goal-ticket-inter">Ticket médio Regularização 2 Órgãos (DCR + ITR)</label>
+              <label for="goal-ticket-inter">Ticket 2 Órgãos R$</label>
               <input type="number" id="goal-ticket-inter" class="apple-input" step="50" min="300" value="950" oninput="window.RRApp.recalculateGoal()">
             </div>
             <div class="form-group">
-              <label for="goal-ticket-pack">Ticket médio Pacote Completo (3 Órgãos + Pasta)</label>
+              <label for="goal-ticket-pack">Ticket Pacote Completo R$</label>
               <input type="number" id="goal-ticket-pack" class="apple-input" step="100" min="500" value="1850" oninput="window.RRApp.recalculateGoal()">
+            </div>
+            <div class="form-group">
+              <label for="goal-retention-rate">Renovação Anual (%)</label>
+              <input type="number" id="goal-retention-rate" class="apple-input" min="0" max="100" step="5" value="65" oninput="window.RRApp.recalculateGoal()">
             </div>
           </div>
 
-          <div id="goal-results-grid" class="topic-grid">
-            <!-- Preenchido dinamicamente pelo app.js -->
+          <div class="sheet-exec-grid">
+            <div class="sheet-exec-summary">
+              <div class="sheet-hero-kpi">
+                <span class="sheet-hero-kpi-tag">FATURAMENTO ANUAL ESTIMADO (12 MESES)</span>
+                <strong id="goal-annual-total" class="sheet-hero-kpi-val">R$ 66.800</strong>
+                <span id="goal-annual-sub" class="sheet-hero-kpi-sub">Soma de novos contratos mensais + picos sazonais de ITR e CCIR</span>
+              </div>
+
+              <div class="sheet-sub-kpis">
+                <div class="sheet-sub-kpi">
+                  <span>Apenas Pacotes / mês</span>
+                  <strong id="goal-clients-pack">3 clientes</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span>Plano Mix Equilibrado</span>
+                  <strong id="goal-clients-mix">2 compl. + 2 inter.</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span>Carteira Anual Ano 2</span>
+                  <strong id="goal-recurring-year2">R$ 10.920</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="sheet-chart-card">
+              <div class="sheet-chart-head">
+                <strong>Projeção de 12 Meses: Novos Projetos + Sazonalidade ITR / CCIR</strong>
+                <span>Agosto/Setembro (entrega DITR) e Outubro/Novembro (taxa CCIR) geram demanda extra</span>
+              </div>
+              <div id="goal-svg-chart" class="sheet-chart-svg-wrap"></div>
+            </div>
+          </div>
+
+          <details class="sheet-details">
+            <summary>Ver combinações de atendimentos por semana e tabela mês a mês (Mês 01 a 12)</summary>
+            <div class="sheet-details-body">
+              <div id="goal-results-grid" class="topic-grid"></div>
+
+              <div class="apple-table-wrap">
+                <table class="apple-spec-table">
+                  <thead>
+                    <tr>
+                      <th>Mês</th>
+                      <th>Foco Sazonal no Campo</th>
+                      <th>Novos Clientes (Mix)</th>
+                      <th>Receita Base</th>
+                      <th>Extra Sazonal / Renovação</th>
+                      <th>Total Projetado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="goal-12m-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- PLANILHA 04: CONVERSOR OFICIAL DE MEDIDAS RURAIS E MODULOS FISCAIS -->
+        <section id="tool-conversor-area" data-tool-panel="tab-conversor" class="interactive-sheet tool-sheet-card hidden">
+          <div class="sheet-header-row">
+            <div>
+              <span id="conv-eyebrow" class="sheet-eyebrow">FERRAMENTA INTERATIVA 02</span>
+              <h2 class="sheet-title">Conversor Oficial de Medidas Rurais e Módulos Fiscais</h2>
+              <p class="sheet-desc">Converta alqueires regionais, tarefas, quadras, litros e metros quadrados para Hectares (ha) e descubra o enquadramento em Módulos Fiscais.</p>
+            </div>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportConverterCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Conversão (.CSV)</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.copyConverterSummary(this)">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copiar Equivalência</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sheet-grid-2">
+            <div class="sheet-controls-panel">
+              <div class="form-group">
+                <label for="conv-qty">Quantidade informada na escritura ou documento antigo</label>
+                <input type="number" id="conv-qty" class="apple-input" step="0.01" min="0.01" value="12" oninput="window.RRApp.recalculateConverter()">
+              </div>
+
+              <div class="form-group">
+                <label for="conv-unit">Unidade agrária de origem</label>
+                <select id="conv-unit" class="apple-input" onchange="window.RRApp.recalculateConverter()">
+                  <option value="alq_paulista">Alqueire Paulista (SP, PR, SC, MS, Norte PR) - 2,42 ha</option>
+                  <option value="alq_mineiro">Alqueire Mineiro / Goiano (MG, GO, TO, RJ) - 4,84 ha</option>
+                  <option value="alq_norte">Alqueire do Norte (PA, AM, MA) - 2,72 ha</option>
+                  <option value="alq_baiano">Alqueire Baiano - 9,68 ha</option>
+                  <option value="tarefa_ba">Tarefa Baiana - 0,4356 ha</option>
+                  <option value="tarefa_ce">Tarefa Nordestina (CE, SE, AL, RN) - 0,3025 ha</option>
+                  <option value="quadra_rs">Quadra Gaúcha (RS) - 1,7424 ha</option>
+                  <option value="litro">Litro Rural - 0,0605 ha</option>
+                  <option value="hectare">Hectare Oficial (ha) - 1,00 ha</option>
+                  <option value="m2">Metros Quadrados (m2) - 0,0001 ha</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="conv-uf-preset">Referência regional de Módulo Fiscal (INCRA)</label>
+                <select id="conv-uf-preset" class="apple-input" onchange="window.RRApp.applyUfModuloPreset(this.value)">
+                  <option value="custom">Informar Módulo Fiscal manualmente</option>
+                  <option value="SP">SP / PR / SC / RS - média 18 ha</option>
+                  <option value="MG">MG / ES / RJ - média 26 ha</option>
+                  <option value="GO">GO / DF / MS - média 35 ha</option>
+                  <option value="BA">BA / NE Litoral - média 30 ha</option>
+                  <option value="MT">MT / TO / PA / RO - média 75 ha</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="conv-modulo-fiscal">Tamanho de 1 Módulo Fiscal no município (ha)</label>
+                <input type="number" id="conv-modulo-fiscal" class="apple-input" min="5" max="110" step="1" value="20" oninput="window.RRApp.recalculateConverter()">
+              </div>
+            </div>
+
+            <div class="sheet-results-panel">
+              <div class="sheet-exec-summary">
+                <div class="sheet-hero-kpi">
+                  <span class="sheet-hero-kpi-tag">ÁREA OFICIAL PADRONIZADA (INCRA / ITR / CAR)</span>
+                  <strong id="conv-res-ha" class="sheet-hero-kpi-val">29,0400 ha</strong>
+                  <span id="conv-res-sub" class="sheet-hero-kpi-sub">12 Alqueires Paulistas convertidos com precisão de 4 casas decimais</span>
+                </div>
+
+                <div class="sheet-sub-kpis">
+                  <div class="sheet-sub-kpi">
+                    <span>Metros Quadrados</span>
+                    <strong id="conv-res-m2">290.400 m2</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Módulos Fiscais</span>
+                    <strong id="conv-res-mf">1,45 MF</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Classificação Legal</span>
+                    <strong id="conv-res-class">Pequena (até 4 MF)</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sheet-chart-card">
+                <div class="sheet-chart-head">
+                  <strong>Régua de Classificação Fundiária (Lei 8.629/93 e Código Florestal)</strong>
+                  <span>Até 4 MF: Pequena Propriedade · De 4 a 15 MF: Média · Acima de 15 MF: Grande</span>
+                </div>
+                <div id="converter-svg-chart" class="sheet-chart-svg-wrap"></div>
+              </div>
+            </div>
+          </div>
+
+          <details class="sheet-details">
+            <summary>Ver tabela completa desta área convertida para todas as unidades regionais do Brasil</summary>
+            <div class="sheet-details-body">
+              <div class="apple-table-wrap">
+                <table class="apple-spec-table">
+                  <thead>
+                    <tr>
+                      <th>Unidade Agrária Regional</th>
+                      <th>Regiões onde aparece em escrituras antigas</th>
+                      <th>Fator Oficial (1 un. em ha)</th>
+                      <th>Metragem (m2)</th>
+                      <th>Equivalência do Imóvel Atual</th>
+                    </tr>
+                  </thead>
+                  <tbody id="converter-all-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- PLANILHA 05: SIMULADOR PRATICO DE ITR, GRAU DE UTILIZACAO E ECONOMIA LEGAL -->
+        <section id="tool-simulador-itr" data-tool-panel="tab-itr" class="interactive-sheet tool-sheet-card hidden">
+          <div class="sheet-header-row">
+            <div>
+              <span id="itr-eyebrow" class="sheet-eyebrow">FERRAMENTA INTERATIVA 03</span>
+              <h2 class="sheet-title">Simulador Prático de ITR, Grau de Utilização e Economia Legal (Lei 9.393/96)</h2>
+              <p class="sheet-desc">Calcule a alíquota oficial do ITR pela matriz de Área Total x Grau de Utilização (GU) e veja o impacto real de declarar corretamente APP e Reserva Legal.</p>
+            </div>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportItrCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Memória ITR (.CSV)</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.resetItrDefaults()">
+                <span>Restaurar Exemplo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sheet-grid-2">
+            <div class="sheet-controls-panel">
+              <div class="form-group">
+                <label for="itr-area-total">Área Total do Imóvel Rural (ha)</label>
+                <input type="number" id="itr-area-total" class="apple-input" step="0.5" min="1" value="180" oninput="window.RRApp.recalculateItr()">
+              </div>
+
+              <div class="form-group">
+                <label for="itr-area-ambiental">Áreas Ambientais Isentas: APP + Reserva Legal + RPPN (ha)</label>
+                <input type="number" id="itr-area-ambiental" class="apple-input" step="0.5" min="0" value="54" oninput="window.RRApp.recalculateItr()">
+              </div>
+
+              <div class="form-group">
+                <label for="itr-area-utilizada">Área Efetivamente Utilizada: lavoura, pastagem, reflorestamento (ha)</label>
+                <input type="number" id="itr-area-utilizada" class="apple-input" step="0.5" min="0" value="110" oninput="window.RRApp.recalculateItr()">
+              </div>
+
+              <div class="form-group">
+                <label for="itr-vtn-ha">Valor da Terra Nua médio por hectare - VTN/ha (R$)</label>
+                <input type="number" id="itr-vtn-ha" class="apple-input" step="500" min="500" value="14500" oninput="window.RRApp.recalculateItr()">
+              </div>
+
+              <div class="form-group">
+                <label class="sheet-Toggle-option">
+                  <input type="checkbox" id="itr-pequena-gleba" onchange="window.RRApp.recalculateItr()">
+                  <span>Imóvel único de Pequena Gleba familiar explorado pelo dono (simular regra de imunidade art. 2º Lei 9.393/96)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="sheet-results-panel">
+              <div class="sheet-exec-summary">
+                <div class="sheet-hero-kpi">
+                  <span class="sheet-hero-kpi-tag">ITR ANUAL ESTIMADO (COM DECLARAÇÃO CORRETA)</span>
+                  <strong id="itr-res-imposto" class="sheet-hero-kpi-val">R$ 1.278,90</strong>
+                  <span id="itr-res-sub" class="sheet-hero-kpi-sub">Cálculo referencial conforme Anexo da Lei Federal 9.393/96 (mínimo DARF R$ 10,00)</span>
+                </div>
+
+                <div class="sheet-sub-kpis">
+                  <div class="sheet-sub-kpi">
+                    <span>Grau de Utilização (GU)</span>
+                    <strong id="itr-res-gu">87,3%</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Alíquota Oficial</span>
+                    <strong id="itr-res-aliquota">0,07%</strong>
+                  </div>
+                  <div class="sheet-sub-kpi">
+                    <span>Economia Legal Anual</span>
+                    <strong id="itr-res-economia">R$ 11.490</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sheet-chart-card">
+                <div class="sheet-chart-head">
+                  <strong>Comparativo: ITR Declarado Sem Exclusão Ambiental/Baixo GU vs. ITR Regularizado</strong>
+                  <span>Declarar CAR + ADA no IBAMA reduz legalmente a base tributável (VTNt)</span>
+                </div>
+                <div id="itr-svg-chart" class="sheet-chart-svg-wrap"></div>
+              </div>
+            </div>
+          </div>
+
+          <details class="sheet-details">
+            <summary>Ver memória completa do DIAT e Tabela Oficial de Alíquotas da Lei 9.393/96</summary>
+            <div class="sheet-details-body">
+              <div class="apple-table-wrap">
+                <table class="apple-spec-table">
+                  <thead>
+                    <tr>
+                      <th>Campo na Ficha DIAT (PGD ITR)</th>
+                      <th>Fórmula / Base</th>
+                      <th>Valor Apurado na Simulação</th>
+                    </tr>
+                  </thead>
+                  <tbody id="itr-memory-tbody"></tbody>
+                </table>
+              </div>
+
+              <div class="apple-table-wrap">
+                <table class="apple-spec-table">
+                  <thead>
+                    <tr>
+                      <th>Faixa de Área Total (Lei 9.393/96)</th>
+                      <th>Acima de 80%</th>
+                      <th>65% a 80%</th>
+                      <th>50% a 65%</th>
+                      <th>30% a 50%</th>
+                      <th>Até 30%</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>Até 50 ha</strong></td>
+                      <td>0,03%</td>
+                      <td>0,20%</td>
+                      <td>0,40%</td>
+                      <td>0,70%</td>
+                      <td>1,00%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>50 a 200 ha</strong></td>
+                      <td>0,07%</td>
+                      <td>0,40%</td>
+                      <td>0,80%</td>
+                      <td>1,40%</td>
+                      <td>2,00%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>200 a 500 ha</strong></td>
+                      <td>0,10%</td>
+                      <td>0,60%</td>
+                      <td>1,30%</td>
+                      <td>2,30%</td>
+                      <td>3,30%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>500 a 1.000 ha</strong></td>
+                      <td>0,15%</td>
+                      <td>0,85%</td>
+                      <td>1,90%</td>
+                      <td>3,30%</td>
+                      <td>4,70%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>1.000 a 5.000 ha</strong></td>
+                      <td>0,30%</td>
+                      <td>1,60%</td>
+                      <td>3,40%</td>
+                      <td>6,00%</td>
+                      <td>8,60%</td>
+                    </tr>
+                    <tr>
+                      <td><strong>Acima de 5.000 ha</strong></td>
+                      <td>0,45%</td>
+                      <td>3,00%</td>
+                      <td>6,40%</td>
+                      <td>12,00%</td>
+                      <td>20,00%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <!-- PLANILHA 06: CARTEIRA CRM DE CLIENTES, PROTOCOLOS E RECEBIVEIS -->
+        <section id="tool-carteira-crm" data-tool-panel="tab-crm" class="interactive-sheet tool-sheet-card hidden">
+          <div class="sheet-header-row">
+            <div>
+              <span id="crm-eyebrow" class="sheet-eyebrow">FERRAMENTA INTERATIVA 04</span>
+              <h2 id="crm-title" class="sheet-title">Ficha Patrimonial das Minhas Glebas e Vencimentos</h2>
+              <p id="crm-desc" class="sheet-desc">Organize as matrículas e glebas da sua propriedade, códigos CCIR/CIB/CAR, taxas anuais e situação cadastral salvos neste navegador.</p>
+            </div>
+            <div class="sheet-header-actions">
+              <button type="button" class="btn-apple-primary" onclick="window.RRApp.exportCrmCsv()">
+                <svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Baixar Planilha (.CSV)</span>
+              </button>
+              <button type="button" class="btn-apple-secondary" onclick="window.RRApp.resetCrmDemo()">
+                <span>Restaurar Exemplo</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="sheet-exec-grid">
+            <div class="sheet-exec-summary">
+              <div class="sheet-hero-kpi">
+                <span id="crm-kpi-main-tag" class="sheet-hero-kpi-tag">TAXAS E IMPOSTOS ANUAIS ESTIMADOS</span>
+                <strong id="crm-kpi-main" class="sheet-hero-kpi-val">R$ 6.450</strong>
+                <span id="crm-kpi-main-sub" class="sheet-hero-kpi-sub">Salvo automaticamente em localStorage neste dispositivo</span>
+              </div>
+
+              <div class="sheet-sub-kpis">
+                <div class="sheet-sub-kpi">
+                  <span id="crm-kpi-sub1-label">Já Quitado</span>
+                  <strong id="crm-kpi-sub1">R$ 3.850</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span id="crm-kpi-sub2-label">Em Aberto no Ano</span>
+                  <strong id="crm-kpi-sub2">R$ 2.600</strong>
+                </div>
+                <div class="sheet-sub-kpi">
+                  <span id="crm-kpi-sub3-label">Glebas Cadastradas</span>
+                  <strong id="crm-kpi-sub3">4 imóveis</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="sheet-chart-card">
+              <div class="sheet-chart-head">
+                <strong id="crm-chart-title">Situação de Quitação Anual e Regularidade das Glebas</strong>
+                <span id="crm-chart-sub">Comparativo em tempo real entre taxas quitadas, em aberto e situação cadastral</span>
+              </div>
+              <div id="crm-svg-chart" class="sheet-chart-svg-wrap"></div>
+            </div>
+          </div>
+
+          <div class="crm-quick-form">
+            <div class="form-group">
+              <label id="crm-label-name" for="crm-name">Cliente / Propriedade</label>
+              <input type="text" id="crm-name" class="apple-input" placeholder="Ex.: Sítio São José (Sr. Marcos)">
+            </div>
+            <div class="form-group">
+              <label id="crm-label-doc" for="crm-doc">Órgãos / Códigos</label>
+              <input type="text" id="crm-doc" class="apple-input" placeholder="Ex.: DCR INCRA + ITR + CAR">
+            </div>
+            <div class="form-group">
+              <label for="crm-ha">Área (ha)</label>
+              <input type="number" id="crm-ha" class="apple-input" step="0.1" min="0.1" placeholder="48">
+            </div>
+            <div class="form-group">
+              <label id="crm-label-value" for="crm-value">Honorários (R$)</label>
+              <input type="number" id="crm-value" class="apple-input" step="50" min="0" placeholder="1650">
+            </div>
+            <div class="form-group">
+              <label for="crm-status">Etapa Atual</label>
+              <select id="crm-status" class="apple-input">
+                <option value="Triagem">Triagem Documental</option>
+                <option value="Em Protocolo">Em Protocolo</option>
+                <option value="Aguardando Órgão">Aguardando Órgão</option>
+                <option value="Concluído">Concluído / Quitado</option>
+              </select>
+            </div>
+            <button type="button" class="btn-apple-primary" onclick="window.RRApp.addCrmRow()">
+              <span>Adicionar</span>
+            </button>
+          </div>
+
+          <div class="apple-table-wrap">
+            <table id="crm-table" class="apple-spec-table">
+              <thead id="crm-thead"></thead>
+              <tbody id="crm-tbody"></tbody>
+            </table>
           </div>
         </section>
 

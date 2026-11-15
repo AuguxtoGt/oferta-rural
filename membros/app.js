@@ -15,6 +15,8 @@
     clock: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/></svg>',
     play: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="6 4 20 12 6 20 6 4"/></svg>',
     copy: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    download: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
+    trash: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>',
     arrowRight: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>',
     arrowLeft: '<svg class="icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>'
   };
@@ -248,8 +250,11 @@
     currentModule: null,
     currentLessonIndex: 0,
     modalModule: null,
-    aiMessages: []
+    aiMessages: [],
+    activeToolTab: 'tab-honorarios'
   };
+
+  let isRestoringTools = false;
 
   /* ========================================================================
      UTILITARIOS DE SANITIZACAO (ZERO EMOJIS E ZERO TRAVESSOES)
@@ -274,6 +279,64 @@
   function formatBRL(value) {
     const num = Math.round(Number(value) || 0);
     return 'R$ ' + num.toLocaleString('pt-BR');
+  }
+
+  function formatBRLCents(value) {
+    const num = Number(value) || 0;
+    return (
+      'R$ ' +
+      num.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })
+    );
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
+
+  function setHtml(id, html) {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  }
+
+  function escapeCsvCell(val) {
+    const clean = sanitizeCleanText(val === null || val === undefined ? '' : String(val)).trim();
+    if (/[;"\r\n]/.test(clean)) {
+      return '"' + clean.replace(/"/g, '""') + '"';
+    }
+    return clean;
+  }
+
+  function downloadCsvFile(filename, headers, rows) {
+    const rawName = sanitizeCleanText(filename || 'planilha-imovel-rural.csv')
+      .replace(/[^a-zA-Z0-9._-]/g, '-')
+      .replace(/-+/g, '-');
+    const finalName = rawName.toLowerCase().endsWith('.csv') ? rawName : `${rawName}.csv`;
+
+    const csvLines = [];
+    if (Array.isArray(headers) && headers.length > 0) {
+      csvLines.push(headers.map(escapeCsvCell).join(';'));
+    }
+    (rows || []).forEach((row) => {
+      if (Array.isArray(row)) {
+        csvLines.push(row.map(escapeCsvCell).join(';'));
+      }
+    });
+
+    const csvContent = csvLines.join('\r\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', finalName);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    showToast('Planilha .CSV baixada com sucesso.');
   }
 
   function showToast(message) {
@@ -870,32 +933,130 @@
       navAi.textContent = isProp ? 'Tira-Dúvidas IA' : 'Consultor IA';
     }
 
-    // Ajusta visibilidade das planilhas na aba de Ferramentas conforme o perfil
-    const calcSheet = document.getElementById('tool-calc-honorarios');
-    const goalSheet = document.getElementById('tool-meta-financeira');
-    const toolsEyebrow = document.getElementById('tools-eyebrow');
-    const toolsTitle = document.getElementById('tools-title');
-    const toolsSubtitle = document.getElementById('tools-subtitle');
+    // Ajusta navegacao e cabecalhos das 6 planilhas interativas conforme o perfil
     const toolsNavPills = document.getElementById('tools-nav-pills');
-
-    if (calcSheet) calcSheet.classList.toggle('hidden', isProp);
-    if (goalSheet) goalSheet.classList.toggle('hidden', isProp);
-    if (toolsNavPills) toolsNavPills.classList.toggle('hidden', isProp);
-
-    if (toolsEyebrow) {
-      toolsEyebrow.textContent = isProp
-        ? 'DIAGNÓSTICO DOCUMENTAL DO PROPRIETÁRIO'
-        : 'FERRAMENTAS OPERACIONAIS';
+    if (toolsNavPills) {
+      toolsNavPills.classList.remove('hidden');
     }
-    if (toolsTitle) {
-      toolsTitle.textContent = isProp
-        ? 'Conferência dos 4 Documentos da Sua Terra.'
-        : 'Planilhas e Calculadoras de Campo.';
+
+    const pillHonorarios = document.getElementById('pill-tab-honorarios');
+    const pillAuditoria = document.getElementById('pill-tab-auditoria');
+    const pillMeta = document.getElementById('pill-tab-meta');
+    const pillConversor = document.getElementById('pill-tab-conversor');
+    const pillItr = document.getElementById('pill-tab-itr');
+    const pillCrm = document.getElementById('pill-tab-crm');
+
+    document.querySelectorAll('#tools-nav-pills [data-role-only="consultor"]').forEach((el) => {
+      el.classList.toggle('hidden', isProp);
+    });
+
+    if (isProp) {
+      if (pillAuditoria) pillAuditoria.textContent = '01 Diagnóstico 4 Órgãos';
+      if (pillConversor) pillConversor.textContent = '02 Conversor de Área';
+      if (pillItr) pillItr.textContent = '03 Simulador Meu ITR';
+      if (pillCrm) pillCrm.textContent = '04 Ficha da Minha Terra';
+      setText('tools-eyebrow', 'FERRAMENTAS DA PROPRIEDADE');
+      setText('tools-title', 'Planilhas e Simuladores da Sua Terra.');
+      setText(
+        'tools-subtitle',
+        'Confira os 4 documentos do imóvel, converta medidas antigas para hectares, simule seu ITR legal e organize a ficha das suas glebas.'
+      );
+      setText('audit-eyebrow', 'FERRAMENTA INTERATIVA 01');
+      setText(
+        'audit-title',
+        'Diagnóstico dos 4 Documentos da Sua Terra (Matrícula x CCIR x ITR x CAR)'
+      );
+      setText('conv-eyebrow', 'FERRAMENTA INTERATIVA 02');
+      setText('itr-eyebrow', 'FERRAMENTA INTERATIVA 03');
+      setText('crm-eyebrow', 'FERRAMENTA INTERATIVA 04');
+      setText('crm-title', 'Ficha Patrimonial das Minhas Glebas e Vencimentos');
+      setText(
+        'crm-desc',
+        'Organize as matrículas e glebas da sua propriedade, códigos CCIR/CIB/CAR, taxas anuais e situação cadastral salvos neste navegador.'
+      );
+      setText('crm-kpi-main-tag', 'TAXAS E IMPOSTOS ANUAIS ESTIMADOS');
+      setText('crm-kpi-sub1-label', 'Já Quitado');
+      setText('crm-kpi-sub2-label', 'Em Aberto no Ano');
+      setText('crm-kpi-sub3-label', 'Glebas Cadastradas');
+      setText('crm-label-name', 'Gleba / Imóvel');
+      setText('crm-label-doc', 'Matrícula / CCIR / CIB');
+      setText('crm-label-value', 'Taxa / Imposto Anual (R$)');
+      setText('crm-chart-title', 'Situação de Quitação Anual e Regularidade das Glebas');
+      setText(
+        'crm-chart-sub',
+        'Comparativo em tempo real entre taxas quitadas, em aberto e situação cadastral'
+      );
+    } else {
+      if (pillHonorarios) pillHonorarios.textContent = '01 Honorários';
+      if (pillAuditoria) pillAuditoria.textContent = '02 Auditoria 4 Órgãos';
+      if (pillMeta) pillMeta.textContent = '03 Meta 12 Meses';
+      if (pillConversor) pillConversor.textContent = '04 Conversor de Área';
+      if (pillItr) pillItr.textContent = '05 Simulador ITR';
+      if (pillCrm) pillCrm.textContent = '06 Carteira CRM';
+      setText('tools-eyebrow', 'CENTRAL OPERACIONAL DO CONSULTOR');
+      setText('tools-title', '6 Planilhas e Simuladores de Campo.');
+      setText(
+        'tools-subtitle',
+        'Calcule honorários, audite os 4 órgãos, projete 12 meses de receita, converta áreas, simule ITR e gerencie sua carteira com gráficos e Excel .CSV.'
+      );
+      setText('audit-eyebrow', 'PLANILHA INTERATIVA 02');
+      setText(
+        'audit-title',
+        'Auditoria Cruzada dos 4 Órgãos (Matrícula x CCIR x ITR x CAR)'
+      );
+      setText('conv-eyebrow', 'PLANILHA INTERATIVA 04');
+      setText('itr-eyebrow', 'PLANILHA INTERATIVA 05');
+      setText('crm-eyebrow', 'PLANILHA INTERATIVA 06');
+      setText('crm-title', 'Carteira CRM de Clientes e Recebíveis 50/50');
+      setText(
+        'crm-desc',
+        'Cadastre seus atendimentos ativos, acompanhe o andamento nos órgãos e controle entradas e saldos salvos automaticamente no seu navegador.'
+      );
+      setText('crm-kpi-main-tag', 'VALOR TOTAL EM CARTEIRA');
+      setText('crm-kpi-sub1-label', 'Já Recebido');
+      setText('crm-kpi-sub2-label', 'A Receber na Entrega');
+      setText('crm-kpi-sub3-label', 'Pastas Ativas');
+      setText('crm-label-name', 'Cliente / Propriedade');
+      setText('crm-label-doc', 'Órgãos / Códigos');
+      setText('crm-label-value', 'Honorários (R$)');
+      setText('crm-chart-title', 'Distribuição Financeira e Status Operacional da Carteira');
+      setText(
+        'crm-chart-sub',
+        'Comparativo em tempo real entre valores recebidos, pendentes e etapas'
+      );
     }
-    if (toolsSubtitle) {
-      toolsSubtitle.textContent = isProp
-        ? 'Digite abaixo o nome, CPF e área que constam na sua Matrícula, no seu CCIR, no seu ITR e no seu CAR para descobrir na hora se há divergência travando o seu imóvel.'
-        : 'Simule honorários por hectare, faça a auditoria cruzada dos 4 documentos do imóvel e planeje sua meta mensal.';
+
+    const crmNameInput = document.getElementById('crm-name');
+    const crmDocInput = document.getElementById('crm-doc');
+    const crmValueInput = document.getElementById('crm-value');
+    const crmStatusSelect = document.getElementById('crm-status');
+    if (crmNameInput) {
+      crmNameInput.placeholder = isProp
+        ? 'Ex.: Gleba Principal - Sítio São José'
+        : 'Ex.: Sítio São José (Sr. Marcos)';
+    }
+    if (crmDocInput) {
+      crmDocInput.placeholder = isProp
+        ? 'Ex.: Matr. 14.820 · CCIR e CIB'
+        : 'Ex.: DCR INCRA + ITR + CAR';
+    }
+    if (crmValueInput) {
+      crmValueInput.placeholder = isProp ? '240' : '1650';
+    }
+    if (crmStatusSelect && crmStatusSelect.getAttribute('data-role-mode') !== (isProp ? 'prop' : 'cons')) {
+      crmStatusSelect.setAttribute('data-role-mode', isProp ? 'prop' : 'cons');
+      crmStatusSelect.innerHTML = isProp
+        ? [
+            '<option value="Em Dia">Em Dia</option>',
+            '<option value="Em Atualização">Em Atualização</option>',
+            '<option value="Pendente">Pendente</option>'
+          ].join('')
+        : [
+            '<option value="Triagem">Triagem Documental</option>',
+            '<option value="Em Protocolo">Em Protocolo</option>',
+            '<option value="Aguardando Órgão">Aguardando Órgão</option>',
+            '<option value="Concluído">Concluído / Quitado</option>'
+          ].join('');
     }
 
     // Atualiza as 4 pilulas de sugestao do chat de IA
@@ -932,6 +1093,10 @@
         ? '<strong>Aviso Legal:</strong> Este portal possui caráter exclusivamente educacional e informativo sobre organização documental de imóveis rurais, sem qualquer vínculo com INCRA, Receita Federal, SICAR, IBAMA, cartórios ou instituições financeiras. Os guias, checklists, diagnósticos e modelos disponibilizados são referenciais e não substituem análise técnica, jurídica, contábil, tributária, ambiental ou fundiária individualizada, nem dispensam a contratação de profissional habilitado em conselho de classe (como CREA, CFT, OAB ou CRC) quando exigido por lei, cartório, banco ou órgão público (incluindo georreferenciamento no SIGEF, plantas, memoriais com ART/TRT, retificações contenciosas e projetos PRADA). Sistemas oficiais, normas, prazos, taxas e exigências podem mudar sem aviso prévio: confira sempre todas as informações diretamente nos canais oficiais e órgãos competentes antes de executar qualquer procedimento ou assinar documentos.'
         : '<strong>Aviso Legal:</strong> Esta plataforma possui caráter exclusivamente educacional e informativo sobre rotinas cadastrais de imóveis rurais, sem qualquer vínculo com INCRA, Receita Federal, SICAR, IBAMA, cartórios ou instituições financeiras. O conteúdo, as planilhas e os modelos disponibilizados são referenciais e não substituem análise técnica, jurídica, contábil, tributária, ambiental ou fundiária individualizada, nem habilitam para atos privativos de profissionais registrados em conselhos de classe (como CREA, CFT, OAB ou CRC, incluindo georreferenciamento no SIGEF, plantas, memoriais ou laudos com ART/TRT e projetos PRADA). Valores de honorários, tabelas de preços e simulações financeiras são estimativas educativas de mercado, sem promessa ou garantia de faturamento. Sistemas oficiais, normas, prazos, taxas e exigências podem mudar sem aviso prévio: confira sempre todas as informações diretamente nos canais oficiais e órgãos competentes antes de executar qualquer procedimento ou assinar documentos.';
     }
+
+    renderCrmSheet();
+    switchToolTab(state.activeToolTab);
+    updateHomeKpiStrip();
   }
 
   function getCompletedLessonsSet() {
@@ -944,11 +1109,16 @@
 
   function computeOverallProgress() {
     const completed = getCompletedLessonsSet();
+    const isProp = isProprietarioMode();
+    const activeTracks = isProp ? PROPRIETARIO_TRACKS : CANONICAL_TRACKS;
     let totalLessons = 0;
     let doneCount = 0;
 
     state.modules.forEach((mod) => {
-      if (mod.unlocked && Array.isArray(mod.lessons)) {
+      const inRole = activeTracks.some(
+        (t) => mod.numInt >= t.modRange[0] && mod.numInt <= t.modRange[1]
+      );
+      if (inRole && mod.unlocked && Array.isArray(mod.lessons)) {
         mod.lessons.forEach((lesson) => {
           totalLessons += 1;
           if (completed.has(lesson.id)) doneCount += 1;
@@ -958,6 +1128,42 @@
 
     const pct = totalLessons > 0 ? Math.round((doneCount / totalLessons) * 100) : 0;
     return { totalLessons, doneCount, pct };
+  }
+
+  function updateHomeKpiStrip() {
+    const isProp = isProprietarioMode();
+    const prog = computeOverallProgress();
+    const activeTracks = isProp ? PROPRIETARIO_TRACKS : CANONICAL_TRACKS;
+    const roleModules = state.modules.filter((m) =>
+      activeTracks.some((t) => m.numInt >= t.modRange[0] && m.numInt <= t.modRange[1])
+    );
+    const totalVisibleModsCount = roleModules.length || (isProp ? 14 : 23);
+    const unlockedModsCount = roleModules.filter((m) => m.unlocked).length;
+
+    let checksCount = 0;
+    try {
+      const savedChecks = JSON.parse(localStorage.getItem('rr_checklist_items') || '{}');
+      if (savedChecks && typeof savedChecks === 'object') {
+        checksCount = Object.keys(savedChecks).filter((k) => Boolean(savedChecks[k])).length;
+      }
+    } catch (_e) {
+      checksCount = 0;
+    }
+
+    setText('kpi-overall-pct', `${prog.pct}%`);
+    const barEl = document.getElementById('kpi-overall-bar');
+    if (barEl) barEl.style.width = `${prog.pct}%`;
+    setText('kpi-overall-sub', `${prog.doneCount} concluídas de ${prog.totalLessons} liberadas`);
+    setText('kpi-lessons-done', `${prog.doneCount} / ${prog.totalLessons || 70}`);
+    setText('kpi-mods-unlocked', `${unlockedModsCount} de ${totalVisibleModsCount} módulos liberados`);
+    setText('kpi-checks-done', `${checksCount} ${checksCount === 1 ? 'item' : 'itens'}`);
+
+    setText('kpi-tools-eyebrow', isProp ? 'Ferramentas da Terra' : 'Central Operacional');
+    setText('kpi-tools-count', isProp ? '4 Ferramentas' : '6 Planilhas');
+    setText(
+      'kpi-tools-cta',
+      isProp ? 'Diagnóstico, área, ITR e ficha .CSV' : 'Gráficos ao vivo e download .CSV'
+    );
   }
 
   function updateHeaderAndProfile() {
@@ -987,6 +1193,7 @@
     if (barEl) barEl.style.width = `${prog.pct}%`;
 
     applyRoleUiTheme();
+    updateHomeKpiStrip();
     updateAiAccessState();
   }
 
@@ -1013,6 +1220,12 @@
       recalculatePricing();
       runCrossAudit();
       recalculateGoal();
+      recalculateConverter();
+      recalculateItr();
+      renderCrmSheet();
+      switchToolTab(state.activeToolTab);
+    } else if (viewName === 'home') {
+      updateHomeKpiStrip();
     } else if (viewName === 'ai') {
       updateAiAccessState();
       if (state.aiMessages.length === 0) {
@@ -1196,6 +1409,7 @@
     }
 
     container.innerHTML = html;
+    updateHomeKpiStrip();
   }
 
   function scrollCarousel(carouselId, delta) {
@@ -1531,7 +1745,7 @@
       el.classList.toggle('hidden', hide);
     });
 
-    // 1. Envolve tabelas soltas em .apple-table-wrap
+    // 1. Envolve tabelas soltas em .apple-table-wrap e injeta barra de filtro + exportacao .CSV
     container.querySelectorAll('table').forEach((tbl) => {
       if (!tbl.parentElement.classList.contains('apple-table-wrap')) {
         const wrap = document.createElement('div');
@@ -1539,6 +1753,79 @@
         tbl.parentNode.insertBefore(wrap, tbl);
         wrap.appendChild(tbl);
       }
+    });
+
+    container.querySelectorAll('.apple-table-wrap').forEach((wrap, idx) => {
+      if (wrap.querySelector('.table-toolbar')) return;
+      const tbl = wrap.querySelector('table');
+      if (!tbl) return;
+      if (tbl.querySelector('input, select, textarea')) return;
+
+      const allRows = Array.from(tbl.querySelectorAll('tr'));
+      const hasThead = Boolean(tbl.tHead && tbl.tHead.rows.length > 0);
+      const firstRowHasTh = allRows.length > 0 && Boolean(allRows[0].querySelector('th'));
+      const headRow = hasThead ? tbl.tHead.rows[0] : firstRowHasTh ? allRows[0] : null;
+      const bodyRows =
+        hasThead && tbl.tBodies && tbl.tBodies.length > 0 && tbl.tBodies[0].rows.length > 0
+          ? Array.from(tbl.tBodies[0].rows)
+          : headRow
+            ? allRows.slice(1)
+            : allRows;
+      const rowCount = bodyRows.length;
+      if (rowCount === 0) return;
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'table-toolbar';
+
+      const metaSpan = document.createElement('span');
+      metaSpan.className = 'table-toolbar-meta';
+      metaSpan.textContent = `${rowCount} ${rowCount === 1 ? 'registro' : 'registros'} na tabela`;
+
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'table-toolbar-actions';
+
+      if (rowCount >= 5) {
+        const filterInput = document.createElement('input');
+        filterInput.type = 'search';
+        filterInput.className = 'table-filter-input';
+        filterInput.placeholder = 'Filtrar na tabela...';
+        filterInput.setAttribute('aria-label', 'Filtrar linhas da tabela');
+        filterInput.addEventListener('input', () => {
+          const q = normStr(filterInput.value);
+          let visible = 0;
+          bodyRows.forEach((tr) => {
+            const match = !q || normStr(tr.textContent).includes(q);
+            tr.classList.toggle('hidden', !match);
+            if (match) visible += 1;
+          });
+          metaSpan.textContent = q
+            ? `${visible} de ${rowCount} registros`
+            : `${rowCount} ${rowCount === 1 ? 'registro' : 'registros'} na tabela`;
+        });
+        actionsDiv.appendChild(filterInput);
+      }
+
+      const csvBtn = document.createElement('button');
+      csvBtn.type = 'button';
+      csvBtn.className = 'btn-table-csv';
+      csvBtn.innerHTML = `${SVG_ICONS.download}<span>Baixar .CSV</span>`;
+      csvBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const headers = headRow
+          ? Array.from(headRow.querySelectorAll('th, td')).map((c) => c.textContent.trim())
+          : [];
+        const visibleRows = bodyRows
+          .filter((tr) => !tr.classList.contains('hidden'))
+          .map((tr) =>
+            Array.from(tr.querySelectorAll('td, th')).map((c) => c.textContent.trim())
+          );
+        downloadCsvFile(`${lessonId}-tabela-${idx + 1}.csv`, headers, visibleRows);
+      });
+      actionsDiv.appendChild(csvBtn);
+
+      toolbar.appendChild(metaSpan);
+      toolbar.appendChild(actionsDiv);
+      wrap.insertBefore(toolbar, wrap.firstChild);
     });
 
     // 2. Injeta botao Copiar Modelo em blocos de script e documento
@@ -1559,7 +1846,12 @@
     });
 
     // 3. Checklists interativos (.check-item e .check li)
-    const savedChecks = JSON.parse(localStorage.getItem('rr_checklist_items') || '{}');
+    let savedChecks = {};
+    try {
+      savedChecks = JSON.parse(localStorage.getItem('rr_checklist_items') || '{}') || {};
+    } catch (_e) {
+      savedChecks = {};
+    }
     const checkItems = container.querySelectorAll('.check-item, .check li');
     checkItems.forEach((item, idx) => {
       const itemKey = `${lessonId}-chk-${idx}`;
@@ -1579,13 +1871,16 @@
 
       item.addEventListener('click', () => {
         const nowChecked = item.classList.toggle('is-checked');
-        const store = JSON.parse(localStorage.getItem('rr_checklist_items') || '{}');
-        if (nowChecked) {
-          store[itemKey] = true;
-        } else {
-          delete store[itemKey];
-        }
-        localStorage.setItem('rr_checklist_items', JSON.stringify(store));
+        try {
+          const store = JSON.parse(localStorage.getItem('rr_checklist_items') || '{}') || {};
+          if (nowChecked) {
+            store[itemKey] = true;
+          } else {
+            delete store[itemKey];
+          }
+          localStorage.setItem('rr_checklist_items', JSON.stringify(store));
+        } catch (_e) {}
+        updateHomeKpiStrip();
       });
     });
 
@@ -1650,6 +1945,7 @@
     renderClassroomSidebarLessons();
     renderActiveLessonContent();
     renderTracks();
+    updateHomeKpiStrip();
     showToast('Progresso atualizado.');
   }
 
@@ -1687,8 +1983,342 @@
   }
 
   /* ========================================================================
-     ABA "FERRAMENTAS E PLANILHAS" (3 PLANILHAS INTERATIVAS)
+     ABA "FERRAMENTAS E PLANILHAS" (6 PLANILHAS INTERATIVAS + GRAFICOS SVG + CSV)
      ======================================================================== */
+  const TOOLS_STORAGE_KEY = 'rr_tools_v2';
+  const CRM_CONS_STORAGE_KEY = 'rr_crm_cons_v2';
+  const CRM_PROP_STORAGE_KEY = 'rr_crm_prop_v2';
+
+  const AGRARIAN_UNITS = [
+    {
+      key: 'alq_paulista',
+      label: 'Alqueire Paulista',
+      plural: 'Alqueires Paulistas',
+      regions: 'SP, PR, SC, MS e Norte do PR',
+      factorHa: 2.42,
+      inTable: true
+    },
+    {
+      key: 'alq_mineiro',
+      label: 'Alqueire Mineiro / Goiano',
+      plural: 'Alqueires Mineiros / Goianos',
+      regions: 'MG, GO, TO, DF e RJ',
+      factorHa: 4.84,
+      inTable: true
+    },
+    {
+      key: 'alq_norte',
+      label: 'Alqueire do Norte',
+      plural: 'Alqueires do Norte',
+      regions: 'PA, AM, MA e Região Norte',
+      factorHa: 2.72,
+      inTable: true
+    },
+    {
+      key: 'alq_baiano',
+      label: 'Alqueire Baiano',
+      plural: 'Alqueires Baianos',
+      regions: 'BA (interior e Chapada)',
+      factorHa: 9.68,
+      inTable: true
+    },
+    {
+      key: 'tarefa_ba',
+      label: 'Tarefa Baiana',
+      plural: 'Tarefas Baianas',
+      regions: 'Bahia e Recôncavo',
+      factorHa: 0.4356,
+      inTable: true
+    },
+    {
+      key: 'tarefa_ce',
+      label: 'Tarefa Nordestina',
+      plural: 'Tarefas Nordestinas',
+      regions: 'CE, SE, AL e RN',
+      factorHa: 0.3025,
+      inTable: true
+    },
+    {
+      key: 'quadra_rs',
+      label: 'Quadra Gaúcha',
+      plural: 'Quadras Gaúchas',
+      regions: 'Rio Grande do Sul (RS)',
+      factorHa: 1.7424,
+      inTable: true
+    },
+    {
+      key: 'litro',
+      label: 'Litro Rural',
+      plural: 'Litros Rurais',
+      regions: 'Sul, MG e interior de SP',
+      factorHa: 0.0605,
+      inTable: true
+    },
+    {
+      key: 'hectare',
+      label: 'Hectare Oficial (ha)',
+      plural: 'Hectares Oficiais (ha)',
+      regions: 'Padrão nacional INCRA, ITR e CAR',
+      factorHa: 1.0,
+      inTable: true
+    },
+    {
+      key: 'm2',
+      label: 'Metro Quadrado (m2)',
+      plural: 'Metros Quadrados (m2)',
+      regions: 'Chácaras e desmembramentos',
+      factorHa: 0.0001,
+      inTable: false
+    }
+  ];
+
+  const ITR_RATES_MATRIX = [
+    { maxHa: 50, label: 'Até 50 ha', rates: [0.03, 0.2, 0.4, 0.7, 1.0] },
+    { maxHa: 200, label: 'Acima de 50 a 200 ha', rates: [0.07, 0.4, 0.8, 1.4, 2.0] },
+    { maxHa: 500, label: 'Acima de 200 a 500 ha', rates: [0.1, 0.6, 1.3, 2.3, 3.3] },
+    { maxHa: 1000, label: 'Acima de 500 a 1.000 ha', rates: [0.15, 0.85, 1.9, 3.3, 4.7] },
+    { maxHa: 5000, label: 'Acima de 1.000 a 5.000 ha', rates: [0.3, 1.6, 3.4, 6.0, 8.6] },
+    { maxHa: Infinity, label: 'Acima de 5.000 ha', rates: [0.45, 3.0, 6.4, 12.0, 20.0] }
+  ];
+
+  const GOAL_SEASONAL_MONTHS = [
+    { short: 'Jan', mult: 1.0, focus: 'Planejamento anual e pastas rurais' },
+    { short: 'Fev', mult: 1.0, focus: 'Atualização de matrículas e CCIR' },
+    { short: 'Mar', mult: 1.0, focus: 'Custeio safra e certidões negativas' },
+    { short: 'Abr', mult: 1.0, focus: 'Saneamento cadastral SNCR e CAR' },
+    { short: 'Mai', mult: 1.0, focus: 'Abertura da emissão anual do CCIR' },
+    { short: 'Jun', mult: 1.0, focus: 'Quitação de CCIR e vínculo CNIR' },
+    { short: 'Jul', mult: 1.0, focus: 'Pré-conferência documental de ITR/ADA' },
+    { short: 'Ago', mult: 1.35, focus: 'Abertura da temporada anual DITR (1,35x)' },
+    { short: 'Set', mult: 1.5, focus: 'Pico final de entrega do ITR e DARF (1,50x)' },
+    { short: 'Out', mult: 1.25, focus: 'Regularização pós-prazo, CCIR e crédito (1,25x)' },
+    { short: 'Nov', mult: 1.2, focus: 'Renovação de certidões e crédito rural (1,20x)' },
+    { short: 'Dez', mult: 1.0, focus: 'Revisão patrimonial e contratos anuais' }
+  ];
+
+  function getDefaultCrmItems(isProp) {
+    if (isProp) {
+      return [
+        {
+          id: 'prop-1',
+          name: 'Gleba Principal - Sítio São José',
+          doc: 'Matr. 14.820 · CCIR e CIB',
+          ha: 42.5,
+          value: 280,
+          status: 'Em Dia',
+          paidMode: 'full'
+        },
+        {
+          id: 'prop-2',
+          name: 'Gleba 02 - Pasto da Serra',
+          doc: 'Matr. 19.104 · Atualizar DCR',
+          ha: 26.0,
+          value: 195,
+          status: 'Em Atualização',
+          paidMode: 'pending'
+        },
+        {
+          id: 'prop-3',
+          name: 'Reserva Legal Averbada / CAR',
+          doc: 'Recibo SICAR + ADA IBAMA',
+          ha: 14.0,
+          value: 110,
+          status: 'Em Dia',
+          paidMode: 'full'
+        }
+      ];
+    }
+    return [
+      {
+        id: 'cons-1',
+        name: 'Fazenda Santa Helena - Sr. João',
+        doc: 'DCR INCRA + ITR + CAR',
+        ha: 145,
+        value: 2400,
+        status: 'Em Protocolo',
+        paidMode: 'partial'
+      },
+      {
+        id: 'cons-2',
+        name: 'Sítio Boa Vista - Espólio Família Lima',
+        doc: 'CCIR Falecido + CAFIR/CNIR',
+        ha: 38,
+        value: 1450,
+        status: 'Aguardando Órgão',
+        paidMode: 'partial'
+      },
+      {
+        id: 'cons-3',
+        name: 'Chácara Recanto Verde - Dona Marta',
+        doc: 'Emissão CCIR + CND ITR',
+        ha: 14,
+        value: 650,
+        status: 'Concluído',
+        paidMode: 'full'
+      },
+      {
+        id: 'cons-4',
+        name: 'Estância São Pedro - Irmãos Souza',
+        doc: 'Pacote 4 Órgãos + Pasta Crédito',
+        ha: 210,
+        value: 2900,
+        status: 'Triagem',
+        paidMode: 'pending'
+      }
+    ];
+  }
+
+  function saveToolsState() {
+    if (isRestoringTools) return;
+    try {
+      const textIds = [
+        'calc-client-name',
+        'calc-hectares',
+        'calc-complexity',
+        'aud-mat-nome',
+        'aud-mat-cpf',
+        'aud-mat-area',
+        'aud-ccir-nome',
+        'aud-ccir-cpf',
+        'aud-ccir-area',
+        'aud-itr-nome',
+        'aud-itr-cpf',
+        'aud-itr-area',
+        'aud-car-nome',
+        'aud-car-cpf',
+        'aud-car-area',
+        'goal-target-input',
+        'goal-ticket-avulso',
+        'goal-ticket-inter',
+        'goal-ticket-pack',
+        'goal-retention-rate',
+        'conv-qty',
+        'conv-unit',
+        'conv-uf-preset',
+        'conv-modulo-fiscal',
+        'itr-area-total',
+        'itr-area-ambiental',
+        'itr-area-utilizada',
+        'itr-vtn-ha'
+      ];
+      const checkIds = ['srv-ccir', 'srv-itr', 'srv-car', 'srv-ret', 'itr-pequena-gleba'];
+      const payload = {
+        activeToolTab: state.activeToolTab,
+        values: {},
+        checks: {}
+      };
+      textIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) payload.values[id] = el.value;
+      });
+      checkIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) payload.checks[id] = Boolean(el.checked);
+      });
+      localStorage.setItem(TOOLS_STORAGE_KEY, JSON.stringify(payload));
+    } catch (_e) {}
+  }
+
+  function restoreToolsState() {
+    isRestoringTools = true;
+    try {
+      const raw = localStorage.getItem(TOOLS_STORAGE_KEY);
+      if (!raw) {
+        isRestoringTools = false;
+        return;
+      }
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') {
+        isRestoringTools = false;
+        return;
+      }
+      if (parsed.activeToolTab && typeof parsed.activeToolTab === 'string') {
+        state.activeToolTab = parsed.activeToolTab;
+      }
+      if (parsed.values && typeof parsed.values === 'object') {
+        Object.keys(parsed.values).forEach((id) => {
+          const el = document.getElementById(id);
+          if (el && parsed.values[id] !== undefined && parsed.values[id] !== null) {
+            el.value = String(parsed.values[id]);
+          }
+        });
+      }
+      if (parsed.checks && typeof parsed.checks === 'object') {
+        Object.keys(parsed.checks).forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.checked = Boolean(parsed.checks[id]);
+        });
+      }
+      const haEl = document.getElementById('calc-hectares');
+      const rangeEl = document.getElementById('calc-hectares-range');
+      if (haEl && rangeEl) {
+        rangeEl.value = String(Math.min(1500, Math.max(5, Number(haEl.value) || 45)));
+      }
+    } catch (_e) {}
+    isRestoringTools = false;
+  }
+
+  function switchToolTab(tabId) {
+    const isProp = isProprietarioMode();
+    const validTabs = [
+      'tab-honorarios',
+      'tab-auditoria',
+      'tab-meta',
+      'tab-conversor',
+      'tab-itr',
+      'tab-crm'
+    ];
+
+    let targetTab = validTabs.includes(tabId)
+      ? tabId
+      : isProp
+        ? 'tab-auditoria'
+        : 'tab-honorarios';
+
+    if (isProp && (targetTab === 'tab-honorarios' || targetTab === 'tab-meta')) {
+      targetTab = 'tab-auditoria';
+    }
+
+    state.activeToolTab = targetTab;
+
+    const pillNodes = document.querySelectorAll('#tools-nav-pills .tool-pill-btn[data-tool-tab]');
+    pillNodes.forEach((btn) => {
+      const btnTab = btn.getAttribute('data-tool-tab');
+      const isActive = btnTab === targetTab;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    });
+
+    const panelNodes = document.querySelectorAll('#view-tools [data-tool-panel]');
+    if (panelNodes.length > 0) {
+      panelNodes.forEach((panel) => {
+        const panelTab = panel.getAttribute('data-tool-panel');
+        const shouldHide =
+          panelTab !== targetTab ||
+          (isProp && (panelTab === 'tab-honorarios' || panelTab === 'tab-meta'));
+        panel.classList.toggle('hidden', shouldHide);
+      });
+    } else {
+      // Fallback para markup anterior sem data-tool-panel
+      const calcSheet = document.getElementById('tool-calc-honorarios');
+      const goalSheet = document.getElementById('tool-meta-financeira');
+      if (calcSheet) calcSheet.classList.toggle('hidden', isProp);
+      if (goalSheet) goalSheet.classList.toggle('hidden', isProp);
+    }
+
+    if (targetTab === 'tab-honorarios') recalculatePricing();
+    else if (targetTab === 'tab-auditoria') runCrossAudit();
+    else if (targetTab === 'tab-meta') recalculateGoal();
+    else if (targetTab === 'tab-conversor') recalculateConverter();
+    else if (targetTab === 'tab-itr') recalculateItr();
+    else if (targetTab === 'tab-crm') renderCrmSheet();
+
+    saveToolsState();
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 01: CALCULADORA DE HONORARIOS E PACOTES RURAIS
+     ------------------------------------------------------------------------ */
   function syncHectaresInput(val, source) {
     const num = Math.max(1, Number(val) || 1);
     const rangeEl = document.getElementById('calc-hectares-range');
@@ -1698,12 +2328,10 @@
     recalculatePricing();
   }
 
-  function recalculatePricing() {
-    const haEl = document.getElementById('calc-hectares');
-    if (!haEl) return;
-
-    const clientName = (document.getElementById('calc-client-name')?.value || '').trim() || 'Produtor Rural';
-    const ha = Math.max(1, Number(haEl.value) || 45);
+  function computePricingData() {
+    const clientName =
+      (document.getElementById('calc-client-name')?.value || '').trim() || 'Produtor Rural';
+    const ha = Math.max(1, Number(document.getElementById('calc-hectares')?.value || 45));
     const complexity = Number(document.getElementById('calc-complexity')?.value || 1);
 
     const hasCcir = Boolean(document.getElementById('srv-ccir')?.checked);
@@ -1724,32 +2352,48 @@
       baseFactor = 1.35;
     }
 
-    const badgeEl = document.getElementById('calc-hectares-badge');
-    if (badgeEl) badgeEl.textContent = `${ha} ha · ${tierLabel}`;
-
-    let rawSum = 0;
-    const selectedNames = [];
+    const items = [];
     if (hasCcir) {
-      rawSum += 320;
-      selectedNames.push('Emissão/Atualização de CCIR no INCRA (SNCR/DCR)');
+      items.push({
+        short: 'CCIR / Atualização DCR no INCRA',
+        full: 'Emissão/Atualização de CCIR no INCRA (SNCR/DCR)',
+        base: 320
+      });
     }
     if (hasItr) {
-      rawSum += 420;
-      selectedNames.push('Regularização de ITR (DITR), vínculo CIB/CNIR e CND');
+      items.push({
+        short: 'ITR (DITR) + Vínculo CIB/CNIR e CND',
+        full: 'Regularização de ITR (DITR), vínculo CIB/CNIR e CND',
+        base: 420
+      });
     }
     if (hasCar) {
-      rawSum += 680;
-      selectedNames.push('Inscrição ou Retificação de Cadastro Ambiental Rural (CAR/SICAR)');
+      items.push({
+        short: 'CAR / SICAR (Inscrição ou Retificação)',
+        full: 'Inscrição ou Retificação de Cadastro Ambiental Rural (CAR/SICAR)',
+        base: 680
+      });
     }
     if (hasRet) {
-      rawSum += 750;
-      selectedNames.push('Organização de Dossiê para Retificação / Pasta Bancária');
+      items.push({
+        short: 'Dossiê de Retificação / Pasta Bancária',
+        full: 'Organização de Dossiê para Retificação / Pasta Bancária',
+        base: 750
+      });
+    }
+    if (items.length === 0) {
+      items.push({
+        short: 'Diagnóstico Documental 4 Órgãos',
+        full: 'Diagnóstico Documental Completo do Imóvel Rural',
+        base: 320
+      });
     }
 
-    if (rawSum === 0) {
-      rawSum = 320;
-      selectedNames.push('Diagnóstico Documental Completo do Imóvel Rural');
-    }
+    const rawSum = items.reduce((acc, it) => acc + it.base, 0);
+    const itemsWithSubtotal = items.map((it) => ({
+      ...it,
+      subtotal: Math.round((it.base * baseFactor * complexity) / 10) * 10
+    }));
 
     const avulso = Math.round((280 * baseFactor * complexity) / 10) * 10;
     const essencial = Math.round((740 * baseFactor * complexity) / 10) * 10;
@@ -1757,32 +2401,131 @@
     const entrada = Math.round(completo / 2);
     const saldo = completo - entrada;
 
-    document.getElementById('res-val-avulso').textContent = formatBRL(avulso);
-    document.getElementById('res-val-essencial').textContent = formatBRL(essencial);
-    document.getElementById('res-val-completo').textContent = formatBRL(completo);
-    document.getElementById('res-val-entrada').textContent = formatBRL(entrada);
-    document.getElementById('res-val-saldo').textContent =
-      `50% na abertura (${formatBRL(entrada)}) + ${formatBRL(saldo)} na entrega`;
+    return {
+      clientName,
+      ha,
+      complexity,
+      tierLabel,
+      baseFactor,
+      rawSum,
+      items: itemsWithSubtotal,
+      avulso,
+      essencial,
+      completo,
+      entrada,
+      saldo
+    };
+  }
+
+  function renderPricingChartSvg(d) {
+    const maxVal = Math.max(d.completo, d.essencial, d.avulso, 100);
+    const bars = [
+      { label: 'Serviço Avulso', val: d.avulso, fill: '#22c55e', opacity: '0.82' },
+      { label: 'Entrada 50%', val: d.entrada, fill: '#16a34a', opacity: '0.92' },
+      { label: 'Pacote Essencial', val: d.essencial, fill: '#0f766e', opacity: '0.95' },
+      { label: 'Pacote Completo', val: d.completo, fill: 'url(#prcBarGrad)', opacity: '1' }
+    ];
+    const x0 = 136;
+    const maxW = 272;
+
+    const gridLines = [0.25, 0.5, 0.75, 1]
+      .map((ratio) => {
+        const gx = Math.round(x0 + maxW * ratio);
+        return `<line x1="${gx}" y1="14" x2="${gx}" y2="182" stroke="var(--hairline-table)" stroke-width="1" stroke-dasharray="3 3"/>`;
+      })
+      .join('');
+
+    const rowsSvg = bars
+      .map((b, i) => {
+        const y = 20 + i * 42;
+        const w = Math.max(10, Math.round((b.val / maxVal) * maxW));
+        const isFeatured = i === 3;
+        return `
+          <text x="8" y="${y + 16}" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11.5" font-weight="${isFeatured ? '700' : '600'}">${escapeHtml(b.label)}</text>
+          <rect x="${x0}" y="${y}" width="${maxW}" height="24" rx="7" fill="var(--canvas-parchment)"/>
+          <rect x="${x0}" y="${y}" width="${w}" height="24" rx="7" fill="${b.fill}" opacity="${b.opacity}"/>
+          <text x="512" y="${y + 16}" fill="${isFeatured ? 'var(--primary)' : 'var(--ink)'}" font-family="Plus Jakarta Sans, sans-serif" font-size="12" font-weight="700" text-anchor="end">${escapeHtml(formatBRL(b.val))}</text>
+        `;
+      })
+      .join('');
+
+    return `
+      <svg viewBox="0 0 520 196" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Gráfico comparativo de honorários">
+        <defs>
+          <linearGradient id="prcBarGrad" x1="${x0}" y1="0" x2="${x0 + maxW}" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#15803d"/>
+            <stop offset="100%" stop-color="#16a34a"/>
+          </linearGradient>
+        </defs>
+        ${gridLines}
+        ${rowsSvg}
+      </svg>
+    `;
+  }
+
+  function recalculatePricing() {
+    if (!document.getElementById('calc-hectares')) return;
+    const d = computePricingData();
+
+    setText('calc-hectares-badge', `${d.ha} ha · ${d.tierLabel}`);
+    setText('res-val-avulso', formatBRL(d.avulso));
+    setText('res-val-essencial', formatBRL(d.essencial));
+    setText('res-val-completo', formatBRL(d.completo));
+    setText('res-val-entrada', formatBRL(d.entrada));
+    setText(
+      'res-val-saldo',
+      `50% na abertura (${formatBRL(d.entrada)}) + ${formatBRL(d.saldo)} na entrega`
+    );
+
+    const tbody = document.getElementById('pricing-breakdown-tbody');
+    if (tbody) {
+      const factorText = `${d.baseFactor.toFixed(2)}x porte · ${d.complexity.toFixed(2)}x complexidade`;
+      const itemRowsHtml = d.items
+        .map(
+          (it) => `
+          <tr>
+            <td><strong>${escapeHtml(it.short)}</strong></td>
+            <td>${escapeHtml(formatBRL(it.base))}</td>
+            <td>${escapeHtml(factorText)}</td>
+            <td><strong>${escapeHtml(formatBRL(it.subtotal))}</strong></td>
+          </tr>
+        `
+        )
+        .join('');
+      const totalRowHtml = `
+        <tr style="background-color: var(--primary-soft);">
+          <td><strong>Total Pacote Completo (50% + 50%)</strong></td>
+          <td><strong>${escapeHtml(formatBRL(d.rawSum))}</strong></td>
+          <td>Multiplicador ${(d.baseFactor * d.complexity).toFixed(2)}x</td>
+          <td><strong style="color: var(--primary);">${escapeHtml(formatBRL(d.completo))}</strong></td>
+        </tr>
+      `;
+      tbody.innerHTML = itemRowsHtml + totalRowHtml;
+    }
+
+    setHtml('pricing-svg-chart', renderPricingChartSvg(d));
 
     const proposalText = [
-      `PROPOSTA DE REGULARIZAÇÃO DE IMÓVEL RURAL`,
-      `Cliente / Propriedade: ${clientName}`,
-      `Área declarada: ${ha} hectares (${tierLabel})`,
-      ``,
-      `ESCOPO DOS SERVIÇOS TÉCNICOS:`,
-      ...selectedNames.map((s, idx) => `${idx + 1}. ${s}`),
-      ``,
-      `OPÇÕES DE INVESTIMENTO:`,
-      `- Opção 1 (Diagnóstico e Demanda Avulsa): ${formatBRL(avulso)}`,
-      `- Opção 2 (Pacote Essencial 2 Órgãos): ${formatBRL(essencial)}`,
-      `- Opção 3 (Pacote Completo Recomendado): ${formatBRL(completo)}`,
-      ``,
-      `CONDIÇÃO DE PAGAMENTO (PACOTE COMPLETO):`,
-      `Entrada de 50% (${formatBRL(entrada)}) no início dos protocolos + saldo de ${formatBRL(saldo)} na entrega dos certificados e recibos oficiais.`
+      'PROPOSTA DE ASSESSORIA CADASTRAL DE IMÓVEL RURAL',
+      `Cliente / Propriedade: ${d.clientName}`,
+      `Área declarada: ${d.ha} hectares (${d.tierLabel})`,
+      '',
+      'ESCOPO DOS SERVIÇOS SELECIONADOS:',
+      ...d.items.map((it, idx) => `${idx + 1}. ${it.full}`),
+      '',
+      'OPÇÕES DE INVESTIMENTO:',
+      `- Opção 1 (Diagnóstico e Demanda Avulsa): ${formatBRL(d.avulso)}`,
+      `- Opção 2 (Pacote Essencial 2 Órgãos): ${formatBRL(d.essencial)}`,
+      `- Opção 3 (Pacote Completo Recomendado): ${formatBRL(d.completo)}`,
+      '',
+      'CONDIÇÃO DE PAGAMENTO (PACOTE COMPLETO):',
+      `Entrada de 50% (${formatBRL(d.entrada)}) na abertura dos protocolos + saldo de ${formatBRL(d.saldo)} na entrega dos certificados e recibos.`,
+      '',
+      'Valores referenciais de assessoria cadastral administrativa; taxas oficiais de órgãos/cartórios são pagas via guia própria pelo titular.'
     ].join('\n');
 
-    const previewEl = document.getElementById('calc-proposal-preview');
-    if (previewEl) previewEl.textContent = proposalText;
+    setText('calc-proposal-preview', proposalText);
+    saveToolsState();
   }
 
   function copyPricingProposal(btn) {
@@ -1791,6 +2534,71 @@
     copyText(previewEl.textContent, btn);
   }
 
+  function exportPricingCsv() {
+    const d = computePricingData();
+    const headers = [
+      'Cliente / Propriedade',
+      'Item / Modalidade',
+      'Porte Declarado',
+      'Fator Porte x Complexidade',
+      'Valor Base (R$)',
+      'Valor Calculado (R$)'
+    ];
+    const factorStr = `${d.baseFactor.toFixed(2)}x porte / ${d.complexity.toFixed(2)}x complexidade`;
+    const rows = d.items.map((it) => [
+      d.clientName,
+      `Serviço: ${it.full}`,
+      `${d.ha} ha (${d.tierLabel})`,
+      factorStr,
+      formatBRL(it.base),
+      formatBRL(it.subtotal)
+    ]);
+    rows.push([
+      d.clientName,
+      'Opção 1 - Serviço Avulso',
+      `${d.ha} ha`,
+      factorStr,
+      formatBRL(280),
+      formatBRL(d.avulso)
+    ]);
+    rows.push([
+      d.clientName,
+      'Opção 2 - Pacote Essencial (2 Órgãos)',
+      `${d.ha} ha`,
+      factorStr,
+      formatBRL(740),
+      formatBRL(d.essencial)
+    ]);
+    rows.push([
+      d.clientName,
+      'Opção 3 - Pacote Completo Recomendado',
+      `${d.ha} ha`,
+      factorStr,
+      formatBRL(d.rawSum),
+      formatBRL(d.completo)
+    ]);
+    rows.push([
+      d.clientName,
+      'Condição 50/50 - Entrada na Abertura (50%)',
+      `${d.ha} ha`,
+      '50% inicial',
+      '-',
+      formatBRL(d.entrada)
+    ]);
+    rows.push([
+      d.clientName,
+      'Condição 50/50 - Saldo na Entrega (50%)',
+      `${d.ha} ha`,
+      '50% final',
+      '-',
+      formatBRL(d.saldo)
+    ]);
+    downloadCsvFile('planilha-01-orcamento-honorarios-rurais.csv', headers, rows);
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 02: AUDITORIA CRUZADA DOS 4 ORGAOS
+     ------------------------------------------------------------------------ */
   function normStr(s) {
     return String(s || '')
       .trim()
@@ -1799,99 +2607,248 @@
       .replace(/[\u0300-\u036f]/g, '');
   }
 
-  function runCrossAudit() {
+  function fmtCommaNum(val, decimals = 2) {
+    return Number(val || 0)
+      .toFixed(decimals)
+      .replace('.', ',');
+  }
+
+  function computeAuditData() {
     const matNome = document.getElementById('aud-mat-nome')?.value || '';
     const matCpf = document.getElementById('aud-mat-cpf')?.value || '';
-    const matArea = parseFloat(document.getElementById('aud-mat-area')?.value || '0') || 0;
+    const matArea = Math.max(
+      0,
+      parseFloat(document.getElementById('aud-mat-area')?.value || '0') || 0
+    );
 
-    if (!document.getElementById('aud-mat-nome')) return;
-
-    const checks = [
+    const checksDef = [
       {
         prefix: 'ccir',
-        orgao: 'CCIR / INCRA',
-        fixTitular: 'Protocolar DCR no SNCR/INCRA para atualizar titularidade (anexar matrícula ou inventário).',
+        shortLabel: 'CCIR / INCRA',
+        orgao: 'CCIR / INCRA (SNCR)',
+        fixTitular:
+          'Protocolar DCR no SNCR/INCRA para atualizar titularidade (anexar matrícula ou inventário).',
         fixArea: 'Atualizar área via DCR no SNCR para igualar à matrícula.'
       },
       {
         prefix: 'itr',
-        orgao: 'ITR / Receita Federal',
+        shortLabel: 'ITR / Receita',
+        orgao: 'ITR / Receita Federal (CAFIR/CNIR)',
         fixTitular: 'Atualizar titular no CAFIR/CNIR via portal e-CAC e ajustar DIAC.',
-        fixArea: 'Corrigir área total no CAFIR/CNIR e transmitir DITR retificadora se necessário.'
+        fixArea:
+          'Corrigir área total no CAFIR/CNIR e transmitir DITR retificadora se necessário.'
       },
       {
         prefix: 'car',
-        orgao: 'CAR / SICAR',
+        shortLabel: 'CAR / SICAR',
+        orgao: 'CAR / SICAR Ambiental',
         fixTitular: 'Acessar Central do Proprietário no SICAR e atualizar titular/possuidor.',
-        fixArea: 'Retificar perímetro vetorizado no módulo de cadastro do CAR para alinhar com a matrícula.'
+        fixArea:
+          'Retificar perímetro vetorizado no módulo de cadastro do CAR para alinhar com a matrícula.'
       }
     ];
 
     let totalIssues = 0;
-    const issueDetails = [];
-
-    checks.forEach((item) => {
+    let maxDiffHa = 0;
+    const organs = checksDef.map((item) => {
       const nome = document.getElementById(`aud-${item.prefix}-nome`)?.value || '';
       const cpf = document.getElementById(`aud-${item.prefix}-cpf`)?.value || '';
-      const area = parseFloat(document.getElementById(`aud-${item.prefix}-area`)?.value || '0') || 0;
+      const area = Math.max(
+        0,
+        parseFloat(document.getElementById(`aud-${item.prefix}-area`)?.value || '0') || 0
+      );
 
       const sameTitular = normStr(nome) === normStr(matNome) && normStr(cpf) === normStr(matCpf);
-      const areaDiff = Math.abs(area - matArea);
-      const areaPct = matArea > 0 ? (areaDiff / matArea) * 100 : 0;
+      const signedDiff = area - matArea;
+      const areaDiff = Math.abs(signedDiff);
+      const signedPct = matArea > 0 ? (signedDiff / matArea) * 100 : 0;
+      const areaPct = Math.abs(signedPct);
       const sameArea = areaPct <= 2.0;
 
-      const statusEl = document.getElementById(`aud-${item.prefix}-status`);
-      const actionEl = document.getElementById(`aud-${item.prefix}-action`);
+      if (areaDiff > maxDiffHa) maxDiffHa = areaDiff;
 
-      if (sameTitular && sameArea) {
-        if (statusEl) {
-          statusEl.className = 'audit-pill audit-ok';
-          statusEl.textContent = 'Compatível';
-        }
-        if (actionEl) {
-          actionEl.textContent = 'Dados alinhados com a matrícula. Manter certidão/recibo arquivado.';
-        }
-      } else {
+      let statusLabel = 'Compatível';
+      let actionText = 'Dados alinhados com a matrícula. Manter certidão/recibo arquivado.';
+      const isOk = sameTitular && sameArea;
+
+      if (!isOk) {
         totalIssues += 1;
-        if (statusEl) {
-          statusEl.className = 'audit-pill audit-err';
-          statusEl.textContent = 'Divergente';
-        }
+        statusLabel = 'Divergente';
         const actions = [];
         if (!sameTitular) actions.push(item.fixTitular);
-        if (!sameArea) actions.push(`${item.fixArea} (Diferença de ${areaDiff.toFixed(2)} ha)`);
-        const combined = actions.join(' ');
-        if (actionEl) actionEl.textContent = combined;
-        issueDetails.push(`${item.orgao}: ${combined}`);
+        if (!sameArea) {
+          actions.push(`${item.fixArea} (Diferença de ${fmtCommaNum(areaDiff, 2)} ha)`);
+        }
+        actionText = actions.join(' ');
+      }
+
+      return {
+        ...item,
+        nome,
+        cpf,
+        area,
+        sameTitular,
+        sameArea,
+        isOk,
+        signedDiff,
+        areaDiff,
+        signedPct,
+        areaPct,
+        statusLabel,
+        actionText
+      };
+    });
+
+    const scorePct = Math.round(((4 - totalIssues) / 4) * 100);
+    return {
+      matNome,
+      matCpf,
+      matArea,
+      totalIssues,
+      maxDiffHa,
+      scorePct,
+      organs
+    };
+  }
+
+  function renderAuditChartSvg(d) {
+    const allAreas = [d.matArea, ...d.organs.map((o) => o.area)];
+    const maxArea = Math.max(...allAreas, 10) * 1.15;
+    const x0 = 114;
+    const maxW = 264;
+
+    const minTolX = d.matArea > 0 ? x0 + ((d.matArea * 0.98) / maxArea) * maxW : x0;
+    const maxTolX = d.matArea > 0 ? x0 + ((d.matArea * 1.02) / maxArea) * maxW : x0;
+    const baseLineX = d.matArea > 0 ? x0 + (d.matArea / maxArea) * maxW : x0;
+
+    const rows = [
+      {
+        label: 'Matrícula',
+        area: d.matArea,
+        color: '#15803d',
+        rightLabel: `${fmtCommaNum(d.matArea, 2)} ha (Base)`
+      },
+      ...d.organs.map((o) => {
+        const sign = o.signedPct > 0.04 ? '+' : '';
+        const pctTxt = `${sign}${fmtCommaNum(o.signedPct, 1)}%`;
+        const barColor = !o.sameArea ? '#dc2626' : !o.sameTitular ? '#f59e0b' : '#16a34a';
+        return {
+          label: o.shortLabel,
+          area: o.area,
+          color: barColor,
+          rightLabel: `${fmtCommaNum(o.area, 2)} ha (${pctTxt})`
+        };
+      })
+    ];
+
+    const barsSvg = rows
+      .map((r, i) => {
+        const y = 30 + i * 40;
+        const w = r.area > 0 ? Math.max(8, Math.round((r.area / maxArea) * maxW)) : 4;
+        return `
+          <text x="8" y="${y + 16}" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11.5" font-weight="${i === 0 ? '700' : '600'}">${escapeHtml(r.label)}</text>
+          <rect x="${x0}" y="${y}" width="${maxW}" height="24" rx="6" fill="var(--canvas-parchment)"/>
+          <rect x="${x0}" y="${y}" width="${w}" height="24" rx="6" fill="${r.color}"/>
+          <text x="532" y="${y + 16}" fill="${r.color === '#dc2626' ? '#dc2626' : 'var(--ink)'}" font-family="Plus Jakarta Sans, sans-serif" font-size="11.5" font-weight="700" text-anchor="end">${escapeHtml(r.rightLabel)}</text>
+        `;
+      })
+      .join('');
+
+    const tolBandSvg =
+      d.matArea > 0
+        ? `
+          <rect x="${minTolX.toFixed(1)}" y="24" width="${Math.max(5, maxTolX - minTolX).toFixed(1)}" height="158" rx="3" fill="rgba(21, 128, 61, 0.16)"/>
+          <line x1="${baseLineX.toFixed(1)}" y1="22" x2="${baseLineX.toFixed(1)}" y2="184" stroke="#15803d" stroke-width="1.5" stroke-dasharray="3 3"/>
+        `
+        : '';
+
+    return `
+      <svg viewBox="0 0 540 196" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Comparativo de áreas declaradas nos 4 órgãos">
+        <text x="${x0}" y="15" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="600">Faixa verde: margem operacional de +-2% da Matrícula</text>
+        ${barsSvg}
+        ${tolBandSvg}
+      </svg>
+    `;
+  }
+
+  function runCrossAudit() {
+    if (!document.getElementById('aud-mat-nome')) return;
+    const d = computeAuditData();
+
+    d.organs.forEach((o) => {
+      const statusEl = document.getElementById(`aud-${o.prefix}-status`);
+      const actionEl = document.getElementById(`aud-${o.prefix}-action`);
+      if (statusEl) {
+        statusEl.className = o.isOk ? 'audit-pill audit-ok' : 'audit-pill audit-err';
+        statusEl.textContent = o.statusLabel;
+      }
+      if (actionEl) {
+        actionEl.textContent = o.actionText;
       }
     });
 
+    setText('audit-score-pct', `${d.scorePct}%`);
+    setText(
+      'audit-score-sub',
+      d.totalIssues === 0
+        ? '4 de 4 documentos consistentes na margem operacional de 2%'
+        : `${4 - d.totalIssues} de 4 documentos alinhados com a Matrícula Imobiliária`
+    );
+    setText('audit-issues-count', `${d.totalIssues} de 3`);
+    setText('audit-max-diff-ha', `${fmtCommaNum(d.maxDiffHa, 2)} ha`);
+    setText('audit-base-ha', `${fmtCommaNum(d.matArea, 2)} ha`);
+
+    setHtml('audit-svg-chart', renderAuditChartSvg(d));
+
     const summaryBanner = document.getElementById('audit-summary-banner');
     if (summaryBanner) {
-      if (totalIssues === 0) {
+      if (d.totalIssues === 0) {
         summaryBanner.innerHTML = `
           <strong style="color: var(--status-ok-text);">Diagnóstico: 100% Compatível nos 4 Órgãos.</strong>
-          <span style="display:block; margin-top:4px; color: var(--ink-secondary);">Titularidade, CPF/CNPJ e área estão consistentes entre Matrícula, INCRA, Receita Federal e CAR. Imóvel apto para escritura e crédito rural.</span>
+          <span style="display:block; margin-top:4px; color: var(--ink-secondary);">Titularidade, CPF/CNPJ e área estão consistentes entre Matrícula, INCRA, Receita Federal e CAR. Imóvel organizado para escritura e crédito rural.</span>
         `;
       } else {
         summaryBanner.innerHTML = `
-          <strong style="color: var(--status-err-text);">Atenção: ${totalIssues} ${totalIssues === 1 ? 'órgão apresenta' : 'órgãos apresentam'} divergência em relação à Matrícula.</strong>
+          <strong style="color: var(--status-err-text);">Atenção: ${d.totalIssues} ${d.totalIssues === 1 ? 'órgão apresenta' : 'órgãos apresentam'} divergência em relação à Matrícula.</strong>
           <span style="display:block; margin-top:4px; color: var(--ink-secondary);">Ordem recomendada de correção: 1º Conferir Matrícula no Cartório · 2º Atualizar DCR/SNCR no INCRA · 3º Vincular CNIR/CAFIR na Receita Federal · 4º Retificar SICAR/CAR.</span>
         `;
       }
     }
+
+    const reportLines = [
+      'DIAGNÓSTICO CADASTRAL CRUZADO DE IMÓVEL RURAL',
+      `Titular Base (Matrícula): ${d.matNome || 'Não informado'} | CPF/CNPJ: ${d.matCpf || 'Não informado'}`,
+      `Área Base na Matrícula: ${fmtCommaNum(d.matArea, 2)} ha | Índice de Conformidade: ${d.scorePct}%`,
+      '',
+      ...d.organs.map(
+        (o, idx) =>
+          `${idx + 1}. ${o.orgao}: [${o.statusLabel}] | Área: ${fmtCommaNum(o.area, 2)} ha | Titular: ${o.nome || '-'} - ${o.actionText}`
+      ),
+      '',
+      d.totalIssues === 0
+        ? 'Conclusão Cadastral: Dados compatíveis entre Matrícula, CCIR, ITR e CAR.'
+        : 'Sequência Operacional Recomendada: 1º Matrícula no Cartório -> 2º DCR/SNCR no INCRA -> 3º CAFIR/CNIR e DITR na Receita Federal -> 4º Central do CAR/SICAR.',
+      '',
+      'Nota: Diagnóstico cadastral informativo baseado nos dados declarados. Confira sempre a situação atualizada diretamente nas certidões e portais oficiais de cada órgão.'
+    ];
+    setText('audit-report-preview', reportLines.join('\n'));
+    saveToolsState();
   }
 
   function loadAuditPreset(mode) {
+    if (!document.getElementById('aud-mat-nome')) return;
     if (mode === 'clean') {
       document.getElementById('aud-mat-nome').value = 'José Carlos Oliveira';
       document.getElementById('aud-mat-cpf').value = '142.850.910-00';
       document.getElementById('aud-mat-area').value = '64.50';
 
       ['ccir', 'itr', 'car'].forEach((p) => {
-        document.getElementById(`aud-${p}-nome`).value = 'José Carlos Oliveira';
-        document.getElementById(`aud-${p}-cpf`).value = '142.850.910-00';
-        document.getElementById(`aud-${p}-area`).value = '64.50';
+        const n = document.getElementById(`aud-${p}-nome`);
+        const c = document.getElementById(`aud-${p}-cpf`);
+        const a = document.getElementById(`aud-${p}-area`);
+        if (n) n.value = 'José Carlos Oliveira';
+        if (c) c.value = '142.850.910-00';
+        if (a) a.value = '64.50';
       });
     } else {
       document.getElementById('aud-mat-nome').value = 'José Carlos Oliveira';
@@ -1914,44 +2871,89 @@
   }
 
   function copyAuditReport(btn) {
-    const matNome = document.getElementById('aud-mat-nome')?.value || '';
-    const matArea = document.getElementById('aud-mat-area')?.value || '';
-    const ccirStatus = document.getElementById('aud-ccir-status')?.textContent || '';
-    const ccirAction = document.getElementById('aud-ccir-action')?.textContent || '';
-    const itrStatus = document.getElementById('aud-itr-status')?.textContent || '';
-    const itrAction = document.getElementById('aud-itr-action')?.textContent || '';
-    const carStatus = document.getElementById('aud-car-status')?.textContent || '';
-    const carAction = document.getElementById('aud-car-action')?.textContent || '';
-
-    const text = [
-      `LAUDO DE AUDITORIA CRUZADA DE IMÓVEL RURAL`,
-      `Titular na Matrícula: ${matNome} | Área Base: ${matArea} ha`,
-      ``,
-      `1. CCIR / INCRA: [${ccirStatus}] - ${ccirAction}`,
-      `2. ITR / Receita Federal: [${itrStatus}] - ${itrAction}`,
-      `3. CAR / Ambiental: [${carStatus}] - ${carAction}`
-    ].join('\n');
-
-    copyText(text, btn);
+    const previewEl = document.getElementById('audit-report-preview');
+    if (previewEl && previewEl.textContent.trim()) {
+      copyText(previewEl.textContent, btn);
+      return;
+    }
+    runCrossAudit();
+    const updated = document.getElementById('audit-report-preview');
+    if (updated) copyText(updated.textContent, btn);
   }
 
+  function exportAuditCsv() {
+    const d = computeAuditData();
+    const headers = [
+      'Documento / Órgão',
+      'Titular no Documento',
+      'CPF ou CNPJ',
+      'Área Declarada (ha)',
+      'Diferença vs Matrícula (ha)',
+      'Diferença (%)',
+      'Status na Auditoria',
+      'Ação Administrativa Recomendada'
+    ];
+    const rows = [
+      [
+        '1. Matrícula / Registro de Imóveis',
+        d.matNome,
+        d.matCpf,
+        fmtCommaNum(d.matArea, 2),
+        '0,00',
+        '0,0%',
+        'Documento Base',
+        'Certidão de Inteiro Teor atualizada (referência de domínio).'
+      ],
+      ...d.organs.map((o, i) => [
+        `${i + 2}. ${o.orgao}`,
+        o.nome,
+        o.cpf,
+        fmtCommaNum(o.area, 2),
+        fmtCommaNum(o.signedDiff, 2),
+        `${fmtCommaNum(o.signedPct, 1)}%`,
+        o.statusLabel,
+        o.actionText
+      ])
+    ];
+    downloadCsvFile('planilha-02-diagnostico-4-orgaos.csv', headers, rows);
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 03: SIMULADOR DE META MENSAL E PROJECAO 12 MESES
+     ------------------------------------------------------------------------ */
   function setMonthlyGoal(amount) {
     const input = document.getElementById('goal-target-input');
     if (input) input.value = String(amount);
-    document.querySelectorAll('.goal-preset-pills .chip-option').forEach((btn) => {
+    document.querySelectorAll('.goal-preset-pills button, .goal-preset-pills .chip-option').forEach((btn) => {
       btn.classList.toggle('active', btn.textContent.includes(amount.toLocaleString('pt-BR')));
     });
     recalculateGoal();
   }
 
-  function recalculateGoal() {
+  function resetGoalDefaults() {
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = String(val);
+    };
+    setVal('goal-target-input', 5000);
+    setVal('goal-ticket-avulso', 300);
+    setVal('goal-ticket-inter', 950);
+    setVal('goal-ticket-pack', 1850);
+    setVal('goal-retention-rate', 65);
+    setMonthlyGoal(5000);
+    showToast('Padrão restaurado na planilha de 12 meses.');
+  }
+
+  function computeGoalData() {
     const goal = Math.max(500, Number(document.getElementById('goal-target-input')?.value || 5000));
     const tAvulso = Math.max(50, Number(document.getElementById('goal-ticket-avulso')?.value || 300));
     const tInter = Math.max(100, Number(document.getElementById('goal-ticket-inter')?.value || 950));
     const tPack = Math.max(200, Number(document.getElementById('goal-ticket-pack')?.value || 1850));
-
-    const grid = document.getElementById('goal-results-grid');
-    if (!grid) return;
+    const retentionEl = document.getElementById('goal-retention-rate');
+    const retentionRate = Math.min(
+      100,
+      Math.max(0, retentionEl ? Number(retentionEl.value || 65) : 65)
+    );
 
     const qtdAvulso = Math.ceil(goal / tAvulso);
     const qtdInter = Math.ceil(goal / tInter);
@@ -1960,44 +2962,1081 @@
     const mixPacks = Math.max(1, Math.floor((goal * 0.55) / tPack));
     const remAfterPacks = Math.max(0, goal - mixPacks * tPack);
     const mixInter = Math.max(1, Math.ceil(remAfterPacks / tInter));
+    const baseMonthlyClients = mixPacks + mixInter;
 
-    grid.innerHTML = `
-      <div class="topic-card">
-        <div class="topic-card-top">
-          <span class="topic-card-num">A</span>
-          <span class="sheet-value-pill">${formatBRL(tAvulso)} / cliente</span>
-        </div>
-        <h4>Apenas Serviços Rápidos</h4>
-        <p>Fechar <strong>${qtdAvulso} serviços no mês</strong> (cerca de ${Math.ceil(qtdAvulso / 4)} por semana) de emissão de CCIR, ITR ou certidão.</p>
-      </div>
+    let annualTotal = 0;
+    let totalClientsYear = 0;
 
-      <div class="topic-card">
-        <div class="topic-card-top">
-          <span class="topic-card-num">B</span>
-          <span class="sheet-value-pill">${formatBRL(tInter)} / cliente</span>
-        </div>
-        <h4>Regularizações de 2 Órgãos</h4>
-        <p>Fechar <strong>${qtdInter} clientes no mês</strong> (cerca de ${Math.max(1, Math.round(qtdInter / 4))} por semana) atualizando DCR/INCRA + ITR/CNIR.</p>
-      </div>
+    const months = GOAL_SEASONAL_MONTHS.map((m, idx) => {
+      const baseRev = goal;
+      const totalRev = Math.round((goal * m.mult) / 10) * 10;
+      const extraSeasonal = Math.max(0, totalRev - baseRev);
+      const clientsCount = Math.max(1, Math.round(baseMonthlyClients * m.mult));
+      annualTotal += totalRev;
+      totalClientsYear += clientsCount;
+      return {
+        num: String(idx + 1).padStart(2, '0'),
+        short: m.short,
+        focus: m.focus,
+        mult: m.mult,
+        clientsCount,
+        baseRev,
+        extraSeasonal,
+        totalRev
+      };
+    });
 
-      <div class="topic-card">
-        <div class="topic-card-top">
-          <span class="topic-card-num">C</span>
-          <span class="sheet-value-pill">${formatBRL(tPack)} / cliente</span>
-        </div>
-        <h4>Apenas Pacotes Completos</h4>
-        <p>Fechar <strong>${qtdPack} ${qtdPack === 1 ? 'fazenda/sítio' : 'fazendas/sítios'} no mês</strong> com regularização completa dos 3 órgãos.</p>
-      </div>
+    const retainedClientsYear2 = Math.round(totalClientsYear * (retentionRate / 100));
+    const recurringYear2 = retainedClientsYear2 * 350;
 
-      <div class="topic-card" style="background-color: var(--primary-soft); border-color: var(--primary-border);">
-        <div class="topic-card-top">
-          <span class="topic-card-num">MIX</span>
-          <span class="sheet-value-pill">Plano Equilibrado</span>
-        </div>
-        <h4>Meta de ${formatBRL(goal)} / mês</h4>
-        <p>Combine <strong>${mixPacks} ${mixPacks === 1 ? 'Pacote Completo' : 'Pacotes Completos'}</strong> + <strong>${mixInter} ${mixInter === 1 ? 'Regularização Intermediária' : 'Regularizações Intermediárias'}</strong> no mês.</p>
-      </div>
+    return {
+      goal,
+      tAvulso,
+      tInter,
+      tPack,
+      retentionRate,
+      qtdAvulso,
+      qtdInter,
+      qtdPack,
+      mixPacks,
+      mixInter,
+      annualTotal,
+      totalClientsYear,
+      retainedClientsYear2,
+      recurringYear2,
+      months
+    };
+  }
+
+  function formatCompactBRL(value) {
+    const n = Number(value) || 0;
+    if (n >= 1000) {
+      const k = n / 1000;
+      return 'R$ ' + (k % 1 === 0 ? k.toFixed(0) : k.toFixed(1).replace('.', ',')) + 'k';
+    }
+    return 'R$ ' + Math.round(n);
+  }
+
+  function renderGoalChartSvg(d) {
+    const maxVal = Math.max(...d.months.map((m) => m.totalRev), d.goal * 1.55, 1000);
+    const xStart = 54;
+    const plotW = 492;
+    const yBottom = 168;
+    const plotH = 132;
+    const slotW = plotW / 12;
+    const barW = 24;
+
+    const gridRatios = [0.5, 1.0];
+    const gridsSvg = gridRatios
+      .map((r) => {
+        const gy = Math.round(yBottom - plotH * r);
+        const gVal = maxVal * r;
+        return `
+          <line x1="${xStart}" y1="${gy}" x2="${xStart + plotW}" y2="${gy}" stroke="var(--hairline-table)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="${xStart - 6}" y="${gy + 4}" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="600" text-anchor="end">${escapeHtml(formatCompactBRL(gVal))}</text>
+        `;
+      })
+      .join('');
+
+    const goalY = Math.round(yBottom - (d.goal / maxVal) * plotH);
+
+    const colsSvg = d.months
+      .map((m, idx) => {
+        const cx = xStart + idx * slotW + slotW / 2;
+        const bx = Math.round(cx - barW / 2);
+        const totalH = Math.max(8, Math.round((m.totalRev / maxVal) * plotH));
+        const baseH = Math.max(6, Math.round((m.baseRev / maxVal) * plotH));
+        const extraH = Math.max(0, totalH - baseH);
+        const baseY = yBottom - baseH;
+        const topY = yBottom - totalH;
+
+        return `
+          <rect x="${bx}" y="${baseY}" width="${barW}" height="${baseH}" rx="4" fill="#15803d"/>
+          ${
+            extraH > 0
+              ? `<rect x="${bx}" y="${topY}" width="${barW}" height="${extraH + 3}" rx="4" fill="#f59e0b"/>
+                 <text x="${cx.toFixed(1)}" y="${topY - 5}" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="9.5" font-weight="700" text-anchor="middle">${escapeHtml(formatCompactBRL(m.totalRev))}</text>`
+              : ''
+          }
+          <text x="${cx.toFixed(1)}" y="188" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="600" text-anchor="middle">${escapeHtml(m.short)}</text>
+        `;
+      })
+      .join('');
+
+    return `
+      <svg viewBox="0 0 560 205" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Projeção de faturamento em 12 meses">
+        <rect x="54" y="6" width="10" height="10" rx="3" fill="#15803d"/>
+        <text x="68" y="15" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="600">Meta Base Mensal</text>
+        <rect x="190" y="6" width="10" height="10" rx="3" fill="#f59e0b"/>
+        <text x="204" y="15" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="600">Demanda Sazonal ITR / CCIR</text>
+        ${gridsSvg}
+        <line x1="${xStart}" y1="${yBottom}" x2="${xStart + plotW}" y2="${yBottom}" stroke="var(--hairline-table)" stroke-width="1"/>
+        ${colsSvg}
+        <line x1="${xStart}" y1="${goalY}" x2="${xStart + plotW}" y2="${goalY}" stroke="#16a34a" stroke-width="1.3" stroke-dasharray="4 3"/>
+      </svg>
     `;
+  }
+
+  function recalculateGoal() {
+    if (!document.getElementById('goal-target-input')) return;
+    const d = computeGoalData();
+
+    const exactGoalLabel = 'R$ ' + d.goal.toLocaleString('pt-BR');
+    document
+      .querySelectorAll('.goal-preset-pills button, .goal-preset-pills .chip-option')
+      .forEach((btn) => {
+        btn.classList.toggle('active', btn.textContent.trim().endsWith(exactGoalLabel));
+      });
+
+    setText('goal-annual-total', formatBRL(d.annualTotal));
+    setText('goal-clients-pack', `${d.qtdPack} ${d.qtdPack === 1 ? 'cliente' : 'clientes'}`);
+    setText('goal-clients-mix', `${d.mixPacks} compl. + ${d.mixInter} inter.`);
+    setText('goal-recurring-year2', formatBRL(d.recurringYear2));
+
+    setHtml('goal-svg-chart', renderGoalChartSvg(d));
+
+    const grid = document.getElementById('goal-results-grid');
+    if (grid) {
+      grid.innerHTML = `
+        <div class="topic-card">
+          <div class="topic-card-top">
+            <span class="topic-card-num">A</span>
+            <span class="sheet-value-pill">${formatBRL(d.tAvulso)} / cliente</span>
+          </div>
+          <h4>Apenas Serviços Rápidos</h4>
+          <p>Fechar <strong>${d.qtdAvulso} serviços no mês</strong> (cerca de ${Math.ceil(d.qtdAvulso / 4)} por semana) de emissão de CCIR, ITR ou certidão.</p>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-card-top">
+            <span class="topic-card-num">B</span>
+            <span class="sheet-value-pill">${formatBRL(d.tInter)} / cliente</span>
+          </div>
+          <h4>Regularizações de 2 Órgãos</h4>
+          <p>Fechar <strong>${d.qtdInter} clientes no mês</strong> (cerca de ${Math.max(1, Math.round(d.qtdInter / 4))} por semana) atualizando DCR/INCRA + ITR/CNIR.</p>
+        </div>
+
+        <div class="topic-card">
+          <div class="topic-card-top">
+            <span class="topic-card-num">C</span>
+            <span class="sheet-value-pill">${formatBRL(d.tPack)} / cliente</span>
+          </div>
+          <h4>Apenas Pacotes Completos</h4>
+          <p>Fechar <strong>${d.qtdPack} ${d.qtdPack === 1 ? 'fazenda/sítio' : 'fazendas/sítios'} no mês</strong> com regularização completa dos 3 órgãos.</p>
+        </div>
+
+        <div class="topic-card" style="background-color: var(--primary-soft); border-color: var(--primary-border);">
+          <div class="topic-card-top">
+            <span class="topic-card-num">MIX</span>
+            <span class="sheet-value-pill">Plano Equilibrado</span>
+          </div>
+          <h4>Meta de ${formatBRL(d.goal)} / mês</h4>
+          <p>Combine <strong>${d.mixPacks} ${d.mixPacks === 1 ? 'Pacote Completo' : 'Pacotes Completos'}</strong> + <strong>${d.mixInter} ${d.mixInter === 1 ? 'Regularização Intermediária' : 'Regularizações Intermediárias'}</strong> no mês.</p>
+        </div>
+      `;
+    }
+
+    const tbody12m = document.getElementById('goal-12m-tbody');
+    if (tbody12m) {
+      tbody12m.innerHTML = d.months
+        .map(
+          (m) => `
+          <tr>
+            <td><strong>Mês ${m.num} (${escapeHtml(m.short)})</strong></td>
+            <td>${escapeHtml(m.focus)}</td>
+            <td>${m.clientsCount} atendimentos</td>
+            <td>${escapeHtml(formatBRL(m.baseRev))}</td>
+            <td>${m.extraSeasonal > 0 ? '<strong style="color: var(--primary);">+ ' + escapeHtml(formatBRL(m.extraSeasonal)) + '</strong>' : 'Mês padrão (1,0x)'}</td>
+            <td><strong>${escapeHtml(formatBRL(m.totalRev))}</strong></td>
+          </tr>
+        `
+        )
+        .join('');
+    }
+
+    saveToolsState();
+  }
+
+  function exportGoalCsv() {
+    const d = computeGoalData();
+    const headers = [
+      'Mês',
+      'Foco Sazonal no Campo',
+      'Atendimentos Estimados (Mix)',
+      'Meta Base Mensal (R$)',
+      'Adicional Sazonal ITR/CCIR (R$)',
+      'Total Projetado no Mês (R$)'
+    ];
+    const rows = d.months.map((m) => [
+      `Mês ${m.num} (${m.short})`,
+      m.focus,
+      `${m.clientsCount} imóveis`,
+      formatBRL(m.baseRev),
+      formatBRL(m.extraSeasonal),
+      formatBRL(m.totalRev)
+    ]);
+    rows.push([
+      'Total Acumulado 12 Meses',
+      `Taxa de renovação anual considerada: ${d.retentionRate}%`,
+      `${d.totalClientsYear} atendimentos no ano`,
+      formatBRL(d.goal * 12),
+      formatBRL(d.annualTotal - d.goal * 12),
+      formatBRL(d.annualTotal)
+    ]);
+    rows.push([
+      'Carteira Recorrente Ano 2',
+      `${d.retainedClientsYear2} clientes renovando ITR + CCIR + CND (R$ 350/ano)`,
+      `${d.retainedClientsYear2} renovações`,
+      '-',
+      '-',
+      formatBRL(d.recurringYear2)
+    ]);
+    downloadCsvFile('planilha-03-meta-12-meses.csv', headers, rows);
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 04: CONVERSOR OFICIAL DE MEDIDAS RURAIS E MODULOS FISCAIS
+     ------------------------------------------------------------------------ */
+  function applyUfModuloPreset(preset) {
+    const presetMap = {
+      SP: 18,
+      MG: 26,
+      GO: 35,
+      BA: 30,
+      MT: 75
+    };
+    const mfEl = document.getElementById('conv-modulo-fiscal');
+    if (mfEl && presetMap[preset] !== undefined) {
+      mfEl.value = String(presetMap[preset]);
+    }
+    recalculateConverter();
+  }
+
+  function computeConverterData() {
+    const qty = Math.max(
+      0.01,
+      parseFloat(document.getElementById('conv-qty')?.value || '12') || 12
+    );
+    const unitKey = document.getElementById('conv-unit')?.value || 'alq_paulista';
+    const moduloFiscal = Math.max(
+      1,
+      parseFloat(document.getElementById('conv-modulo-fiscal')?.value || '20') || 20
+    );
+
+    const unitObj = AGRARIAN_UNITS.find((u) => u.key === unitKey) || AGRARIAN_UNITS[0];
+    const ha = qty * unitObj.factorHa;
+    const m2 = ha * 10000;
+    const mf = ha / moduloFiscal;
+
+    let classification = 'Grande (> 15 MF)';
+    let shortClass = 'Grande Propriedade';
+    if (mf <= 4) {
+      classification = 'Pequena (até 4 MF)';
+      shortClass = 'Pequena Propriedade';
+    } else if (mf <= 15) {
+      classification = 'Média (4 a 15 MF)';
+      shortClass = 'Média Propriedade';
+    }
+
+    const regionalRows = AGRARIAN_UNITS.filter((u) => u.inTable).map((u) => ({
+      ...u,
+      unitM2: Math.round(u.factorHa * 10000),
+      equiv: ha / u.factorHa
+    }));
+
+    return {
+      qty,
+      unitKey,
+      unitObj,
+      moduloFiscal,
+      ha,
+      m2,
+      mf,
+      classification,
+      shortClass,
+      regionalRows
+    };
+  }
+
+  function renderConverterChartSvg(d) {
+    let pinX = 20;
+    if (d.mf <= 4) {
+      pinX = 20 + (Math.max(0, d.mf) / 4) * 136;
+    } else if (d.mf <= 15) {
+      pinX = 160 + ((d.mf - 4) / 11) * 196;
+    } else {
+      const ratio = Math.min(1, (d.mf - 15) / 15);
+      pinX = 360 + ratio * 140;
+    }
+    const clampedBadgeX = Math.min(430, Math.max(90, pinX));
+    const alqPaulista = d.ha / 2.42;
+    const alqMineiro = d.ha / 4.84;
+
+    return `
+      <svg viewBox="0 0 520 186" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Escala de classificação em Módulos Fiscais">
+        <!-- Pin indicador superior -->
+        <rect x="${(clampedBadgeX - 74).toFixed(1)}" y="8" width="148" height="24" rx="12" fill="#15803d"/>
+        <text x="${clampedBadgeX.toFixed(1)}" y="24" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="700" text-anchor="middle">Imóvel: ${fmtCommaNum(d.mf, 2)} MF</text>
+        <line x1="${pinX.toFixed(1)}" y1="32" x2="${pinX.toFixed(1)}" y2="50" stroke="#15803d" stroke-width="2"/>
+
+        <!-- Regua Fundiaria Segmentada -->
+        <rect x="20" y="48" width="136" height="26" rx="6" fill="#15803d"/>
+        <text x="88" y="65" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">0 a 4 MF · Pequena</text>
+
+        <rect x="160" y="48" width="196" height="26" rx="6" fill="#d97706"/>
+        <text x="258" y="65" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">4 a 15 MF · Média</text>
+
+        <rect x="360" y="48" width="140" height="26" rx="6" fill="#0f766e"/>
+        <text x="430" y="65" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-size="10.5" font-weight="700" text-anchor="middle">15+ MF · Grande</text>
+
+        <circle cx="${pinX.toFixed(1)}" cy="61" r="7" fill="#ffffff" stroke="#1d1d1f" stroke-width="2.5"/>
+
+        <text x="20" y="90" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="600">0 MF</text>
+        <text x="158" y="90" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="600" text-anchor="middle">4 MF</text>
+        <text x="358" y="90" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="600" text-anchor="middle">15 MF</text>
+        <text x="500" y="90" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="600" text-anchor="end">30+ MF</text>
+
+        <!-- 3 Blocos Visuais de Equivalencia -->
+        <rect x="20" y="106" width="152" height="66" rx="10" fill="var(--canvas-parchment)" stroke="var(--hairline-table)"/>
+        <text x="32" y="127" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="9.5" font-weight="700" letter-spacing="0.05em">HECTARES OFICIAIS</text>
+        <text x="32" y="154" fill="var(--primary)" font-family="Plus Jakarta Sans, sans-serif" font-size="15.5" font-weight="700">${fmtCommaNum(d.ha, 2)} ha</text>
+
+        <rect x="184" y="106" width="152" height="66" rx="10" fill="var(--canvas-parchment)" stroke="var(--hairline-table)"/>
+        <text x="196" y="127" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="9.5" font-weight="700" letter-spacing="0.05em">ALQ. PAULISTA (2,42)</text>
+        <text x="196" y="154" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="15.5" font-weight="700">${fmtCommaNum(alqPaulista, 2)} alq</text>
+
+        <rect x="348" y="106" width="152" height="66" rx="10" fill="var(--canvas-parchment)" stroke="var(--hairline-table)"/>
+        <text x="360" y="127" fill="var(--ink-secondary)" font-family="Plus Jakarta Sans, sans-serif" font-size="9.5" font-weight="700" letter-spacing="0.05em">ALQ. MINEIRO (4,84)</text>
+        <text x="360" y="154" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="15.5" font-weight="700">${fmtCommaNum(alqMineiro, 2)} alq</text>
+      </svg>
+    `;
+  }
+
+  function recalculateConverter() {
+    if (!document.getElementById('conv-qty')) return;
+    const d = computeConverterData();
+
+    const haFormatted = d.ha.toLocaleString('pt-BR', {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4
+    });
+    const qtyFormatted = d.qty.toLocaleString('pt-BR', { maximumFractionDigits: 4 });
+    const unitDisplay = d.qty === 1 ? d.unitObj.label : d.unitObj.plural;
+
+    setText('conv-res-ha', `${haFormatted} ha`);
+    setText(
+      'conv-res-sub',
+      `${qtyFormatted} ${unitDisplay} convertidos com precisão de 4 casas decimais`
+    );
+    setText('conv-res-m2', `${Math.round(d.m2).toLocaleString('pt-BR')} m2`);
+    setText('conv-res-mf', `${fmtCommaNum(d.mf, 2)} MF`);
+    setText('conv-res-class', d.classification);
+
+    setHtml('converter-svg-chart', renderConverterChartSvg(d));
+
+    const tbody = document.getElementById('converter-all-tbody');
+    if (tbody) {
+      tbody.innerHTML = d.regionalRows
+        .map(
+          (r) => `
+          <tr${r.key === d.unitKey ? ' style="background-color: var(--primary-soft);"' : ''}>
+            <td><strong>${escapeHtml(r.label)}</strong></td>
+            <td>${escapeHtml(r.regions)}</td>
+            <td>${fmtCommaNum(r.factorHa, 4)} ha</td>
+            <td>${r.unitM2.toLocaleString('pt-BR')} m2</td>
+            <td><strong>${fmtCommaNum(r.equiv, 4)}</strong></td>
+          </tr>
+        `
+        )
+        .join('');
+    }
+
+    saveToolsState();
+  }
+
+  function copyConverterSummary(btn) {
+    const d = computeConverterData();
+    const summary = [
+      'QUADRO DE CONVERSÃO DE MEDIDA AGRÁRIA E MÓDULOS FISCAIS',
+      `Medida original informada: ${d.qty.toLocaleString('pt-BR')} ${d.qty === 1 ? d.unitObj.label : d.unitObj.plural}`,
+      `Área oficial padronizada (INCRA / ITR / CAR): ${fmtCommaNum(d.ha, 4)} ha (${Math.round(d.m2).toLocaleString('pt-BR')} m2)`,
+      `Módulo Fiscal adotado: ${d.moduloFiscal} ha | Enquadramento: ${fmtCommaNum(d.mf, 2)} MF - ${d.classification}`,
+      '',
+      'Equivalências Regionais:',
+      `- Alqueire Paulista (2,42 ha): ${fmtCommaNum(d.ha / 2.42, 4)}`,
+      `- Alqueire Mineiro / Goiano (4,84 ha): ${fmtCommaNum(d.ha / 4.84, 4)}`,
+      `- Alqueire Baiano (9,68 ha): ${fmtCommaNum(d.ha / 9.68, 4)}`,
+      `- Tarefa Baiana (0,4356 ha): ${fmtCommaNum(d.ha / 0.4356, 2)}`
+    ].join('\n');
+    copyText(summary, btn);
+  }
+
+  function exportConverterCsv() {
+    const d = computeConverterData();
+    const headers = [
+      'Unidade Agrária Regional',
+      'Regiões de Uso Tradicional',
+      'Fator Oficial (1 un. em ha)',
+      'Metragem de 1 un. (m2)',
+      'Equivalência para Este Imóvel'
+    ];
+    const rows = d.regionalRows.map((r) => [
+      r.label,
+      r.regions,
+      fmtCommaNum(r.factorHa, 4),
+      String(r.unitM2),
+      fmtCommaNum(r.equiv, 4)
+    ]);
+    rows.push([
+      'Enquadramento Fundiário Calculado',
+      `Módulo Fiscal municipal: ${d.moduloFiscal} ha`,
+      `${fmtCommaNum(d.ha, 4)} ha`,
+      `${Math.round(d.m2)} m2`,
+      `${fmtCommaNum(d.mf, 2)} MF - ${d.classification}`
+    ]);
+    downloadCsvFile('planilha-04-conversao-medidas-rurais.csv', headers, rows);
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 05: SIMULADOR PRATICO DE ITR E ECONOMIA LEGAL (LEI 9.393/96)
+     ------------------------------------------------------------------------ */
+  function resetItrDefaults() {
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.value = String(val);
+    };
+    setVal('itr-area-total', 180);
+    setVal('itr-area-ambiental', 54);
+    setVal('itr-area-utilizada', 110);
+    setVal('itr-vtn-ha', 14500);
+    const chk = document.getElementById('itr-pequena-gleba');
+    if (chk) chk.checked = false;
+    recalculateItr();
+    showToast('Exemplo padrão do ITR restaurado.');
+  }
+
+  function computeItrData() {
+    const areaTotal = Math.max(
+      1,
+      parseFloat(document.getElementById('itr-area-total')?.value || '180') || 180
+    );
+    const rawAmb = parseFloat(document.getElementById('itr-area-ambiental')?.value || '0') || 0;
+    const rawUtil = parseFloat(document.getElementById('itr-area-utilizada')?.value || '0') || 0;
+    const vtnHa = Math.max(
+      100,
+      parseFloat(document.getElementById('itr-vtn-ha')?.value || '14500') || 14500
+    );
+    const pequenaGlebaChecked = Boolean(document.getElementById('itr-pequena-gleba')?.checked);
+
+    const areaAmbiental = Math.min(areaTotal, Math.max(0, rawAmb));
+    const areaTributavel = Math.max(0, areaTotal - areaAmbiental);
+    const areaUtilizada = Math.min(areaTributavel, Math.max(0, rawUtil));
+    const gu = areaTributavel > 0 ? (areaUtilizada / areaTributavel) * 100 : 100;
+
+    let guColIdx = 4;
+    let guBracketLabel = 'Até 30%';
+    if (gu > 80) {
+      guColIdx = 0;
+      guBracketLabel = 'Acima de 80%';
+    } else if (gu > 65) {
+      guColIdx = 1;
+      guBracketLabel = '65% a 80%';
+    } else if (gu > 50) {
+      guColIdx = 2;
+      guBracketLabel = '50% a 65%';
+    } else if (gu > 30) {
+      guColIdx = 3;
+      guBracketLabel = '30% a 50%';
+    }
+
+    const rowBracket =
+      ITR_RATES_MATRIX.find((r) => areaTotal <= r.maxHa) ||
+      ITR_RATES_MATRIX[ITR_RATES_MATRIX.length - 1];
+
+    const aliquota = rowBracket.rates[guColIdx];
+    const worstRate = rowBracket.rates[4];
+
+    const vtnTotal = areaTotal * vtnHa;
+    const vtnTributavel = areaTributavel * vtnHa;
+
+    const isIsento = pequenaGlebaChecked && areaTotal <= 30;
+    const impostoRegularizado = isIsento
+      ? 0
+      : areaTributavel === 0
+        ? 10
+        : Math.max(10, vtnTributavel * (aliquota / 100));
+
+    const impostoSemRegularizar = Math.max(10, vtnTotal * (worstRate / 100));
+    const economia = Math.max(0, impostoSemRegularizar - impostoRegularizado);
+    const reductionPct =
+      impostoSemRegularizar > 0 ? Math.round((economia / impostoSemRegularizar) * 100) : 0;
+
+    return {
+      areaTotal,
+      areaAmbiental,
+      areaTributavel,
+      areaUtilizada,
+      vtnHa,
+      pequenaGlebaChecked,
+      isIsento,
+      gu,
+      guBracketLabel,
+      rowBracket,
+      aliquota,
+      worstRate,
+      vtnTotal,
+      vtnTributavel,
+      impostoRegularizado,
+      impostoSemRegularizar,
+      economia,
+      reductionPct
+    };
+  }
+
+  function renderItrChartSvg(d) {
+    const maxItr = Math.max(d.impostoSemRegularizar, d.impostoRegularizado, 100);
+    const maxBarW = 480;
+    const unoptW = Math.max(12, Math.round((d.impostoSemRegularizar / maxItr) * maxBarW));
+    const optW =
+      d.impostoRegularizado === 0
+        ? 8
+        : Math.max(10, Math.round((d.impostoRegularizado / maxItr) * maxBarW));
+
+    return `
+      <svg viewBox="0 0 520 190" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Comparativo entre ITR sem regularização e ITR com CAR/ADA e GU real">
+        <!-- Barra 1: Sem Isencao / GU Baixo -->
+        <text x="20" y="24" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11.5" font-weight="600">Sem Isenção / GU Baixo (&lt;=30% · ${fmtCommaNum(d.worstRate, 2)}%)</text>
+        <text x="500" y="24" fill="#dc2626" font-family="Plus Jakarta Sans, sans-serif" font-size="12" font-weight="700" text-anchor="end">${escapeHtml(formatBRLCents(d.impostoSemRegularizar))}</text>
+        <rect x="20" y="32" width="${maxBarW}" height="24" rx="7" fill="var(--canvas-parchment)"/>
+        <rect x="20" y="32" width="${unoptW}" height="24" rx="7" fill="#dc2626"/>
+
+        <!-- Barra 2: Declarado com CAR/ADA + GU Real -->
+        <text x="20" y="80" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11.5" font-weight="700">Declarado com CAR/ADA + GU Real (${fmtCommaNum(d.gu, 1)}%)</text>
+        <text x="500" y="80" fill="#15803d" font-family="Plus Jakarta Sans, sans-serif" font-size="12" font-weight="700" text-anchor="end">${escapeHtml(d.isIsento ? 'Isento (R$ 0,00)' : formatBRLCents(d.impostoRegularizado))}</text>
+        <rect x="20" y="88" width="${maxBarW}" height="24" rx="7" fill="var(--canvas-parchment)"/>
+        <rect x="20" y="88" width="${optW}" height="24" rx="7" fill="#15803d"/>
+
+        <!-- Selo de Economia Anual -->
+        <rect x="20" y="130" width="480" height="46" rx="11" fill="rgba(21, 128, 61, 0.12)" stroke="rgba(21, 128, 61, 0.32)"/>
+        <rect x="32" y="141" width="118" height="24" rx="12" fill="#15803d"/>
+        <text x="91" y="157" fill="#ffffff" font-family="Plus Jakarta Sans, sans-serif" font-size="10" font-weight="700" text-anchor="middle">ECONOMIA LEGAL</text>
+        <text x="162" y="157" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="12" font-weight="700">${escapeHtml(formatBRLCents(d.economia))} / ano (-${d.reductionPct}% no imposto)</text>
+      </svg>
+    `;
+  }
+
+  function recalculateItr() {
+    if (!document.getElementById('itr-area-total')) return;
+    const d = computeItrData();
+
+    setText(
+      'itr-res-imposto',
+      d.isIsento ? 'Isento (R$ 0,00)' : formatBRLCents(d.impostoRegularizado)
+    );
+
+    if (d.isIsento) {
+      setText(
+        'itr-res-sub',
+        'Imunidade de Pequena Gleba até 30 ha (art. 2º da Lei 9.393/96, quando único imóvel explorado pela família)'
+      );
+    } else if (d.pequenaGlebaChecked && d.areaTotal > 30) {
+      setText(
+        'itr-res-sub',
+        'Regra geral de Pequena Gleba exige até 30 ha (50 ha Polígono das Secas/Amaz. Oriental ou 100 ha Amaz. Ocidental/Pantanal). Cálculo normal aplicado.'
+      );
+    } else {
+      setText(
+        'itr-res-sub',
+        'Cálculo referencial conforme Anexo da Lei Federal 9.393/96 (mínimo DARF R$ 10,00)'
+      );
+    }
+
+    setText('itr-res-gu', `${fmtCommaNum(d.gu, 1)}%`);
+    setText('itr-res-aliquota', d.isIsento ? 'Isento (0%)' : `${fmtCommaNum(d.aliquota, 2)}%`);
+    setText('itr-res-economia', formatBRL(d.economia));
+
+    setHtml('itr-svg-chart', renderItrChartSvg(d));
+
+    const memTbody = document.getElementById('itr-memory-tbody');
+    if (memTbody) {
+      const memRows = [
+        [
+          '01. Área Total do Imóvel',
+          'Matrícula / CIB / CNIR',
+          `${fmtCommaNum(d.areaTotal, 2)} ha`
+        ],
+        [
+          '02. (-) Áreas Ambientais Isentas',
+          'APP + Reserva Legal + RPPN (Recibo CAR + ADA IBAMA)',
+          `${fmtCommaNum(d.areaAmbiental, 2)} ha`
+        ],
+        [
+          '03. (=) Área Tributável do Imóvel',
+          'Área Total menos Áreas Ambientais',
+          `${fmtCommaNum(d.areaTributavel, 2)} ha`
+        ],
+        [
+          '04. Grau de Utilização (GU)',
+          `${fmtCommaNum(d.areaUtilizada, 2)} ha utilizados / ${fmtCommaNum(d.areaTributavel, 2)} ha tributáveis`,
+          `${fmtCommaNum(d.gu, 1)}% (${d.guBracketLabel})`
+        ],
+        [
+          '05. Valor da Terra Nua Tributável (VTNt)',
+          `${fmtCommaNum(d.areaTributavel, 2)} ha x ${formatBRL(d.vtnHa)} / ha`,
+          formatBRLCents(d.vtnTributavel)
+        ],
+        [
+          '06. Alíquota Oficial (Lei 9.393/96)',
+          `Faixa: ${d.rowBracket.label} x GU ${d.guBracketLabel}`,
+          d.isIsento ? 'Isento (Art. 2º)' : `${fmtCommaNum(d.aliquota, 2)}%`
+        ],
+        [
+          '07. ITR Anual Estimado vs. Sem Exclusão',
+          `Sem CAR/ADA e GU baixo: ${formatBRLCents(d.impostoSemRegularizar)} | Economia: ${formatBRLCents(d.economia)}`,
+          d.isIsento ? 'Isento (R$ 0,00)' : formatBRLCents(d.impostoRegularizado)
+        ]
+      ];
+      memTbody.innerHTML = memRows
+        .map(
+          (r, i) => `
+          <tr${i === 6 ? ' style="background-color: var(--primary-soft);"' : ''}>
+            <td><strong>${escapeHtml(r[0])}</strong></td>
+            <td>${escapeHtml(r[1])}</td>
+            <td><strong>${escapeHtml(r[2])}</strong></td>
+          </tr>
+        `
+        )
+        .join('');
+    }
+
+    saveToolsState();
+  }
+
+  function exportItrCsv() {
+    const d = computeItrData();
+    const headers = [
+      'Campo na Ficha DIAT (PGD ITR)',
+      'Base / Fórmula de Apuração',
+      'Valor Apurado na Simulação'
+    ];
+    const rows = [
+      ['01. Área Total do Imóvel', 'Matrícula / CIB / CNIR', `${fmtCommaNum(d.areaTotal, 2)} ha`],
+      [
+        '02. Áreas Ambientais Isentas',
+        'APP + Reserva Legal + RPPN (CAR + ADA)',
+        `${fmtCommaNum(d.areaAmbiental, 2)} ha`
+      ],
+      [
+        '03. Área Tributável',
+        'Área Total menos Áreas Ambientais',
+        `${fmtCommaNum(d.areaTributavel, 2)} ha`
+      ],
+      [
+        '04. Área Efetivamente Utilizada',
+        'Lavoura, pastagem plantada/nativa ou manejo',
+        `${fmtCommaNum(d.areaUtilizada, 2)} ha`
+      ],
+      [
+        '05. Grau de Utilização (GU)',
+        `Faixa: ${d.guBracketLabel}`,
+        `${fmtCommaNum(d.gu, 1)}%`
+      ],
+      [
+        '06. VTN Tributável (VTNt)',
+        `VTN/ha informado: ${formatBRL(d.vtnHa)}`,
+        formatBRLCents(d.vtnTributavel)
+      ],
+      [
+        '07. Alíquota Lei 9.393/96',
+        d.rowBracket.label,
+        d.isIsento ? 'Isento (0%)' : `${fmtCommaNum(d.aliquota, 2)}%`
+      ],
+      [
+        '08. ITR Anual Declarado Corretamente',
+        'Mínimo legal DARF R$ 10,00',
+        d.isIsento ? 'Isento (R$ 0,00)' : formatBRLCents(d.impostoRegularizado)
+      ],
+      [
+        '09. Comparativo Sem CAR/ADA e GU <= 30%',
+        `Alíquota comparativa ${fmtCommaNum(d.worstRate, 2)}% sobre VTN total`,
+        formatBRLCents(d.impostoSemRegularizar)
+      ],
+      [
+        '10. Economia Legal Anual Estimada',
+        `Redução de ${d.reductionPct}%`,
+        formatBRLCents(d.economia)
+      ]
+    ];
+    downloadCsvFile('planilha-05-memoria-simulacao-itr.csv', headers, rows);
+  }
+
+  /* ------------------------------------------------------------------------
+     PLANILHA 06: CARTEIRA CRM (CONSULTOR) / FICHA DA MINHA TERRA (PROPRIETARIO)
+     ------------------------------------------------------------------------ */
+  function getCrmStorageKey() {
+    return isProprietarioMode() ? CRM_PROP_STORAGE_KEY : CRM_CONS_STORAGE_KEY;
+  }
+
+  function loadCrmItems() {
+    const isProp = isProprietarioMode();
+    const key = getCrmStorageKey();
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (_e) {}
+    const defaults = getDefaultCrmItems(isProp);
+    saveCrmItems(defaults);
+    return defaults;
+  }
+
+  function saveCrmItems(items) {
+    try {
+      localStorage.setItem(getCrmStorageKey(), JSON.stringify(items));
+    } catch (_e) {}
+  }
+
+  function getCrmReceivedAmount(row) {
+    const val = Math.max(0, Number(row.value) || 0);
+    if (row.paidMode === 'full') return val;
+    if (row.paidMode === 'partial') return Math.round(val / 2);
+    return 0;
+  }
+
+  function renderCrmChartSvg(rows, isProp, totalVal, receivedVal, pendingVal) {
+    const safeTotal = Math.max(totalVal, 1);
+    const recPct = totalVal > 0 ? Math.round((receivedVal / safeTotal) * 100) : 0;
+    const pendPct = Math.max(0, 100 - recPct);
+    const barTotalW = 504;
+    const recW = totalVal > 0 ? Math.round((receivedVal / safeTotal) * barTotalW) : 0;
+    const pendW = Math.max(0, barTotalW - recW);
+
+    const statusStages = isProp
+      ? [
+          { key: 'Em Dia', color: '#15803d' },
+          { key: 'Em Atualização', color: '#f59e0b' },
+          { key: 'Pendente', color: '#dc2626' }
+        ]
+      : [
+          { key: 'Triagem', color: '#6e6e73' },
+          { key: 'Em Protocolo', color: '#0f766e' },
+          { key: 'Aguardando Órgão', color: '#f59e0b' },
+          { key: 'Concluído', color: '#15803d' }
+        ];
+
+    const stageStats = statusStages.map((st) => {
+      const matched = rows.filter((r) => r.status === st.key);
+      const sum = matched.reduce((acc, r) => acc + (Number(r.value) || 0), 0);
+      return { ...st, count: matched.length, sum };
+    });
+    const maxStageCount = Math.max(...stageStats.map((s) => s.count), 1);
+    const rowSpacing = isProp ? 31 : 24;
+    const barH = isProp ? 18 : 15;
+
+    const stageBarsSvg = stageStats
+      .map((st, idx) => {
+        const y = 82 + idx * rowSpacing;
+        const w = st.count > 0 ? Math.max(14, Math.round((st.count / maxStageCount) * 230)) : 4;
+        return `
+          <text x="18" y="${y + 12}" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="600">${escapeHtml(st.key)}</text>
+          <rect x="148" y="${y}" width="230" height="${barH}" rx="5" fill="var(--canvas-parchment)"/>
+          <rect x="148" y="${y}" width="${w}" height="${barH}" rx="5" fill="${st.color}"/>
+          <text x="522" y="${y + 12}" fill="var(--ink)" font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="700" text-anchor="end">${st.count} · ${escapeHtml(formatBRL(st.sum))}</text>
+        `;
+      })
+      .join('');
+
+    return `
+      <svg viewBox="0 0 540 190" fill="none" xmlns="http://www.w3.org/2000/svg" font-family="Plus Jakarta Sans, sans-serif" role="img" aria-label="Resumo financeiro e etapas da carteira">
+        <text x="18" y="21" fill="#15803d" font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="700">${isProp ? 'Quitado' : 'Recebido'}: ${escapeHtml(formatBRL(receivedVal))} (${recPct}%)</text>
+        <text x="522" y="21" fill="#d97706" font-family="Plus Jakarta Sans, sans-serif" font-size="11" font-weight="700" text-anchor="end">${isProp ? 'Em Aberto' : 'A Receber'}: ${escapeHtml(formatBRL(pendingVal))} (${pendPct}%)</text>
+
+        <rect x="18" y="30" width="${barTotalW}" height="22" rx="7" fill="var(--canvas-parchment)"/>
+        ${recW > 0 ? `<rect x="18" y="30" width="${recW}" height="22" rx="7" fill="#15803d"/>` : ''}
+        ${pendW > 0 ? `<rect x="${18 + recW}" y="30" width="${pendW}" height="22" rx="7" fill="#f59e0b"/>` : ''}
+
+        <line x1="18" y1="66" x2="522" y2="66" stroke="var(--hairline-table)" stroke-width="1"/>
+        ${stageBarsSvg}
+      </svg>
+    `;
+  }
+
+  function renderCrmSheet() {
+    const tbody = document.getElementById('crm-tbody');
+    const thead = document.getElementById('crm-thead');
+    if (!tbody || !thead) return;
+
+    const isProp = isProprietarioMode();
+    const rows = loadCrmItems();
+
+    const totalVal = rows.reduce((acc, r) => acc + (Number(r.value) || 0), 0);
+    const receivedVal = rows.reduce((acc, r) => acc + getCrmReceivedAmount(r), 0);
+    const pendingVal = Math.max(0, totalVal - receivedVal);
+
+    setText('crm-kpi-main', formatBRL(totalVal));
+    setText('crm-kpi-sub1', formatBRL(receivedVal));
+    setText('crm-kpi-sub2', formatBRL(pendingVal));
+    setText(
+      'crm-kpi-sub3',
+      isProp
+        ? `${rows.length} ${rows.length === 1 ? 'gleba' : 'glebas'}`
+        : `${rows.length} ${rows.length === 1 ? 'imóvel' : 'imóveis'}`
+    );
+
+    setHtml(
+      'crm-svg-chart',
+      renderCrmChartSvg(rows, isProp, totalVal, receivedVal, pendingVal)
+    );
+
+    thead.innerHTML = isProp
+      ? `
+        <tr>
+          <th>Gleba / Imóvel</th>
+          <th>Matrícula / Cadastros</th>
+          <th>Área</th>
+          <th>Taxa / Imposto</th>
+          <th>Situação</th>
+          <th>Quitação (Clique)</th>
+          <th>Ação</th>
+        </tr>
+      `
+      : `
+        <tr>
+          <th>Cliente / Propriedade</th>
+          <th>Órgãos / Escopo</th>
+          <th>Área</th>
+          <th>Honorários</th>
+          <th>Etapa Atual</th>
+          <th>Pagamento (Clique)</th>
+          <th>Ação</th>
+        </tr>
+      `;
+
+    const statusOptions = isProp
+      ? ['Em Dia', 'Em Atualização', 'Pendente']
+      : ['Triagem', 'Em Protocolo', 'Aguardando Órgão', 'Concluído'];
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" style="text-align: center; color: var(--ink-secondary); padding: 24px;">
+            Nenhum registro cadastrado. Use os campos acima para adicionar ou clique em "Restaurar Exemplo".
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = rows
+      .map((row) => {
+        const selectHtml = `
+          <select class="crm-inline-select" onchange="window.RRApp.updateCrmRowStatus('${escapeHtml(row.id)}', this.value)" aria-label="Alterar etapa">
+            ${statusOptions
+              .map(
+                (opt) =>
+                  `<option value="${escapeHtml(opt)}"${row.status === opt ? ' selected' : ''}>${escapeHtml(opt)}</option>`
+              )
+              .join('')}
+          </select>
+        `;
+
+        let paidClass = '';
+        let paidLabel = '0% Pendente';
+        if (isProp) {
+          if (row.paidMode === 'full') {
+            paidClass = 'is-paid';
+            paidLabel = 'Quitado';
+          } else {
+            paidClass = 'is-partial';
+            paidLabel = 'Em Aberto';
+          }
+        } else if (row.paidMode === 'full') {
+          paidClass = 'is-paid';
+          paidLabel = '100% Quitado';
+        } else if (row.paidMode === 'partial') {
+          paidClass = 'is-partial';
+          paidLabel = '50% Entrada';
+        }
+
+        const haTxt = `${Number(row.ha || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ha`;
+
+        return `
+          <tr>
+            <td><strong>${escapeHtml(row.name)}</strong></td>
+            <td>${escapeHtml(row.doc)}</td>
+            <td>${escapeHtml(haTxt)}</td>
+            <td><strong>${escapeHtml(formatBRL(row.value))}</strong></td>
+            <td>${selectHtml}</td>
+            <td>
+              <button type="button" class="btn-paid-toggle ${paidClass}" onclick="window.RRApp.toggleCrmRowPaid('${escapeHtml(row.id)}')">
+                ${escapeHtml(paidLabel)}
+              </button>
+            </td>
+            <td>
+              <button type="button" class="btn-row-del" onclick="window.RRApp.deleteCrmRow('${escapeHtml(row.id)}')" title="Remover linha" aria-label="Remover registro">
+                ${SVG_ICONS.trash}
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+  }
+
+  function addCrmRow() {
+    const isProp = isProprietarioMode();
+    const nameEl = document.getElementById('crm-name');
+    const docEl = document.getElementById('crm-doc');
+    const haEl = document.getElementById('crm-ha');
+    const valEl = document.getElementById('crm-value');
+    const statusEl = document.getElementById('crm-status');
+
+    const name = sanitizeCleanText(nameEl ? nameEl.value : '').trim();
+    if (!name) {
+      if (nameEl) nameEl.focus();
+      showToast(isProp ? 'Informe o nome da gleba ou imóvel.' : 'Informe o nome do cliente ou imóvel.');
+      return;
+    }
+
+    const doc =
+      sanitizeCleanText(docEl ? docEl.value : '').trim() ||
+      (isProp ? 'Matrícula + CCIR + ITR' : 'DCR INCRA + ITR + CAR');
+    const ha = Math.max(0.1, parseFloat(haEl ? haEl.value : '0') || 25);
+    const value = Math.max(0, parseFloat(valEl ? valEl.value : '0') || (isProp ? 220 : 1500));
+    const status =
+      (statusEl ? statusEl.value : '') || (isProp ? 'Em Dia' : 'Triagem');
+
+    const paidMode =
+      status === 'Concluído' || status === 'Em Dia'
+        ? 'full'
+        : isProp
+          ? 'pending'
+          : 'partial';
+
+    const rows = loadCrmItems();
+    rows.unshift({
+      id: `crm-${Date.now()}`,
+      name,
+      doc,
+      ha,
+      value,
+      status,
+      paidMode
+    });
+    saveCrmItems(rows);
+
+    if (nameEl) nameEl.value = '';
+    if (docEl) docEl.value = '';
+    if (haEl) haEl.value = '';
+    if (valEl) valEl.value = '';
+
+    renderCrmSheet();
+    showToast('Registro adicionado com sucesso.');
+  }
+
+  function updateCrmRowStatus(id, newStatus) {
+    const rows = loadCrmItems();
+    const target = rows.find((r) => r.id === id);
+    if (!target) return;
+    target.status = sanitizeCleanText(newStatus);
+    if (target.status === 'Concluído' || target.status === 'Em Dia') {
+      target.paidMode = 'full';
+    }
+    saveCrmItems(rows);
+    renderCrmSheet();
+  }
+
+  function toggleCrmRowPaid(id) {
+    const isProp = isProprietarioMode();
+    const rows = loadCrmItems();
+    const target = rows.find((r) => r.id === id);
+    if (!target) return;
+
+    if (isProp) {
+      target.paidMode = target.paidMode === 'full' ? 'pending' : 'full';
+    } else if (target.paidMode === 'pending') {
+      target.paidMode = 'partial';
+    } else if (target.paidMode === 'partial') {
+      target.paidMode = 'full';
+    } else {
+      target.paidMode = 'pending';
+    }
+
+    saveCrmItems(rows);
+    renderCrmSheet();
+  }
+
+  function deleteCrmRow(id) {
+    const rows = loadCrmItems().filter((r) => r.id !== id);
+    saveCrmItems(rows);
+    renderCrmSheet();
+    showToast('Registro removido da planilha.');
+  }
+
+  function resetCrmDemo() {
+    const defaults = getDefaultCrmItems(isProprietarioMode());
+    saveCrmItems(defaults);
+    renderCrmSheet();
+    showToast('Dados de exemplo restaurados.');
+  }
+
+  function exportCrmCsv() {
+    const isProp = isProprietarioMode();
+    const rows = loadCrmItems();
+    const headers = isProp
+      ? [
+          'Gleba / Imóvel',
+          'Matrícula / Cadastros',
+          'Área (ha)',
+          'Taxa / Imposto Anual (R$)',
+          'Situação Cadastral',
+          'Status de Quitação',
+          'Valor Quitado (R$)',
+          'Saldo em Aberto (R$)'
+        ]
+      : [
+          'Cliente / Propriedade',
+          'Órgãos / Escopo',
+          'Área (ha)',
+          'Honorários Totais (R$)',
+          'Etapa Operacional',
+          'Status de Recebimento',
+          'Já Recebido (R$)',
+          'Saldo a Receber (R$)'
+        ];
+
+    const csvRows = rows.map((r) => {
+      const val = Math.max(0, Number(r.value) || 0);
+      const rec = getCrmReceivedAmount(r);
+      const pend = Math.max(0, val - rec);
+      const paidText = isProp
+        ? r.paidMode === 'full'
+          ? 'Quitado'
+          : 'Em Aberto'
+        : r.paidMode === 'full'
+          ? '100% Quitado'
+          : r.paidMode === 'partial'
+            ? '50% Entrada Recebida'
+            : '0% Pendente';
+      return [
+        r.name,
+        r.doc,
+        fmtCommaNum(r.ha, 2),
+        formatBRL(val),
+        r.status,
+        paidText,
+        formatBRL(rec),
+        formatBRL(pend)
+      ];
+    });
+
+    downloadCsvFile(
+      isProp ? 'planilha-04-ficha-minha-terra.csv' : 'planilha-06-carteira-crm-rural.csv',
+      headers,
+      csvRows
+    );
   }
 
   /* ========================================================================
@@ -2363,10 +4402,6 @@
   async function init() {
     initTheme();
     initAiWelcomeMessage();
-    recalculatePricing();
-    runCrossAudit();
-    recalculateGoal();
-    syncDemoUiVisibility();
 
     const path = (window.location.pathname || '').toLowerCase();
     const search = (window.location.search || '').toLowerCase();
@@ -2374,6 +4409,7 @@
       path.includes('/proprietario') || search.includes('modo=proprietario');
 
     if (wantsProprietarioUrl) {
+      state.activeToolTab = 'tab-auditoria';
       const loginEyebrow = document.querySelector('.login-eyebrow');
       const loginTitle = document.querySelector('.login-title');
       const loginSub = document.querySelector('.login-subtitle');
@@ -2384,6 +4420,17 @@
           'Digite o mesmo e-mail usado na sua compra para acessar os guias passo a passo da sua propriedade.';
       }
     }
+
+    restoreToolsState();
+    recalculatePricing();
+    runCrossAudit();
+    recalculateGoal();
+    recalculateConverter();
+    recalculateItr();
+    renderCrmSheet();
+    applyRoleUiTheme();
+    updateHomeKpiStrip();
+    syncDemoUiVisibility();
 
     try {
       localStorage.removeItem('rr_token');
@@ -2438,18 +4485,39 @@
     openModule,
     selectLesson,
     copyText,
+    downloadCsvFile,
+    updateHomeKpiStrip,
     toggleCurrentLessonComplete,
     prevLesson,
     nextLesson,
     openModulePdf,
+    switchToolTab,
     syncHectaresInput,
     recalculatePricing,
+    exportPricingCsv,
     copyPricingProposal,
     runCrossAudit,
     loadAuditPreset,
+    exportAuditCsv,
     copyAuditReport,
     setMonthlyGoal,
     recalculateGoal,
+    exportGoalCsv,
+    resetGoalDefaults,
+    recalculateConverter,
+    applyUfModuloPreset,
+    exportConverterCsv,
+    copyConverterSummary,
+    recalculateItr,
+    exportItrCsv,
+    resetItrDefaults,
+    renderCrmSheet,
+    addCrmRow,
+    updateCrmRowStatus,
+    toggleCrmRowPaid,
+    deleteCrmRow,
+    exportCrmCsv,
+    resetCrmDemo,
     closeModals,
     closeModalOnBackdrop,
     simulatePass7DaysNow,

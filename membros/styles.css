@@ -1,6 +1,6 @@
 /* ==========================================================================
    IMOVEL RURAL EM DIA - APPLE MINIMALIST DESIGN SYSTEM
-   Tipografia exclusiva: Plus Jakarta Sans (Zero Serif, Zero Emojis, Zero Travessoes)
+   Tipografia exclusiva: Plus Jakarta Sans (Sem Fontes Serifadas, Zero Emojis, Zero Travessoes)
    ========================================================================== */
 
 :root,
@@ -2225,7 +2225,7 @@ code {
 
 #goal-results-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   margin: 0;
 }
@@ -2911,5 +2911,1020 @@ code {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
+  }
+}
+
+/* ==========================================================================
+   UPGRADE EXECUTIVO TOTAL: KPI STRIP, 6 PLANILHAS, DRAWERS, CRM E WORKBOOK
+   Tipografia exclusiva: Plus Jakarta Sans com alinhamento tabular-nums
+   ========================================================================== */
+
+/* Alinhamento numerico tabular global em KPIs, badges, celulas e simuladores */
+.lesson-nav-num,
+.topic-card-num,
+.n,
+.workbook-content .step-badge,
+.workbook-content .kpi,
+.workbook-content .cards .big,
+.workbook-content td,
+.apple-spec-table td,
+.td-num,
+.num-cell,
+.reader-mod-badge,
+.reader-lesson-pill,
+.reader-progress-label,
+.sheet-value-pill,
+.pricing-card-amount,
+.input-sm,
+.table-input,
+.audit-pill,
+.goal-controls-row .apple-input,
+.goal-controls-grid-5 .apple-input,
+.crm-quick-form .apple-input {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 1. Home Executive KPI Strip (#view-home abaixo de .apple-hero) */
+.home-kpi-strip {
+  max-width: 1180px;
+  margin: -18px auto 28px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.home-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-kpi-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+[data-theme="dark"] .home-kpi-card {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+}
+
+.home-kpi-card-action {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: linear-gradient(145deg, var(--primary-soft), var(--surface-card));
+  border-color: var(--primary-border);
+}
+
+.home-kpi-card-action:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.home-kpi-card-action:focus-visible {
+  outline: 2px solid var(--primary-focus);
+  outline-offset: 2px;
+}
+
+.home-kpi-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.home-kpi-value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+}
+
+.home-kpi-card-action .home-kpi-value {
+  color: var(--primary);
+}
+
+.home-kpi-sub {
+  font-size: 12.5px;
+  color: var(--ink-secondary);
+  line-height: 1.35;
+}
+
+.home-kpi-track {
+  height: 5px;
+  width: 100%;
+  background-color: var(--canvas-parchment);
+  border-radius: 9999px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.home-kpi-fill {
+  height: 100%;
+  background-color: var(--primary);
+  border-radius: 9999px;
+  transition: width 0.35s ease;
+}
+
+/* 2. Workspace Operacional de 6 Planilhas (#view-tools) */
+.tools-hero {
+  max-width: 1100px;
+}
+
+.tools-main-title {
+  max-width: 760px;
+}
+
+.tool-sheet-card {
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+}
+
+.tools-segmented-bar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 9999px;
+  background-color: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.tool-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  white-space: nowrap;
+  min-height: 38px;
+}
+
+.tool-pill-btn:hover {
+  color: var(--ink);
+  background-color: rgba(21, 128, 61, 0.05);
+}
+
+[data-theme="dark"] .tool-pill-btn:hover {
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+.tool-pill-btn.active {
+  background-color: var(--surface-card);
+  color: var(--primary);
+  border-color: var(--primary-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .tool-pill-btn.active {
+  background-color: var(--surface-elevated);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.sheet-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  text-align: left;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--hairline);
+  flex-wrap: wrap;
+}
+
+.sheet-header-row .sheet-title {
+  text-align: left;
+  margin-bottom: 6px;
+}
+
+.sheet-header-row .sheet-desc {
+  text-align: left;
+  margin: 0;
+  max-width: 680px;
+}
+
+.sheet-header-row .sheet-header-actions {
+  justify-content: flex-end;
+  margin-top: 0;
+}
+
+.sheet-exec-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 24px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
+
+.sheet-exec-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sheet-hero-kpi {
+  background: linear-gradient(145deg, var(--primary-soft), var(--canvas-parchment));
+  border: 1px solid var(--primary-border);
+  border-radius: 16px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sheet-hero-kpi-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.sheet-hero-kpi-val {
+  font-size: clamp(28px, 3.2vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.sheet-hero-kpi-sub {
+  font-size: 13px;
+  color: var(--ink-secondary);
+  line-height: 1.4;
+}
+
+.sheet-sub-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.sheet-sub-kpi {
+  background-color: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+  border-radius: 13px;
+  padding: 13px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sheet-sub-kpi span {
+  font-size: 11.5px;
+  color: var(--ink-secondary);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.sheet-sub-kpi strong {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+
+.sheet-chart-card {
+  background-color: var(--surface-pearl);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sheet-chart-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sheet-chart-head strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.sheet-chart-head span {
+  font-size: 12px;
+  color: var(--ink-secondary);
+}
+
+.sheet-chart-svg-wrap {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.sheet-chart-svg-wrap svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.goal-controls-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 24px;
+}
+
+.goal-controls-grid-5 .form-group {
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.goal-controls-grid-5 .apple-input {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 3. Gavetas Expansiveis (<details class="sheet-details">) */
+.sheet-details {
+  margin-top: 22px;
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  background-color: var(--canvas-parchment);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .sheet-details {
+  background-color: var(--surface-pearl);
+}
+
+.sheet-details summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 14px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.sheet-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.sheet-details summary::marker {
+  content: "";
+}
+
+.sheet-details summary:hover {
+  background-color: var(--primary-soft);
+}
+
+.sheet-details summary::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--ink-secondary);
+  border-bottom: 2px solid var(--ink-secondary);
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+  margin-right: 4px;
+  margin-top: -3px;
+}
+
+.sheet-details[open] > summary::after,
+.sheet-details[open] summary::after {
+  transform: rotate(-135deg);
+  border-color: var(--primary);
+  margin-top: 3px;
+}
+
+.sheet-details-body {
+  padding: 18px 20px 20px;
+  border-top: 1px solid var(--hairline);
+  background-color: var(--surface-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 4. CRM / Ficha da Minha Terra - Cadastro Rapido e Controles Inline */
+.crm-quick-form {
+  display: grid;
+  grid-template-columns: 1.5fr 1.3fr 0.7fr 0.8fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  background-color: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+}
+
+.crm-quick-form .form-group {
+  margin-bottom: 0;
+}
+
+.crm-inline-select {
+  background-color: var(--canvas-parchment);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.crm-inline-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--surface-card);
+}
+
+.btn-paid-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  border: 1px solid var(--hairline);
+  background-color: var(--canvas-parchment);
+  color: var(--ink-secondary);
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-paid-toggle.is-paid {
+  background-color: var(--status-ok-bg);
+  color: var(--status-ok-text);
+  border-color: var(--primary-border);
+}
+
+.btn-paid-toggle.is-partial {
+  background-color: var(--status-warn-bg);
+  color: var(--status-warn-text);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+
+.btn-row-del {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--ink-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-row-del:hover {
+  color: var(--status-err-text);
+  background-color: var(--status-err-bg);
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+/* 5. Evolucoes do Workbook de Aulas (.table-toolbar, .case-study-card, badges, SVG Dark Mode) */
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background-color: var(--canvas-parchment);
+  border-bottom: 1px solid var(--hairline-table);
+  flex-wrap: wrap;
+}
+
+.table-toolbar-meta {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.table-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.table-filter-input {
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 9999px;
+  padding: 6px 13px;
+  font-size: 12.5px;
+  color: var(--ink);
+  min-width: 190px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.table-filter-input::placeholder {
+  color: var(--ink-muted);
+}
+
+.table-filter-input:focus {
+  border-color: var(--primary);
+}
+
+[data-theme="dark"] .table-filter-input,
+[data-theme="dark"] .btn-table-csv {
+  background-color: var(--surface-elevated);
+}
+
+.btn-table-csv {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-table-csv:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.case-study-card,
+.workbook-content .case-study-card {
+  margin: 20px 0;
+  border-radius: 16px;
+  border: 1px solid var(--primary-border);
+  background: linear-gradient(160deg, var(--primary-soft), var(--surface-card));
+  padding: 22px 24px;
+}
+
+.case-study-head,
+.workbook-content .case-study-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.case-study-tag,
+.workbook-content .case-study-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background-color: var(--surface-card);
+  border: 1px solid var(--primary-border);
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.case-study-title,
+.workbook-content .case-study-title {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.case-study-grid,
+.workbook-content .case-study-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.case-col,
+.workbook-content .case-col {
+  background-color: var(--surface-card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+[data-theme="dark"] .workbook-content .case-col,
+[data-theme="dark"] .workbook-content .case-study-tag {
+  background-color: var(--surface-elevated);
+}
+
+.case-col strong,
+.workbook-content .case-col strong {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  margin-bottom: 6px;
+}
+
+.case-col p,
+.workbook-content .case-col p {
+  font-size: 13.5px;
+  color: var(--ink-secondary);
+  margin: 0;
+  line-height: 1.48;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-badge-ok,
+.data-badge-warn,
+.data-badge-err {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.data-badge-ok {
+  background-color: var(--status-ok-bg);
+  color: var(--status-ok-text);
+  border: 1px solid var(--primary-border);
+}
+
+.data-badge-warn {
+  background-color: var(--status-warn-bg);
+  color: var(--status-warn-text);
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+.data-badge-err {
+  background-color: var(--status-err-bg);
+  color: var(--status-err-text);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+}
+
+/* Nitidez de Diagramas Visuais SVG em Light e Dark Mode sem lavar cores */
+.visual-diagram {
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  background-color: var(--surface-pearl);
+  border: 1px solid var(--hairline);
+}
+
+.visual-diagram svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] .visual-diagram {
+  background-color: var(--surface-pearl);
+  border-color: var(--hairline);
+}
+
+[data-theme="dark"] .visual-diagram svg,
+[data-theme="dark"] .sheet-chart-svg-wrap svg {
+  opacity: 1;
+  filter: none;
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#F5F5F7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#f5f5f7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#F8FAFC"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#f8fafc"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#F5F5F7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#f5f5f7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#F8FAFC"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#f8fafc"] {
+  fill: var(--canvas-parchment);
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#FFFFFF"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#ffffff"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#FFFFFF"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#ffffff"] {
+  fill: var(--surface-elevated);
+}
+
+[data-theme="dark"] .visual-diagram svg [stroke="#E5E5EA"],
+[data-theme="dark"] .visual-diagram svg [stroke="#e5e5ea"],
+[data-theme="dark"] .visual-diagram svg [stroke="#E2E8F0"],
+[data-theme="dark"] .visual-diagram svg [stroke="#e2e8f0"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg [stroke="#E5E5EA"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg [stroke="#e5e5ea"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg [stroke="#E2E8F0"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg [stroke="#e2e8f0"] {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#1D1D1F"],
+[data-theme="dark"] .visual-diagram svg text[fill="#1d1d1f"],
+[data-theme="dark"] .visual-diagram svg text[fill="#0F172A"],
+[data-theme="dark"] .visual-diagram svg text[fill="#0f172a"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#1D1D1F"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#1d1d1f"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#1D1D1F"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#1d1d1f"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0F172A"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0f172a"] {
+  fill: var(--ink);
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#6E6E73"],
+[data-theme="dark"] .visual-diagram svg text[fill="#6e6e73"],
+[data-theme="dark"] .visual-diagram svg text[fill="#64748B"],
+[data-theme="dark"] .visual-diagram svg text[fill="#64748b"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#6E6E73"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#6e6e73"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#6E6E73"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#6e6e73"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#64748B"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#64748b"] {
+  fill: var(--ink-secondary);
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#16a34a"],
+[data-theme="dark"] .visual-diagram svg text[fill="#16A34A"],
+[data-theme="dark"] .visual-diagram svg text[fill="#15803d"],
+[data-theme="dark"] .visual-diagram svg text[fill="#15803D"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#16a34a"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#16A34A"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#15803d"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#15803D"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#16a34a"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#15803d"] {
+  fill: #4ade80;
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#DCFCE7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#dcfce7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#E8F5E9"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#e8f5e9"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#BBF7D0"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#bbf7d0"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#DCFCE7"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#dcfce7"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#DCFCE7"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#dcfce7"],
+[data-theme="dark"] .visual-diagram svg ellipse[fill="#DCFCE7"],
+[data-theme="dark"] .visual-diagram svg ellipse[fill="#dcfce7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#DCFCE7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#dcfce7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#BBF7D0"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#bbf7d0"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#DCFCE7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#dcfce7"] {
+  fill: rgba(34, 197, 94, 0.16);
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#FEF3C7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#fef3c7"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#FDE68A"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#fde68a"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#FEF3C7"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#fef3c7"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#FEF3C7"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#fef3c7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#FEF3C7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#fef3c7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#FDE68A"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#fde68a"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#FEF3C7"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#fef3c7"] {
+  fill: rgba(245, 158, 11, 0.16);
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#FEE2E2"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#fee2e2"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#FEE2E2"],
+[data-theme="dark"] .visual-diagram svg polygon[fill="#fee2e2"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#FEE2E2"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#fee2e2"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#FEE2E2"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#fee2e2"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#FEE2E2"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg circle[fill="#fee2e2"] {
+  fill: rgba(239, 68, 68, 0.18);
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#DBEAFE"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#dbeafe"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#DBEAFE"],
+[data-theme="dark"] .visual-diagram svg circle[fill="#dbeafe"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#DBEAFE"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#dbeafe"] {
+  fill: rgba(59, 130, 246, 0.18);
+}
+
+[data-theme="dark"] .visual-diagram svg rect[fill="#0F291A"],
+[data-theme="dark"] .visual-diagram svg rect[fill="#0f291a"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#0F291A"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg rect[fill="#0f291a"] {
+  stroke: rgba(134, 239, 172, 0.28);
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#0F291A"],
+[data-theme="dark"] .visual-diagram svg text[fill="#0f291a"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#0F291A"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#0f291a"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0F291A"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0f291a"] {
+  fill: #86efac;
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#92400E"],
+[data-theme="dark"] .visual-diagram svg text[fill="#92400e"],
+[data-theme="dark"] .visual-diagram svg text[fill="#B45309"],
+[data-theme="dark"] .visual-diagram svg text[fill="#b45309"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#92400E"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#92400e"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#B45309"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#b45309"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#92400E"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#92400e"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#B45309"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#b45309"] {
+  fill: #fbbf24;
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#991B1B"],
+[data-theme="dark"] .visual-diagram svg text[fill="#991b1b"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#991B1B"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#991b1b"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#991B1B"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#991b1b"] {
+  fill: #f87171;
+}
+
+[data-theme="dark"] .visual-diagram svg text[fill="#1E40AF"],
+[data-theme="dark"] .visual-diagram svg text[fill="#1e40af"],
+[data-theme="dark"] .visual-diagram svg text[fill="#0369A1"],
+[data-theme="dark"] .visual-diagram svg text[fill="#0369a1"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#1E40AF"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#1e40af"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#0369A1"],
+[data-theme="dark"] .visual-diagram svg tspan[fill="#0369a1"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#1E40AF"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#1e40af"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0369A1"],
+[data-theme="dark"] .sheet-chart-svg-wrap svg text[fill="#0369a1"] {
+  fill: #60a5fa;
+}
+
+[data-theme="dark"] .visual-diagram svg path[stroke="#16a34a"],
+[data-theme="dark"] .visual-diagram svg path[stroke="#16A34A"] {
+  stroke: #4ade80;
+}
+
+/* Responsividade dos Novos Componentes Executivos */
+@media (max-width: 980px) {
+  .home-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sheet-exec-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-controls-grid-5 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crm-quick-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .case-study-grid,
+  .workbook-content .case-study-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-kpi-strip {
+    margin: -12px auto 22px;
+    padding: 0 16px;
+  }
+
+  .home-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .home-kpi-card {
+    padding: 14px 15px;
+  }
+
+  .home-kpi-value {
+    font-size: 22px;
+  }
+
+  .tools-segmented-bar {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tools-segmented-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sheet-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sheet-header-row .sheet-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .sheet-sub-kpis,
+  .goal-controls-grid-5,
+  .goal-controls-row,
+  #goal-results-grid,
+  .crm-quick-form,
+  .workbook-content .grid-2,
+  .workbook-content .grid-3,
+  .workbook-content .kpi-row {
+    grid-template-columns: 1fr;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-toolbar-actions {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .table-filter-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .visual-diagram {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-kpi-grid {
+    grid-template-columns: 1fr;
   }
 }
