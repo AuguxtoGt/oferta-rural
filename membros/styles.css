@@ -2574,6 +2574,25 @@ code {
   display: flex;
 }
 
+.login-legal-notice {
+  margin-top: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.login-legal-notice a {
+  color: var(--ink-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.login-legal-notice a:hover {
+  color: var(--primary);
+}
+
 .login-quick-switch {
   margin-top: 24px;
   padding-top: 16px;
@@ -2749,6 +2768,71 @@ code {
   box-shadow: var(--product-shadow);
 }
 
+/* Rodape Juridico Global da Plataforma */
+.app-legal-footer {
+  margin-top: 56px;
+  background-color: var(--canvas-parchment);
+  border-top: 1px solid var(--hairline);
+  padding: 28px 24px 36px;
+}
+
+.legal-footer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.legal-footer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.legal-footer-brand {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  letter-spacing: -0.01em;
+}
+
+.legal-footer-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.legal-footer-links a {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.legal-footer-links a:hover {
+  color: var(--primary);
+}
+
+.legal-footer-disclaimer {
+  font-size: 12px;
+  line-height: 1.62;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.legal-footer-disclaimer strong {
+  color: var(--ink-secondary);
+  font-weight: 600;
+}
+
 /* ==========================================================================
    RESPONSIVIDADE
    ========================================================================== */
@@ -2816,5 +2900,16 @@ code {
 
   .ai-composer-actions {
     justify-content: flex-end;
+  }
+
+  .app-legal-footer {
+    margin-top: 40px;
+    padding: 24px 16px 32px;
+  }
+
+  .legal-footer-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }

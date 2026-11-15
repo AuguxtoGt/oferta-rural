@@ -918,6 +918,20 @@
         ? pillLabelsProp[idx] || activeCases[idx]
         : pillLabelsCons[idx] || activeCases[idx];
     });
+
+    const footerBrand = document.getElementById('footer-legal-brand');
+    if (footerBrand) {
+      footerBrand.textContent = isProp
+        ? 'Portal do Proprietário Rural · Conteúdo Educacional Independente (sem vínculo governamental)'
+        : 'Imóvel Rural em Dia · Conteúdo Educacional Independente (sem vínculo governamental)';
+    }
+
+    const footerDisclaimer = document.getElementById('footer-legal-disclaimer');
+    if (footerDisclaimer) {
+      footerDisclaimer.innerHTML = isProp
+        ? '<strong>Aviso Legal:</strong> Este portal possui caráter exclusivamente educacional e informativo sobre organização documental de imóveis rurais, sem qualquer vínculo com INCRA, Receita Federal, SICAR, IBAMA, cartórios ou instituições financeiras. Os guias, checklists, diagnósticos e modelos disponibilizados são referenciais e não substituem análise técnica, jurídica, contábil, tributária, ambiental ou fundiária individualizada, nem dispensam a contratação de profissional habilitado em conselho de classe (como CREA, CFT, OAB ou CRC) quando exigido por lei, cartório, banco ou órgão público (incluindo georreferenciamento no SIGEF, plantas, memoriais com ART/TRT, retificações contenciosas e projetos PRADA). Sistemas oficiais, normas, prazos, taxas e exigências podem mudar sem aviso prévio: confira sempre todas as informações diretamente nos canais oficiais e órgãos competentes antes de executar qualquer procedimento ou assinar documentos.'
+        : '<strong>Aviso Legal:</strong> Esta plataforma possui caráter exclusivamente educacional e informativo sobre rotinas cadastrais de imóveis rurais, sem qualquer vínculo com INCRA, Receita Federal, SICAR, IBAMA, cartórios ou instituições financeiras. O conteúdo, as planilhas e os modelos disponibilizados são referenciais e não substituem análise técnica, jurídica, contábil, tributária, ambiental ou fundiária individualizada, nem habilitam para atos privativos de profissionais registrados em conselhos de classe (como CREA, CFT, OAB ou CRC, incluindo georreferenciamento no SIGEF, plantas, memoriais ou laudos com ART/TRT e projetos PRADA). Valores de honorários, tabelas de preços e simulações financeiras são estimativas educativas de mercado, sem promessa ou garantia de faturamento. Sistemas oficiais, normas, prazos, taxas e exigências podem mudar sem aviso prévio: confira sempre todas as informações diretamente nos canais oficiais e órgãos competentes antes de executar qualquer procedimento ou assinar documentos.';
+    }
   }
 
   function getCompletedLessonsSet() {
