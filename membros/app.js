@@ -251,7 +251,11 @@
     currentLessonIndex: 0,
     modalModule: null,
     aiMessages: [],
-    activeToolTab: 'tab-honorarios'
+    activeToolTab: 'tab-honorarios',
+    certSide: 'front',
+    certPreviewName: '',
+    certPreviewDoc: '',
+    certDocEdited: false
   };
 
   let isRestoringTools = false;
@@ -762,6 +766,9 @@
 
     highlightSimMenu(simKey);
     state.user = res.data.user;
+    state.certPreviewName = '';
+    state.certPreviewDoc = '';
+    state.certDocEdited = false;
     state.canSimulateDemo = Boolean(res.data.canSimulateDemo);
     state.daysSincePurchase = res.data.daysSincePurchase ?? 0;
     state.dripConfig = res.data.dripConfig || state.dripConfig;
@@ -776,6 +783,12 @@
 
     if (state.currentView === 'classroom') {
       navigate('home');
+    } else if (state.currentView === 'certificate') {
+      if (isProprietarioMode()) {
+        navigate('home');
+      } else {
+        renderCertificateView({ syncInputs: true });
+      }
     } else {
       updateAiAccessState();
     }
@@ -837,6 +850,9 @@
     }
 
     state.user = res.data.user;
+    state.certPreviewName = '';
+    state.certPreviewDoc = '';
+    state.certDocEdited = false;
     state.canSimulateDemo = Boolean(res.data.canSimulateDemo);
     state.daysSincePurchase = res.data.daysSincePurchase ?? 0;
     state.dripConfig = res.data.dripConfig || [];
@@ -861,6 +877,9 @@
       localStorage.removeItem('rr_token');
     } catch (_e) {}
     state.user = null;
+    state.certPreviewName = '';
+    state.certPreviewDoc = '';
+    state.certDocEdited = false;
     state.canSimulateDemo = false;
     syncDemoUiVisibility();
     showLoginScreen();
@@ -946,7 +965,8 @@
     const pillItr = document.getElementById('pill-tab-itr');
     const pillCrm = document.getElementById('pill-tab-crm');
 
-    document.querySelectorAll('#tools-nav-pills [data-role-only="consultor"]').forEach((el) => {
+    document.querySelectorAll('[data-role-only="consultor"]').forEach((el) => {
+      if (el.hasAttribute('data-tool-panel')) return;
       el.classList.toggle('hidden', isProp);
     });
 
@@ -1097,6 +1117,9 @@
     renderCrmSheet();
     switchToolTab(state.activeToolTab);
     updateHomeKpiStrip();
+    if (isProp && state.currentView === 'certificate') {
+      navigate('home');
+    }
   }
 
   function getCompletedLessonsSet() {
@@ -1164,6 +1187,7 @@
       'kpi-tools-cta',
       isProp ? 'Diagnóstico, área, ITR e ficha .CSV' : 'Gráficos ao vivo e download .CSV'
     );
+    updateCertificateSummaryUi();
   }
 
   function updateHeaderAndProfile() {
@@ -1195,17 +1219,21 @@
     applyRoleUiTheme();
     updateHomeKpiStrip();
     updateAiAccessState();
+    updateCertificateSummaryUi();
   }
 
   /* ========================================================================
-     NAVEGACAO ENTRE AS VISÕES (HOME, CLASSROOM, TOOLS, AI)
+     NAVEGACAO ENTRE AS VISÕES (HOME, CLASSROOM, TOOLS, AI, CERTIFICATE)
      ======================================================================== */
   function navigate(viewName) {
     if (viewName === 'ai' && !ENABLE_AI_CONSULTANT) {
       viewName = 'tools';
     }
+    if (viewName === 'certificate' && isProprietarioMode()) {
+      viewName = 'home';
+    }
     state.currentView = viewName;
-    const views = ['home', 'classroom', 'tools', 'ai'];
+    const views = ['home', 'classroom', 'tools', 'ai', 'certificate'];
     views.forEach((v) => {
       const el = document.getElementById(`view-${v}`);
       if (el) el.classList.toggle('hidden', v !== viewName);
@@ -1226,6 +1254,8 @@
       switchToolTab(state.activeToolTab);
     } else if (viewName === 'home') {
       updateHomeKpiStrip();
+    } else if (viewName === 'certificate') {
+      renderCertificateView({ syncInputs: true });
     } else if (viewName === 'ai') {
       updateAiAccessState();
       if (state.aiMessages.length === 0) {
@@ -1234,6 +1264,11 @@
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function openCertificateFromMenu() {
+    closeProfileMenu();
+    navigate('certificate');
   }
 
   function continueStudying() {
@@ -1946,6 +1981,10 @@
     renderActiveLessonContent();
     renderTracks();
     updateHomeKpiStrip();
+    updateCertificateSummaryUi();
+    if (state.currentView === 'certificate') {
+      renderCertificateView({ syncInputs: false });
+    }
     showToast('Progresso atualizado.');
   }
 
@@ -4365,6 +4404,1264 @@
   }
 
   /* ========================================================================
+     SISTEMA DE CERTIFICADO DE CONCLUSAO DE CURSO LIVRE (FRENTE E VERSO A4)
+     Lei Federal n. 9.394/1996 (art. 42) e Decreto n. 5.154/2004
+     ======================================================================== */
+  const CERT_FONT = 'Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif';
+
+  const CERT_LOCKED_TOAST =
+    "Conclua as 34 aulas da Trilha Principal (ou use o botão de simulação local) para baixar o certificado oficial sem marca d'água.";
+
+  const CERT_MAIN_MODULES_CURRICULUM = [
+    '01. Fundamentos e Limites Legais (CCIR, ITR e CAR)',
+    '02. Emissão e Atualização de CCIR/DCR no INCRA',
+    '03. Declaração de ITR, CAFIR, CNIR e CND Rural',
+    '04. Cadastro Ambiental Rural (CAR e SICAR)',
+    '05. Retificação Administrativa e Noções de SIGEF',
+    '06. Organização Documental para Crédito Rural',
+    '07. Checklists Operacionais por Objetivo',
+    '08. Calendário Anual de Obrigações Rurais',
+    '09. Diagnóstico e Correção de Divergências',
+    '10. Resolução de Sobreposições CAR/CEFIR',
+    '11. Portal e-CAC Aplicado ao Imóvel Rural'
+  ];
+
+  const CERT_EXTRA_TRACKS_DEFS = [
+    {
+      key: 'ob1',
+      range: [12, 14],
+      hours: 6,
+      title: 'Consultor Rural Profissional (Prospecção e Precificação)'
+    },
+    {
+      key: 'ob2',
+      range: [15, 17],
+      hours: 6,
+      title: 'Modelos Operacionais, Propostas e Contratos Rurais'
+    },
+    {
+      key: 'ob3',
+      range: [18, 20],
+      hours: 6,
+      title: 'Guia Técnico de 20 Serviços Rurais Cadastrais'
+    },
+    {
+      key: 'upsell',
+      range: [21, 23],
+      hours: 6,
+      title: 'Estruturação de Negócio Rural e Parcerias Recorrentes'
+    }
+  ];
+
+  const FALLBACK_MAIN_LESSON_IDS = [
+    'mod-01-aula-00',
+    'mod-01-aula-01',
+    'mod-01-aula-02',
+    'mod-01-aula-03',
+    'mod-02-aula-01',
+    'mod-02-aula-02',
+    'mod-02-aula-03',
+    'mod-03-aula-01',
+    'mod-03-aula-02',
+    'mod-03-aula-03',
+    'mod-04-aula-01',
+    'mod-04-aula-02',
+    'mod-04-aula-03',
+    'mod-05-aula-01',
+    'mod-05-aula-02',
+    'mod-05-aula-03',
+    'mod-06-aula-01',
+    'mod-06-aula-02',
+    'mod-06-aula-03',
+    'mod-07-aula-01',
+    'mod-07-aula-02',
+    'mod-07-aula-03',
+    'mod-08-aula-01',
+    'mod-08-aula-02',
+    'mod-08-aula-03',
+    'mod-09-aula-01',
+    'mod-09-aula-02',
+    'mod-09-aula-03',
+    'mod-10-aula-01',
+    'mod-10-aula-02',
+    'mod-10-aula-03',
+    'mod-11-aula-01',
+    'mod-11-aula-02',
+    'mod-11-aula-03'
+  ];
+
+  function cleanStudentNameForCert(rawName) {
+    return sanitizeCleanText(rawName || '')
+      .replace(
+        /\s+-\s+(Aluno\s+VIP|Aluno\s+Dia\s*\d+\+?|Propriet[aá]rio\s+Rural|Conta\s+Demo.*|Modo\s+Teste.*)$/i,
+        ''
+      )
+      .replace(/[<>]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function formatPortugueseDate(isoDateStr) {
+    const months = [
+      'janeiro',
+      'fevereiro',
+      'março',
+      'abril',
+      'maio',
+      'junho',
+      'julho',
+      'agosto',
+      'setembro',
+      'outubro',
+      'novembro',
+      'dezembro'
+    ];
+    const raw = String(isoDateStr || '').slice(0, 10);
+    const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) {
+      const now = new Date();
+      const d = String(now.getDate()).padStart(2, '0');
+      const m = months[now.getMonth()] || 'janeiro';
+      return `${d} de ${m} de ${now.getFullYear()}`;
+    }
+    const year = Number(match[1]);
+    const monthIdx = Math.max(0, Math.min(11, Number(match[2]) - 1));
+    const day = String(Number(match[3])).padStart(2, '0');
+    return `${day} de ${months[monthIdx]} de ${year}`;
+  }
+
+  function computeCertVerificationCode(user) {
+    const seed =
+      String((user && user.id) || '') +
+      '|' +
+      String((user && user.email) || 'demo@rural.com').toLowerCase() +
+      '|IRD2026';
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < seed.length; i += 1) {
+      hash ^= seed.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193);
+    }
+    const hashHex = (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+    return `IRD-2026-${hashHex}`;
+  }
+
+  function extractCertTagsFromProgress(progressoArr) {
+    let savedMaskedDoc = '';
+    let savedIssuedDate = '';
+    if (Array.isArray(progressoArr)) {
+      progressoArr.forEach((item) => {
+        const str = String(item || '');
+        if (str.startsWith('__cert_doc:')) {
+          const val = str.slice('__cert_doc:'.length).trim();
+          if (/^\*{3}\.\d{3}\.\d{3}-\*{2}$/.test(val)) {
+            savedMaskedDoc = val;
+          }
+        } else if (str.startsWith('__cert_issued:')) {
+          const val = str.slice('__cert_issued:'.length).trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(val)) {
+            savedIssuedDate = val;
+          }
+        }
+      });
+    }
+    return { savedMaskedDoc, savedIssuedDate };
+  }
+
+  function computeCertificateStatus() {
+    const completed = getCompletedLessonsSet();
+    const mainMods = state.modules.filter((m) => m.numInt >= 1 && m.numInt <= 11);
+
+    let mainTotal = 0;
+    let mainDone = 0;
+    if (mainMods.length > 0) {
+      mainMods.forEach((mod) => {
+        const lessons = Array.isArray(mod.lessons) ? mod.lessons : [];
+        lessons.forEach((lesson) => {
+          mainTotal += 1;
+          if (completed.has(lesson.id)) mainDone += 1;
+        });
+      });
+    }
+
+    if (mainTotal === 0) {
+      mainTotal = 34;
+      FALLBACK_MAIN_LESSON_IDS.forEach((id) => {
+        if (completed.has(id)) mainDone += 1;
+      });
+    }
+
+    const mainPct = mainTotal > 0 ? Math.min(100, Math.round((mainDone / mainTotal) * 100)) : 0;
+    const lessonsOk = mainTotal > 0 && mainDone >= mainTotal;
+    const daysSince = Number(state.daysSincePurchase || 0);
+    const daysOk = Boolean(
+      state.user && (state.user.isAdmin || state.user.liberar_trava_7dias_manual || daysSince >= 7)
+    );
+    const daysRemaining = daysOk ? 0 : Math.max(1, 7 - daysSince);
+    const eligible = lessonsOk && daysOk;
+
+    let hours = 24;
+    const extraTracksDone = [];
+    CERT_EXTRA_TRACKS_DEFS.forEach((def) => {
+      const trackMods = state.modules.filter(
+        (m) => m.numInt >= def.range[0] && m.numInt <= def.range[1]
+      );
+      if (trackMods.length >= 3) {
+        let trackLessonTotal = 0;
+        let trackLessonDone = 0;
+        trackMods.forEach((mod) => {
+          (mod.lessons || []).forEach((l) => {
+            trackLessonTotal += 1;
+            if (completed.has(l.id)) trackLessonDone += 1;
+          });
+        });
+        if (trackLessonTotal > 0 && trackLessonDone >= trackLessonTotal) {
+          hours += def.hours;
+          extraTracksDone.push(def.title);
+        }
+      }
+    });
+
+    const rawProg = state.user && Array.isArray(state.user.progresso_aulas)
+      ? state.user.progresso_aulas
+      : [];
+    const { savedMaskedDoc, savedIssuedDate } = extractCertTagsFromProgress(rawProg);
+    const cleanDefaultName = cleanStudentNameForCert(state.user && state.user.nome);
+
+    const holderName = sanitizeCleanText(
+      state.certPreviewName || cleanDefaultName || 'Nome Completo do Aluno'
+    )
+      .replace(/[<>]/g, '')
+      .trim() || 'Nome Completo do Aluno';
+
+    const maskedDoc = state.certDocEdited
+      ? state.certPreviewDoc || ''
+      : state.certPreviewDoc !== undefined &&
+          state.certPreviewDoc !== null &&
+          state.certPreviewDoc !== ''
+        ? state.certPreviewDoc
+        : savedMaskedDoc;
+
+    const issueDateIso = savedIssuedDate || new Date().toISOString().slice(0, 10);
+    const issueDateLabel = formatPortugueseDate(issueDateIso);
+    const code = computeCertVerificationCode(state.user);
+
+    return {
+      mainTotal,
+      mainDone,
+      mainPct,
+      lessonsOk,
+      daysSince,
+      daysOk,
+      daysRemaining,
+      eligible,
+      hours,
+      extraTracksDone,
+      cleanDefaultName,
+      savedMaskedDoc,
+      savedIssuedDate,
+      holderName,
+      maskedDoc,
+      issueDateIso,
+      issueDateLabel,
+      code
+    };
+  }
+
+  function formatMaskedCpfInput(rawVal) {
+    const trimmed = String(rawVal || '').trim();
+    if (!trimmed) {
+      return { valid: true, masked: '', shouldReplaceInput: false };
+    }
+    if (/^\*{3}\.\d{3}\.\d{3}-\*{2}$/.test(trimmed)) {
+      return { valid: true, masked: trimmed, shouldReplaceInput: false };
+    }
+    const digits = trimmed.replace(/\D/g, '');
+    if (!trimmed.includes('*') && digits.length === 11) {
+      const masked = `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+      return { valid: true, masked, shouldReplaceInput: true };
+    }
+    return { valid: false, masked: '', shouldReplaceInput: false };
+  }
+
+  function handleCertDocInput(inputEl) {
+    if (!inputEl) return;
+    const parsed = formatMaskedCpfInput(inputEl.value);
+    if (parsed.shouldReplaceInput) {
+      inputEl.value = parsed.masked;
+    }
+    state.certDocEdited = true;
+    state.certPreviewDoc = parsed.valid ? parsed.masked : '';
+    renderCertificateStageOnly();
+  }
+
+  function handleCertNamePreview(val) {
+    state.certPreviewName = sanitizeCleanText(val || '').replace(/[<>]/g, '');
+    renderCertificateStageOnly();
+  }
+
+  function setCertificateSide(side) {
+    const allowed = ['front', 'back', 'both'];
+    state.certSide = allowed.includes(side) ? side : 'front';
+    const frontBtn = document.getElementById('cert-side-front-btn');
+    const backBtn = document.getElementById('cert-side-back-btn');
+    const bothBtn = document.getElementById('cert-side-both-btn');
+    if (frontBtn) frontBtn.classList.toggle('active', state.certSide === 'front');
+    if (backBtn) backBtn.classList.toggle('active', state.certSide === 'back');
+    if (bothBtn) bothBtn.classList.toggle('active', state.certSide === 'both');
+    renderCertificateStageOnly();
+  }
+
+  function updateCertificateSummaryUi() {
+    if (isProprietarioMode()) return;
+    const status = computeCertificateStatus();
+
+    const dropPill = document.getElementById('dropdown-cert-pill');
+    if (dropPill) {
+      dropPill.textContent = status.eligible
+        ? 'Liberado'
+        : `${status.mainDone}/${status.mainTotal}`;
+      dropPill.classList.toggle('is-ready', status.eligible);
+    }
+
+    setText(
+      'home-cert-title',
+      status.eligible
+        ? 'Certificado Oficial Liberado para Emissão'
+        : 'Certificado Oficial de Conclusão'
+    );
+    setText(
+      'home-cert-desc',
+      status.eligible
+        ? 'Parabéns! Você concluiu 100% da Trilha Principal e cumpriu o cronograma de liberação. Emita agora seu certificado nominal em PDF A4 Paisagem (Frente e Verso) ou PNG de alta resolução.'
+        : 'Conclua as 34 aulas obrigatórias da Trilha Principal (Módulos 01 a 11) após o cronograma de 7 dias para emitir seu certificado nominal em PDF A4 Paisagem (Frente e Verso) e imagem PNG de alta resolução.'
+    );
+    setText(
+      'home-cert-progress-label',
+      status.lessonsOk && !status.daysOk
+        ? `${status.mainDone} de ${status.mainTotal} aulas concluídas · Libera em ${status.daysRemaining} ${status.daysRemaining === 1 ? 'dia' : 'dias'}`
+        : `${status.mainDone} de ${status.mainTotal} aulas obrigatórias concluídas`
+    );
+    setText('home-cert-progress-pct', `${status.mainPct}%`);
+    const homeBar = document.getElementById('home-cert-progress-bar');
+    if (homeBar) homeBar.style.width = `${status.mainPct}%`;
+    setText(
+      'home-cert-cta-label',
+      status.eligible ? 'Emitir Certificado Agora' : 'Ver Modelo e Progresso'
+    );
+  }
+
+  function buildCertificateCornerAccentsSvg() {
+    return `
+      <g stroke="#8A6D3B" stroke-width="1.3" fill="none" opacity="0.72">
+        <path d="M52 72 V52 H72"/>
+        <rect x="49" y="49" width="4" height="4" fill="#8A6D3B" stroke="none"/>
+        <path d="M1071 72 V52 H1051"/>
+        <rect x="1070" y="49" width="4" height="4" fill="#8A6D3B" stroke="none"/>
+        <path d="M52 722 V742 H72"/>
+        <rect x="49" y="741" width="4" height="4" fill="#8A6D3B" stroke="none"/>
+        <path d="M1071 722 V742 H1051"/>
+        <rect x="1070" y="741" width="4" height="4" fill="#8A6D3B" stroke="none"/>
+      </g>
+    `;
+  }
+
+  function buildPreviewWatermarkSvg() {
+    return `
+      <g transform="rotate(-18 561 397)" pointer-events="none">
+        <rect x="166" y="363" width="790" height="68" rx="14" fill="rgba(180, 83, 9, 0.10)" stroke="rgba(180, 83, 9, 0.45)" stroke-width="2" stroke-dasharray="8 5"/>
+        <text x="561" y="403" fill="rgba(146, 64, 14, 0.72)" font-family="${CERT_FONT}" font-size="16.5" font-weight="800" letter-spacing="0.08em" text-anchor="middle">MODELO DE PRÉ-VISUALIZAÇÃO · CONCLUA A TRILHA PRINCIPAL PARA EMITIR</text>
+      </g>
+    `;
+  }
+
+  function buildCertificateHeaderCrestSvg() {
+    return `
+      <g aria-hidden="true">
+        <rect x="68" y="63" width="42" height="42" rx="10" fill="url(#certFrontCrestGrad)" stroke="#C8AD73" stroke-width="1.2"/>
+        <rect x="71.5" y="66.5" width="35" height="35" rx="7" fill="none" stroke="#DFC997" stroke-opacity="0.38" stroke-width="0.8"/>
+        <path d="M89 70.5 L100.2 74.8 V84.6 C100.2 91.6 95.4 96.3 89 98.7 C82.6 96.3 77.8 91.6 77.8 84.6 V74.8 Z" fill="rgba(223, 201, 151, 0.10)" stroke="#E5D1A1" stroke-width="1.25" stroke-linejoin="round"/>
+        <path d="M89 92.6 V79.6" stroke="#FCFBF7" stroke-width="1.35" stroke-linecap="round"/>
+        <path d="M89 87 C84.5 87 82.7 83.8 83.1 80.3 C86.5 80.3 89 82.6 89 87 Z" fill="#FCFBF7"/>
+        <path d="M89 85.2 C93.3 85.2 95.1 82.1 94.7 78.7 C91.4 78.7 89 81 89 85.2 Z" fill="#86EFAC"/>
+        <path d="M82.6 92.2 Q89 90.2 95.4 92.2" fill="none" stroke="#DFC997" stroke-width="1.1" stroke-linecap="round"/>
+      </g>
+    `;
+  }
+
+  function buildFourPointStarPath(cx, cy, outerR, innerR) {
+    const pts = [];
+    for (let i = 0; i < 8; i += 1) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const a = (i * Math.PI) / 4 - Math.PI / 2;
+      pts.push(
+        `${i === 0 ? 'M' : 'L'}${(cx + Math.cos(a) * r).toFixed(2)} ${(cy + Math.sin(a) * r).toFixed(2)}`
+      );
+    }
+    return `${pts.join(' ')} Z`;
+  }
+
+  function buildCertificateMedallionSvg() {
+    const cx = 561.5;
+    const cy = 574;
+
+    const rosettePts = [];
+    const totalSamples = 224;
+    const lobes = 28;
+    for (let i = 0; i < totalSamples; i += 1) {
+      const angle = (i / totalSamples) * Math.PI * 2;
+      const r = 42.2 + 1.85 * Math.cos(lobes * angle);
+      const px = (cx + Math.cos(angle) * r).toFixed(2);
+      const py = (cy + Math.sin(angle) * r).toFixed(2);
+      rosettePts.push(`${i === 0 ? 'M' : 'L'}${px} ${py}`);
+    }
+    const rosettePath = `${rosettePts.join(' ')} Z`;
+
+    const wreathRadius = 54.5;
+    const phiStations = [0.84, 1.18, 1.52, 1.86, 2.2, 2.5];
+    const leafShape = 'M0 0 C3.4 -3.1, 8.6 -2.8, 12.2 0 C8.6 2.8, 3.4 3.1, 0 0 Z';
+    let wreathSvg = '';
+
+    [-1, 1].forEach((side) => {
+      const stemPts = [];
+      for (let s = 0; s <= 28; s += 1) {
+        const phi = 0.44 + (s / 28) * (2.64 - 0.44);
+        const sx = (cx + side * Math.sin(phi) * wreathRadius).toFixed(2);
+        const sy = (cy + Math.cos(phi) * wreathRadius).toFixed(2);
+        stemPts.push(`${s === 0 ? 'M' : 'L'}${sx} ${sy}`);
+      }
+      wreathSvg += `<path d="${stemPts.join(' ')}" fill="none" stroke="#A6894C" stroke-width="1.15" stroke-linecap="round"/>`;
+
+      phiStations.forEach((phi, idx) => {
+        const lx = (cx + side * Math.sin(phi) * wreathRadius).toFixed(2);
+        const ly = (cy + Math.cos(phi) * wreathRadius).toFixed(2);
+        const tangentDeg = (Math.atan2(-Math.sin(phi), side * Math.cos(phi)) * 180) / Math.PI;
+        const scale = (1 - idx * 0.045).toFixed(3);
+        const outerDeg = (tangentDeg + side * 31).toFixed(2);
+        const innerDeg = (tangentDeg - side * 27).toFixed(2);
+        wreathSvg += `<path d="${leafShape}" transform="translate(${lx},${ly}) rotate(${outerDeg}) scale(${scale})" fill="#DEC997" stroke="#9B7E43" stroke-width="0.65"/>`;
+        wreathSvg += `<path d="${leafShape}" transform="translate(${lx},${ly}) rotate(${innerDeg}) scale(${(Number(scale) * 0.9).toFixed(3)})" fill="#EAE0C4" stroke="#9B7E43" stroke-width="0.65"/>`;
+      });
+
+      const tipPhi = 2.66;
+      const tx = (cx + side * Math.sin(tipPhi) * wreathRadius).toFixed(2);
+      const ty = (cy + Math.cos(tipPhi) * wreathRadius).toFixed(2);
+      const tipDeg = (
+        (Math.atan2(-Math.sin(tipPhi), side * Math.cos(tipPhi)) * 180) / Math.PI +
+        side * 4
+      ).toFixed(2);
+      wreathSvg += `<path d="${leafShape}" transform="translate(${tx},${ty}) rotate(${tipDeg}) scale(0.82)" fill="#DEC997" stroke="#9B7E43" stroke-width="0.65"/>`;
+    });
+
+    const topCrownStar = buildFourPointStarPath(cx, cy - 53.5, 4.2, 1.45);
+    const innerStarCenter = buildFourPointStarPath(cx, 551.8, 2.9, 1.0);
+    const innerStarLeft = buildFourPointStarPath(cx - 9.2, 553.8, 2.1, 0.75);
+    const innerStarRight = buildFourPointStarPath(cx + 9.2, 553.8, 2.1, 0.75);
+
+    return `
+      <g aria-hidden="true">
+        <!-- Ramos de Louro Simetricos em Ouro Antigo -->
+        ${wreathSvg}
+        <path d="${topCrownStar}" fill="#B39556"/>
+
+        <!-- Roseta de Lacre Metalico Champagne-Gold (28 Ondas Suaves) -->
+        <path d="${rosettePath}" fill="url(#certFrontGoldFoilGrad)" stroke="#9B7E43" stroke-width="1.15"/>
+
+        <!-- Aneis Concentricos Guilloche -->
+        <circle cx="${cx}" cy="${cy}" r="36.8" fill="#FCFBF7" stroke="#0F291A" stroke-width="1.25"/>
+        <circle cx="${cx}" cy="${cy}" r="33.6" fill="none" stroke="#B39556" stroke-width="1" stroke-dasharray="1.35 2.25"/>
+        <circle cx="${cx}" cy="${cy}" r="29.8" fill="url(#certFrontCoreGrad)" stroke="#9B7E43" stroke-width="0.85"/>
+
+        <!-- Estrelas Superiores e Filetes Laterais -->
+        <path d="${innerStarCenter}" fill="#9B7E43"/>
+        <path d="${innerStarLeft}" fill="#B39556"/>
+        <path d="${innerStarRight}" fill="#B39556"/>
+
+        <line x1="536.2" y1="572.5" x2="545.5" y2="572.5" stroke="#B39556" stroke-width="0.9" stroke-linecap="round"/>
+        <line x1="538.8" y1="575.5" x2="545.5" y2="575.5" stroke="#B39556" stroke-width="0.8" stroke-linecap="round"/>
+        <line x1="577.5" y1="572.5" x2="586.8" y2="572.5" stroke="#B39556" stroke-width="0.9" stroke-linecap="round"/>
+        <line x1="577.5" y1="575.5" x2="584.2" y2="575.5" stroke="#B39556" stroke-width="0.8" stroke-linecap="round"/>
+
+        <!-- Brasao Central Esmeralda e Ouro -->
+        <path d="M561.5 558.8 L573.5 563.3 V574 C573.5 581.7 568.3 586.6 561.5 589.2 C554.7 586.6 549.5 581.7 549.5 574 V563.3 Z" fill="url(#certFrontCrestGrad)" stroke="#C8AD73" stroke-width="1.15" stroke-linejoin="round"/>
+        <path d="M553.2 565.3 L561.5 562.2 L569.8 565.3" fill="none" stroke="#DFC997" stroke-width="0.75" stroke-linecap="round" opacity="0.75"/>
+        <polyline points="556.2,573.8 559.9,577.5 567.3,569.2" fill="none" stroke="#FCFBF7" stroke-width="2.05" stroke-linecap="round" stroke-linejoin="round"/>
+
+        <!-- Faixa Heráldica Dobrada na Base -->
+        <path d="M465 617 H445 L451.5 626 L445 635 H469 V617 Z" fill="#E6DCC3" stroke="#9B7E43" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M461 632 L469 635 V632 Z" fill="#8A6D3B"/>
+        <path d="M658 617 H678 L671.5 626 L678 635 H654 V617 Z" fill="#E6DCC3" stroke="#9B7E43" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M662 632 L654 635 V632 Z" fill="#8A6D3B"/>
+
+        <rect x="461" y="612" width="201" height="20" rx="3" fill="url(#certFrontRibbonGrad)" stroke="#9B7E43" stroke-width="1.1"/>
+        <line x1="466" y1="614.5" x2="657" y2="614.5" stroke="#D8C8A3" stroke-width="0.6"/>
+        <line x1="466" y1="629.5" x2="657" y2="629.5" stroke="#D8C8A3" stroke-width="0.6"/>
+        <text x="${cx}" y="625" fill="#0F291A" font-family="${CERT_FONT}" font-size="8.1" font-weight="800" letter-spacing="0.09em" text-anchor="middle">IMÓVEL RURAL EM DIA · CURSO LIVRE</text>
+      </g>
+    `;
+  }
+
+  function buildCertificateFrontSvg(certData) {
+    const rawName = String(certData.holderName || 'Nome Completo do Aluno').trim();
+    const safeName = escapeHtml(rawName);
+    const safeDoc = certData.maskedDoc ? escapeHtml(certData.maskedDoc) : '';
+    const safeCode = escapeHtml(certData.code || 'IRD-2026-00000000');
+    const safeHours = escapeHtml(String(certData.hours || 24));
+    const safeDate = escapeHtml(certData.issueDateLabel || '');
+
+    const nameLen = rawName.length;
+    const nameFontSize = nameLen <= 28 ? 38 : nameLen <= 40 ? 32 : nameLen <= 56 ? 25 : 20;
+    const nameFitAttr = nameLen > 62 ? ' textLength="940" lengthAdjust="spacingAndGlyphs"' : '';
+
+    const docNode = safeDoc
+      ? `<text x="561.5" y="378" fill="#526056" font-family="${CERT_FONT}" font-size="13" font-weight="600" letter-spacing="0.04em" text-anchor="middle">CPF: ${safeDoc}</text>`
+      : '';
+
+    const watermarkNode = certData.eligible ? '' : buildPreviewWatermarkSvg();
+
+    return `<svg viewBox="0 0 1123 794" width="1123" height="794" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Certificado de Conclusão - Frente">
+      <defs>
+        <clipPath id="certFrontInnerClip">
+          <rect x="41" y="41" width="1041" height="712" rx="6"/>
+        </clipPath>
+        <linearGradient id="certFrontCrestGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#184029"/>
+          <stop offset="100%" stop-color="#0B2014"/>
+        </linearGradient>
+        <linearGradient id="certFrontGoldFoilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#FCF8EE"/>
+          <stop offset="38%" stop-color="#EADAB4"/>
+          <stop offset="72%" stop-color="#D7C08B"/>
+          <stop offset="100%" stop-color="#F6EFE0"/>
+        </linearGradient>
+        <linearGradient id="certFrontCoreGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FCFBF6"/>
+          <stop offset="100%" stop-color="#EFE8D4"/>
+        </linearGradient>
+        <linearGradient id="certFrontRibbonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#FDFBF6"/>
+          <stop offset="100%" stop-color="#F1E9D4"/>
+        </linearGradient>
+      </defs>
+
+      <rect x="0" y="0" width="1123" height="794" fill="#FCFBF7"/>
+      <rect x="1" y="1" width="1121" height="792" fill="none" stroke="#E5E2D9" stroke-width="2"/>
+
+      <g clip-path="url(#certFrontInnerClip)" opacity="0.045" fill="none" stroke="#0F291A" stroke-width="1.35">
+        <path d="M20 620 C240 540, 440 670, 720 575 C900 515, 1020 560, 1110 520"/>
+        <path d="M20 652 C250 575, 455 700, 735 605 C910 545, 1025 590, 1110 552"/>
+        <path d="M20 155 C230 95, 470 205, 760 125 C925 80, 1030 120, 1110 95"/>
+        <circle cx="1015" cy="128" r="95"/>
+        <circle cx="1015" cy="128" r="135"/>
+        <circle cx="108" cy="618" r="88"/>
+        <circle cx="108" cy="618" r="126"/>
+      </g>
+
+      <rect x="28" y="28" width="1067" height="738" rx="10" fill="none" stroke="#0F291A" stroke-width="3"/>
+      <rect x="40" y="40" width="1043" height="714" rx="6" fill="none" stroke="#8A6D3B" stroke-width="1"/>
+      ${buildCertificateCornerAccentsSvg()}
+
+      <!-- Barra Institucional Superior -->
+      ${buildCertificateHeaderCrestSvg()}
+
+      <text x="122" y="81" fill="#0F291A" font-family="${CERT_FONT}" font-size="12" font-weight="800" letter-spacing="0.14em">FORMAÇÃO IMÓVEL RURAL EM DIA</text>
+      <text x="122" y="96" fill="#526056" font-family="${CERT_FONT}" font-size="10.5" font-weight="600" letter-spacing="0.04em">CAPACITAÇÃO PRÁTICA INDEPENDENTE EM DOCUMENTAÇÃO RURAL</text>
+
+      <rect x="765" y="69" width="290" height="30" rx="6" fill="#F4F2EA" stroke="#DFDAC6" stroke-width="1"/>
+      <text x="1041" y="88" fill="#526056" font-family="${CERT_FONT}" font-size="11.5" font-weight="700" letter-spacing="0.03em" text-anchor="end">REGISTRO INTERNO: ${safeCode}</text>
+
+      <line x1="68" y1="116" x2="1055" y2="116" stroke="#E5E2D9" stroke-width="1"/>
+
+      <!-- Titulo Principal e Subtitulo Legal -->
+      <text x="561.5" y="178" fill="#0F291A" font-family="${CERT_FONT}" font-size="40" font-weight="800" letter-spacing="-0.02em" text-anchor="middle">CERTIFICADO DE CONCLUSÃO</text>
+
+      <rect x="166.5" y="196" width="790" height="28" rx="14" fill="#ECFDF3" stroke="#BBF7D0" stroke-width="1"/>
+      <text x="561.5" y="214" fill="#15803D" font-family="${CERT_FONT}" font-size="12.5" font-weight="700" letter-spacing="0.07em" text-anchor="middle">CURSO LIVRE DE CAPACITAÇÃO E ATUALIZAÇÃO PRÁTICA · LEI FEDERAL Nº 9.394/1996 (ART. 42)</text>
+
+      <!-- Texto Introdutorio e Identificacao do Aluno -->
+      <text x="561.5" y="282" fill="#4A5550" font-family="${CERT_FONT}" font-size="16" font-weight="500" text-anchor="middle">Certificamos, para os devidos fins de comprovação de estudos livres, que</text>
+
+      <text x="561.5" y="340" fill="#0F291A" font-family="${CERT_FONT}" font-size="${nameFontSize}" font-weight="800" letter-spacing="-0.015em" text-anchor="middle"${nameFitAttr}>${safeName}</text>
+      <line x1="251.5" y1="356" x2="871.5" y2="356" stroke="#C8B996" stroke-width="1.3"/>
+      <rect x="558.5" y="353" width="6" height="6" transform="rotate(45 561.5 356)" fill="#8A6D3B"/>
+      ${docNode}
+
+      <!-- Descricao do Escopo Educacional e Carga Horaria -->
+      <text x="561.5" y="414" fill="#2F3B34" font-family="${CERT_FONT}" font-size="15.5" font-weight="500" text-anchor="middle">concluiu integralmente a <tspan font-weight="700" fill="#0F291A">Formação Prática em Organização Documental e Rotinas Cadastrais</tspan></text>
+      <text x="561.5" y="440" fill="#2F3B34" font-family="${CERT_FONT}" font-size="15.5" font-weight="500" text-anchor="middle"><tspan font-weight="700" fill="#0F291A">de Imóveis Rurais</tspan> (Matrícula, CCIR/INCRA, ITR/Receita Federal, CNIR, ADA e CAR/SICAR),</text>
+      <text x="561.5" y="466" fill="#2F3B34" font-family="${CERT_FONT}" font-size="15.5" font-weight="500" text-anchor="middle">perfazendo carga horária total estimada de <tspan font-weight="800" fill="#15803D">${safeHours} horas</tspan> de estudos teóricos e práticos.</text>
+
+      <!-- Linha de Data, Selo Heráldico e Assinatura -->
+      <!-- Coluna Esquerda: Data -->
+      <text x="210" y="582" fill="#0F291A" font-family="${CERT_FONT}" font-size="16" font-weight="700" text-anchor="middle">${safeDate}</text>
+      <line x1="85" y1="598" x2="335" y2="598" stroke="#BDB7A6" stroke-width="1.2"/>
+      <text x="210" y="618" fill="#0F291A" font-family="${CERT_FONT}" font-size="11" font-weight="800" letter-spacing="0.1em" text-anchor="middle">DATA DE CONCLUSÃO</text>
+      <text x="210" y="635" fill="#526056" font-family="${CERT_FONT}" font-size="11" font-weight="500" text-anchor="middle">Modalidade Online · Estudo Prático</text>
+
+      <!-- Centro: Medalhao Dourado com Ramos de Louro e Brasao -->
+      ${buildCertificateMedallionSvg()}
+
+      <!-- Coluna Direita: Assinatura Monolinha -->
+      <path d="M838 584 C848 548, 864 538, 865 568 C866 584, 879 554, 888 564 C894 571, 891 583, 902 577 C916 569, 932 544, 939 566 C944 581, 956 566, 968 571 C978 575, 988 569, 1002 565" fill="none" stroke="#0F291A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M844 589 C888 582, 942 580, 992 585" fill="none" stroke="#8A6D3B" stroke-width="1.1" stroke-linecap="round" opacity="0.75"/>
+      <line x1="787" y1="598" x2="1037" y2="598" stroke="#BDB7A6" stroke-width="1.2"/>
+      <text x="912" y="618" fill="#0F291A" font-family="${CERT_FONT}" font-size="11" font-weight="800" letter-spacing="0.1em" text-anchor="middle">COORDENAÇÃO PEDAGÓGICA</text>
+      <text x="912" y="635" fill="#526056" font-family="${CERT_FONT}" font-size="11" font-weight="500" text-anchor="middle">Plataforma Educacional Imóvel Rural em Dia</text>
+
+      <!-- Rodape Juridico Obrigatorio Dentro da Moldura -->
+      <rect x="64" y="682" width="995" height="54" rx="6" fill="#F4F2EA" stroke="#E2DEC9" stroke-width="1"/>
+      <text x="561.5" y="704" fill="#4A5550" font-family="${CERT_FONT}" font-size="9.4" font-weight="600" text-anchor="middle">Natureza Jurídica: Curso Livre privado estritamente educacional (Lei Federal nº 9.394/96, art. 42 e Decreto nº 5.154/04), sem vínculo com INCRA, Receita Federal, SICAR, IBAMA, cartórios ou MEC.</text>
+      <text x="561.5" y="722" fill="#4A5550" font-family="${CERT_FONT}" font-size="9.1" font-weight="500" text-anchor="middle">Comprova conclusão de estudos livres em rotinas declaratórias; não confere grau acadêmico, habilitação técnica nem substitui registro em conselhos de classe (CREA, CFT, OAB ou CRC) em atos privativos.</text>
+
+      ${watermarkNode}
+    </svg>`;
+  }
+
+  function buildCertificateBackSvg(certData) {
+    const rawName = String(certData.holderName || 'Nome Completo do Aluno').trim();
+    const maxBackLen = certData.maskedDoc ? 32 : 44;
+    const truncatedName = rawName.length > maxBackLen ? `${rawName.slice(0, maxBackLen - 2)}...` : rawName;
+    const safeName = escapeHtml(truncatedName);
+    const safeDoc = certData.maskedDoc ? escapeHtml(certData.maskedDoc) : '';
+    const safeCode = escapeHtml(certData.code || 'IRD-2026-00000000');
+    const safeHours = escapeHtml(String(certData.hours || 24));
+    const safeDate = escapeHtml(certData.issueDateLabel || '');
+
+    const mainRowsSvg = CERT_MAIN_MODULES_CURRICULUM.map((item, idx) => {
+      const y = 240 + idx * 38;
+      return `
+        <g>
+          <circle cx="90" cy="${y - 4}" r="7" fill="#ECFDF3" stroke="#86EFAC" stroke-width="1"/>
+          <polyline points="${86.8},${y - 4} ${89.2},${y - 1.5} ${93.5},${y - 6.5}" fill="none" stroke="#15803D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="106" y="${y}" fill="#1E2B23" font-family="${CERT_FONT}" font-size="12.2" font-weight="600">${escapeHtml(item)}</text>
+        </g>
+      `;
+    }).join('');
+
+    const extras = Array.isArray(certData.extraTracksDone) ? certData.extraTracksDone : [];
+    let extraSectionSvg = '';
+    if (extras.length > 0) {
+      extraSectionSvg = extras
+        .map((title, idx) => {
+          const y = 242 + idx * 30;
+          return `
+            <g>
+              <circle cx="598" cy="${y - 4}" r="7" fill="#ECFDF3" stroke="#86EFAC" stroke-width="1"/>
+              <polyline points="594.8,${y - 4} 597.2,${y - 1.5} 601.5,${y - 6.5}" fill="none" stroke="#15803D" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <text x="614" y="${y}" fill="#1E2B23" font-family="${CERT_FONT}" font-size="11.5" font-weight="600">${escapeHtml(title)}</text>
+              <text x="1040" y="${y}" fill="#15803D" font-family="${CERT_FONT}" font-size="11.5" font-weight="800" text-anchor="end">+6h</text>
+            </g>
+          `;
+        })
+        .join('');
+    } else {
+      extraSectionSvg = `
+        <rect x="592" y="228" width="449" height="114" rx="6" fill="#F9F8F3" stroke="#E6E2D3" stroke-width="1"/>
+        <text x="610" y="258" fill="#0F291A" font-family="${CERT_FONT}" font-size="12.8" font-weight="700">Formação base concluída integralmente (24 horas)</text>
+        <text x="610" y="282" fill="#526056" font-family="${CERT_FONT}" font-size="11.2" font-weight="500">Trilha Principal de 11 módulos e 34 aulas práticas cumprida integralmente.</text>
+        <text x="610" y="304" fill="#526056" font-family="${CERT_FONT}" font-size="11.2" font-weight="500">Pacotes complementares concluídos posteriormente adicionam +6h cada</text>
+        <text x="610" y="324" fill="#526056" font-family="${CERT_FONT}" font-size="11.2" font-weight="500">ao histórico curricular automaticamente.</text>
+      `;
+    }
+
+    const legalItems = [
+      {
+        head: '1. Modalidade Curso Livre (Lei Federal nº 9.394/96, art. 42):',
+        body: 'Capacitação privada de atualização prática (Decreto nº 5.154/04), livre de autorização MEC.'
+      },
+      {
+        head: '2. Ausência de Vínculo Público ou Governamental:',
+        body: 'Plataforma privada independente, sem vínculo com INCRA, RFB, SICAR, IBAMA ou MEC.'
+      },
+      {
+        head: '3. Escopo Administrativo e Declaratório:',
+        body: 'Abrange organização documental e rotinas declaratórias em portais públicos abertos.'
+      },
+      {
+        head: '4. Atos Privativos Excluídos (CREA, CFT, OAB e CRC):',
+        body: 'Não habilita para SIGEF, plantas/memoriais com ART/TRT, PRADA ou atos jurídicos.'
+      },
+      {
+        head: '5. Autenticidade Vinculada ao Titular e Código Interno:',
+        body: `Vinculado ao registro ${safeCode}; vedada adulteração ou uso fora deste escopo.`
+      }
+    ];
+
+    const legalItemsSvg = legalItems
+      .map((item, idx) => {
+        const y = 446 + idx * 48;
+        return `
+          <g>
+            <text x="592" y="${y}" fill="#0F291A" font-family="${CERT_FONT}" font-size="10.8" font-weight="800">${escapeHtml(item.head)}</text>
+            <text x="592" y="${y + 16}" fill="#4A5550" font-family="${CERT_FONT}" font-size="9.6" font-weight="500">${escapeHtml(item.body)}</text>
+          </g>
+        `;
+      })
+      .join('');
+
+    const watermarkNode = certData.eligible ? '' : buildPreviewWatermarkSvg();
+
+    return `<svg viewBox="0 0 1123 794" width="1123" height="794" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Certificado de Conclusão - Verso">
+      <rect x="0" y="0" width="1123" height="794" fill="#FCFBF7"/>
+      <rect x="1" y="1" width="1121" height="792" fill="none" stroke="#E5E2D9" stroke-width="2"/>
+      <rect x="28" y="28" width="1067" height="738" rx="10" fill="none" stroke="#0F291A" stroke-width="3"/>
+      <rect x="40" y="40" width="1043" height="714" rx="6" fill="none" stroke="#8A6D3B" stroke-width="1"/>
+      ${buildCertificateCornerAccentsSvg()}
+
+      <!-- Cabecalho do Verso -->
+      <text x="64" y="76" fill="#15803D" font-family="${CERT_FONT}" font-size="10.5" font-weight="800" letter-spacing="0.12em">HISTÓRICO DE ESTUDOS LIVRES · VERSO DO CERTIFICADO</text>
+      <text x="64" y="101" fill="#0F291A" font-family="${CERT_FONT}" font-size="20" font-weight="800" letter-spacing="-0.015em">CONTEÚDO PROGRAMÁTICO CONCLUÍDO E CONFORMIDADE LEGAL</text>
+
+      <rect x="64" y="114" width="995" height="38" rx="6" fill="#F4F2EA" stroke="#E2DEC9" stroke-width="1"/>
+      <text x="80" y="138" fill="#0F291A" font-family="${CERT_FONT}" font-size="11.2" font-weight="700">Titular: ${safeName}${safeDoc ? '  ·  CPF: ' + safeDoc : ''}</text>
+      <text x="1043" y="138" fill="#526056" font-family="${CERT_FONT}" font-size="11.2" font-weight="700" text-anchor="end">Carga Horária: ${safeHours}h  ·  Data: ${safeDate}  ·  Registro: ${safeCode}</text>
+
+      <!-- Coluna Esquerda: Trilha Principal Obrigatoria -->
+      <rect x="64" y="168" width="492" height="524" rx="8" fill="#FFFFFF" stroke="#E2DEC9" stroke-width="1.2"/>
+      <text x="84" y="195" fill="#0F291A" font-family="${CERT_FONT}" font-size="12" font-weight="800" letter-spacing="0.05em">TRILHA PRINCIPAL OBRIGATÓRIA (MÓDULOS 01 A 11 · 24H)</text>
+      <line x1="64" y1="212" x2="556" y2="212" stroke="#EAE6D7" stroke-width="1"/>
+      ${mainRowsSvg}
+      <line x1="84" y1="654" x2="536" y2="654" stroke="#EAE6D7" stroke-width="1"/>
+      <text x="84" y="675" fill="#526056" font-family="${CERT_FONT}" font-size="11" font-weight="600">34 aulas práticas e checklists operacionais · Carga base: 24 horas</text>
+
+      <!-- Coluna Direita Topo: Formacao Complementar -->
+      <rect x="574" y="168" width="485" height="196" rx="8" fill="#FFFFFF" stroke="#E2DEC9" stroke-width="1.2"/>
+      <text x="592" y="195" fill="#0F291A" font-family="${CERT_FONT}" font-size="12" font-weight="800" letter-spacing="0.05em">FORMAÇÃO COMPLEMENTAR CONCLUÍDA</text>
+      <line x1="574" y1="212" x2="1059" y2="212" stroke="#EAE6D7" stroke-width="1"/>
+      ${extraSectionSvg}
+
+      <!-- Coluna Direita Base: Quadro Juridico -->
+      <rect x="574" y="380" width="485" height="312" rx="8" fill="#F4F2EA" stroke="#DFDAC6" stroke-width="1.2"/>
+      <text x="592" y="407" fill="#0F291A" font-family="${CERT_FONT}" font-size="11.5" font-weight="800" letter-spacing="0.04em">QUADRO DE ENQUADRAMENTO JURÍDICO E LIMITES PROFISSIONAIS</text>
+      <line x1="574" y1="422" x2="1059" y2="422" stroke="#DFDAC6" stroke-width="1"/>
+      ${legalItemsSvg}
+
+      <!-- Rodape do Verso -->
+      <line x1="64" y1="708" x2="1059" y2="708" stroke="#E5E2D9" stroke-width="1"/>
+      <text x="64" y="728" fill="#526056" font-family="${CERT_FONT}" font-size="10.5" font-weight="600">Plataforma Educacional Imóvel Rural em Dia · Curso Livre (Lei nº 9.394/96, art. 42)</text>
+      <text x="1059" y="728" fill="#526056" font-family="${CERT_FONT}" font-size="10.5" font-weight="700" text-anchor="end">Verso integrante do Certificado ${safeCode} · Página 2 de 2</text>
+
+      ${watermarkNode}
+    </svg>`;
+  }
+
+  function renderCertificateStageOnly(precomputedStatus) {
+    const stageEl = document.getElementById('cert-svg-stage');
+    if (!stageEl) return;
+    const status = precomputedStatus || computeCertificateStatus();
+
+    const modeTag = document.getElementById('cert-preview-mode-tag');
+    if (modeTag) {
+      modeTag.textContent = status.eligible
+        ? 'Certificado Oficial Liberado'
+        : 'Modelo de Pré-visualização';
+      modeTag.classList.toggle('is-official', status.eligible);
+      modeTag.classList.toggle('is-preview', !status.eligible);
+    }
+
+    if (state.certSide === 'back') {
+      stageEl.innerHTML = `<div class="cert-paper-frame">${buildCertificateBackSvg(status)}</div>`;
+    } else if (state.certSide === 'both') {
+      stageEl.innerHTML = `
+        <div class="cert-paper-frame">${buildCertificateFrontSvg(status)}</div>
+        <div class="cert-paper-frame">${buildCertificateBackSvg(status)}</div>
+      `;
+    } else {
+      stageEl.innerHTML = `<div class="cert-paper-frame">${buildCertificateFrontSvg(status)}</div>`;
+    }
+  }
+
+  function renderCertificateView(opts = { syncInputs: false }) {
+    if (isProprietarioMode()) return;
+
+    if (opts && opts.syncInputs) {
+      const rawProg = state.user && Array.isArray(state.user.progresso_aulas)
+        ? state.user.progresso_aulas
+        : [];
+      const { savedMaskedDoc } = extractCertTagsFromProgress(rawProg);
+      const defaultName = cleanStudentNameForCert(state.user && state.user.nome);
+
+      if (!state.certPreviewName) {
+        state.certPreviewName = defaultName;
+      }
+      if (!state.certDocEdited) {
+        state.certPreviewDoc = savedMaskedDoc || '';
+      }
+
+      const nameInput = document.getElementById('cert-holder-name');
+      const docInput = document.getElementById('cert-holder-doc');
+      if (nameInput) nameInput.value = state.certPreviewName || defaultName || '';
+      if (docInput) docInput.value = state.certDocEdited ? state.certPreviewDoc : savedMaskedDoc || '';
+    }
+
+    const status = computeCertificateStatus();
+    updateCertificateSummaryUi();
+
+    const badgeEl = document.getElementById('cert-elig-badge');
+    if (badgeEl) {
+      badgeEl.textContent = status.eligible ? 'Liberado para Emissão' : 'Em andamento';
+      badgeEl.classList.toggle('is-ready', status.eligible);
+      badgeEl.classList.toggle('is-pending', !status.eligible);
+    }
+
+    setText('cert-main-pct-label', `${status.mainDone} de ${status.mainTotal} aulas concluídas`);
+    setText('cert-main-pct-num', `${status.mainPct}%`);
+    const mainBar = document.getElementById('cert-main-bar');
+    if (mainBar) mainBar.style.width = `${status.mainPct}%`;
+
+    const reqLessonsItem = document.getElementById('cert-req-lessons-item');
+    const reqLessonsDot = document.getElementById('cert-req-lessons-dot');
+    if (reqLessonsItem) reqLessonsItem.classList.toggle('done', status.lessonsOk);
+    if (reqLessonsDot) {
+      reqLessonsDot.innerHTML = status.lessonsOk ? SVG_ICONS.check : SVG_ICONS.clock;
+    }
+    const missingLessons = Math.max(0, status.mainTotal - status.mainDone);
+    setText(
+      'cert-req-lessons-text',
+      status.lessonsOk
+        ? `Concluídas 100% das ${status.mainTotal} aulas obrigatórias da Trilha Principal.`
+        : `Concluir 100% das ${status.mainTotal} aulas da Trilha Principal (faltam ${missingLessons} ${missingLessons === 1 ? 'aula' : 'aulas'}).`
+    );
+
+    const reqDaysItem = document.getElementById('cert-req-days-item');
+    const reqDaysDot = document.getElementById('cert-req-days-dot');
+    if (reqDaysItem) reqDaysItem.classList.toggle('done', status.daysOk);
+    if (reqDaysDot) {
+      reqDaysDot.innerHTML = status.daysOk ? SVG_ICONS.check : SVG_ICONS.clock;
+    }
+    setText(
+      'cert-req-days-text',
+      status.daysOk
+        ? 'Cronograma integral de liberação de 7 dias cumprido.'
+        : `Cumprir o cronograma de 7 dias pós-compra (libera em ${status.daysRemaining} ${status.daysRemaining === 1 ? 'dia' : 'dias'}).`
+    );
+
+    const reqExtraDot = document.getElementById('cert-req-extra-dot');
+    if (reqExtraDot) reqExtraDot.innerHTML = SVG_ICONS.check;
+    setText(
+      'cert-req-extra-text',
+      status.extraTracksDone.length > 0
+        ? `${status.extraTracksDone.length} ${status.extraTracksDone.length === 1 ? 'trilha complementar averbada' : 'trilhas complementares averbadas'} no verso (+${status.extraTracksDone.length * 6}h).`
+        : 'Trilhas complementares concluídas entram automaticamente no verso (+6h cada).'
+    );
+
+    setText('cert-hours-val', `${status.hours} horas`);
+    setText('cert-code-val', status.code);
+
+    const lockHint = document.getElementById('cert-lock-hint');
+    if (lockHint) {
+      lockHint.classList.toggle('hidden', status.eligible);
+      if (!status.eligible) {
+        if (!status.lessonsOk && !status.daysOk) {
+          lockHint.textContent = `Faltam ${missingLessons} ${missingLessons === 1 ? 'aula obrigatória' : 'aulas obrigatórias'} e ${status.daysRemaining} ${status.daysRemaining === 1 ? 'dia' : 'dias'} do cronograma para liberar a exportação oficial sem marca d'água.`;
+        } else if (!status.lessonsOk) {
+          lockHint.textContent = `Conclua as ${missingLessons} ${missingLessons === 1 ? 'aula restante' : 'aulas restantes'} da Trilha Principal (Módulos 01 a 11) para liberar a exportação oficial sem marca d'água.`;
+        } else {
+          lockHint.textContent = `Aulas obrigatórias 100% concluídas! A exportação oficial sem marca d'água abre automaticamente em ${status.daysRemaining} ${status.daysRemaining === 1 ? 'dia' : 'dias'} (8º dia de acesso).`;
+        }
+      }
+    }
+
+    ['btn-cert-pdf', 'btn-cert-png-front', 'btn-cert-png-back'].forEach((btnId) => {
+      const btn = document.getElementById(btnId);
+      if (btn) {
+        btn.setAttribute('aria-disabled', String(!status.eligible));
+        btn.style.opacity = status.eligible ? '1' : '0.62';
+      }
+    });
+
+    const devBox = document.getElementById('cert-dev-box');
+    if (devBox) {
+      devBox.classList.toggle('hidden', !isDemoEnvironment());
+    }
+    setText(
+      'btn-cert-dev-label',
+      status.eligible
+        ? 'Reverter Simulação (Voltar ao Progresso Inicial)'
+        : 'Simular 100% Concluído (Liberar Agora)'
+    );
+
+    const frontBtn = document.getElementById('cert-side-front-btn');
+    const backBtn = document.getElementById('cert-side-back-btn');
+    const bothBtn = document.getElementById('cert-side-both-btn');
+    if (frontBtn) frontBtn.classList.toggle('active', state.certSide === 'front');
+    if (backBtn) backBtn.classList.toggle('active', state.certSide === 'back');
+    if (bothBtn) bothBtn.classList.toggle('active', state.certSide === 'both');
+
+    renderCertificateStageOnly(status);
+  }
+
+  async function saveCertificateProfile(btnEl) {
+    const nameEl = document.getElementById('cert-holder-name');
+    const docEl = document.getElementById('cert-holder-doc');
+
+    const fullName = sanitizeCleanText(nameEl ? nameEl.value : '')
+      .replace(/[<>]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 90);
+
+    if (fullName.length < 4) {
+      showToast('Informe seu nome completo com pelo menos 4 caracteres.');
+      if (nameEl) nameEl.focus();
+      return;
+    }
+
+    const rawDoc = docEl ? docEl.value : '';
+    const parsedDoc = formatMaskedCpfInput(rawDoc);
+    if (!parsedDoc.valid) {
+      showToast('Informe os 11 números do CPF para mascaramento automático ou deixe em branco.');
+      if (docEl) docEl.focus();
+      return;
+    }
+
+    if (parsedDoc.shouldReplaceInput && docEl) {
+      docEl.value = parsedDoc.masked;
+    }
+
+    const status = computeCertificateStatus();
+    if (btnEl) btnEl.disabled = true;
+
+    const res = await apiFetch('/api/auth', {
+      method: 'PUT',
+      body: JSON.stringify({
+        action: 'update_certificate_profile',
+        fullName,
+        maskedDoc: parsedDoc.masked,
+        markIssued: status.eligible
+      })
+    });
+
+    if (btnEl) btnEl.disabled = false;
+
+    if (res.ok && res.data && res.data.user) {
+      state.user = res.data.user;
+    } else if (state.user) {
+      state.user.nome = fullName;
+      const nextProg = Array.isArray(state.user.progresso_aulas)
+        ? state.user.progresso_aulas.filter((i) => !String(i).startsWith('__cert_doc:'))
+        : [];
+      if (parsedDoc.masked) nextProg.push(`__cert_doc:${parsedDoc.masked}`);
+      if (status.eligible && !nextProg.some((i) => String(i).startsWith('__cert_issued:'))) {
+        nextProg.push(`__cert_issued:${new Date().toISOString().slice(0, 10)}`);
+      }
+      state.user.progresso_aulas = nextProg;
+    }
+
+    state.certPreviewName = fullName;
+    state.certPreviewDoc = parsedDoc.masked;
+    state.certDocEdited = true;
+
+    updateHeaderAndProfile();
+    renderCertificateView({ syncInputs: false });
+    showToast('Dados salvos no certificado.');
+  }
+
+  function ensureCertificateIssuedRecorded(status) {
+    if (!status.eligible || status.savedIssuedDate || !state.user) return;
+    const todayIso = new Date().toISOString().slice(0, 10);
+    const list = Array.isArray(state.user.progresso_aulas)
+      ? [...state.user.progresso_aulas]
+      : [];
+    if (!list.some((item) => String(item).startsWith('__cert_issued:'))) {
+      list.push(`__cert_issued:${todayIso}`);
+      state.user.progresso_aulas = list;
+    }
+    apiFetch('/api/auth', {
+      method: 'PUT',
+      body: JSON.stringify({
+        action: 'update_certificate_profile',
+        fullName: status.holderName,
+        maskedDoc: status.maskedDoc || '',
+        markIssued: true
+      })
+    }).then((res) => {
+      if (res && res.ok && res.data && res.data.user) {
+        state.user = res.data.user;
+      }
+    });
+  }
+
+  function downloadCertificatePng(side = 'front') {
+    let status = computeCertificateStatus();
+    if (!status.eligible) {
+      showToast(CERT_LOCKED_TOAST);
+      return;
+    }
+
+    ensureCertificateIssuedRecorded(status);
+    status = computeCertificateStatus();
+
+    const targetSide = side === 'back' ? 'back' : 'front';
+    const rawSvg =
+      targetSide === 'back'
+        ? buildCertificateBackSvg(status)
+        : buildCertificateFrontSvg(status);
+
+    const hiResSvg = rawSvg.replace(
+      'width="1123" height="794"',
+      'width="2400" height="1697"'
+    );
+
+    const svgBlob = new Blob([hiResSvg], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const img = new Image();
+
+    img.onload = function () {
+      const canvas = document.createElement('canvas');
+      canvas.width = 2400;
+      canvas.height = 1697;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        URL.revokeObjectURL(svgUrl);
+        showToast('Não foi possível renderizar a imagem neste navegador.');
+        return;
+      }
+      ctx.fillStyle = '#FCFBF7';
+      ctx.fillRect(0, 0, 2400, 1697);
+      ctx.drawImage(img, 0, 0, 2400, 1697);
+      URL.revokeObjectURL(svgUrl);
+
+      canvas.toBlob(
+        (pngBlob) => {
+          if (!pngBlob) {
+            showToast('Erro ao exportar arquivo PNG.');
+            return;
+          }
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const link = document.createElement('a');
+          link.href = pngUrl;
+          link.setAttribute(
+            'download',
+            `certificado-imovel-rural-${targetSide}-${status.code.toLowerCase()}.png`
+          );
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(pngUrl), 1800);
+          showToast(
+            targetSide === 'back'
+              ? 'Verso do certificado baixado em PNG de alta resolução.'
+              : 'Frente do certificado baixada em PNG de alta resolução.'
+          );
+        },
+        'image/png',
+        1.0
+      );
+    };
+
+    img.onerror = function () {
+      URL.revokeObjectURL(svgUrl);
+      showToast('Erro ao preparar imagem PNG do certificado.');
+    };
+
+    img.src = svgUrl;
+  }
+
+  function printCertificatePdf() {
+    let status = computeCertificateStatus();
+    if (!status.eligible) {
+      showToast(CERT_LOCKED_TOAST);
+      return;
+    }
+
+    ensureCertificateIssuedRecorded(status);
+    status = computeCertificateStatus();
+
+    const frontSvg = buildCertificateFrontSvg(status);
+    const backSvg = buildCertificateBackSvg(status);
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      showToast('Permita a abertura de nova aba para salvar ou imprimir o PDF A4.');
+      return;
+    }
+
+    const docTitle = `Certificado Imovel Rural em Dia - ${escapeHtml(status.holderName)} (${escapeHtml(status.code)})`;
+    const printHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>${docTitle}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    html, body {
+      background: #e9e7df;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .print-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1123px;
+      margin: 18px auto 12px;
+      padding: 12px 18px;
+      background: #0F291A;
+      color: #FCFBF7;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .print-toolbar button {
+      background: #15803D;
+      color: #ffffff;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .print-page {
+      width: 297mm;
+      height: 210mm;
+      margin: 0 auto 18px;
+      background: #FCFBF7;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+    }
+    .print-page:last-of-type {
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .print-page svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    @media print {
+      html, body {
+        background: #FCFBF7;
+      }
+      .print-toolbar {
+        display: none !important;
+      }
+      .print-page {
+        margin: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-toolbar">
+    <span>Certificado A4 Paisagem (2 páginas: Frente e Verso) · Selecione "Salvar como PDF" na janela de impressão.</span>
+    <button type="button" onclick="window.print()">Imprimir / Salvar PDF</button>
+  </div>
+  <div class="print-page">${frontSvg}</div>
+  <div class="print-page">${backSvg}</div>
+  <script>
+    (function () {
+      var readyPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+      readyPromise.then(function () {
+        setTimeout(function () {
+          window.focus();
+          window.print();
+        }, 350);
+      });
+    })();
+  <\/script>
+</body>
+</html>`;
+
+    win.document.open();
+    win.document.write(printHtml);
+    win.document.close();
+  }
+
+  async function toggleDemoCertificateReady() {
+    if (!isDemoEnvironment()) {
+      showToast('Simulação disponível apenas em ambiente local ou administrativo.');
+      return;
+    }
+
+    const res = await apiFetch('/api/auth', {
+      method: 'PUT',
+      body: JSON.stringify({ action: 'demo_toggle_certificate_ready' })
+    });
+
+    if (res.ok && res.data && res.data.user) {
+      state.user = res.data.user;
+      if (res.data.daysSincePurchase !== undefined) {
+        state.daysSincePurchase = res.data.daysSincePurchase;
+      }
+      state.modules = mergeModulesCatalog(state.modules);
+      updateHeaderAndProfile();
+      renderTracks();
+      renderCertificateView({ syncInputs: false });
+      showToast(
+        res.data.simulatedComplete
+          ? 'Simulação ativada: Certificado Oficial 100% liberado!'
+          : 'Simulação revertida para o progresso inicial.'
+      );
+      return;
+    }
+
+    // Fallback instantaneo client-side caso offline em localhost
+    if (!state.user) return;
+    const statusBefore = computeCertificateStatus();
+    const mainLessonIds = [];
+    state.modules
+      .filter((m) => m.numInt >= 1 && m.numInt <= 11)
+      .forEach((m) => {
+        (m.lessons || []).forEach((l) => mainLessonIds.push(l.id));
+      });
+    const effectiveMainIds =
+      mainLessonIds.length > 0 ? mainLessonIds : FALLBACK_MAIN_LESSON_IDS;
+
+    const currentList = Array.isArray(state.user.progresso_aulas)
+      ? [...state.user.progresso_aulas]
+      : [];
+
+    let simulatedComplete = false;
+    if (statusBefore.eligible) {
+      const mainSet = new Set(effectiveMainIds);
+      state.user.progresso_aulas = currentList.filter(
+        (id) => !mainSet.has(id) && !String(id).startsWith('__cert_issued:')
+      );
+      state.user.liberar_trava_7dias_manual = false;
+      if (state.currentSimKey === 'dia1') {
+        state.daysSincePurchase = 0;
+      }
+      simulatedComplete = false;
+    } else {
+      const merged = new Set(currentList);
+      effectiveMainIds.forEach((id) => merged.add(id));
+      if (!Array.from(merged).some((id) => String(id).startsWith('__cert_issued:'))) {
+        merged.add(`__cert_issued:${new Date().toISOString().slice(0, 10)}`);
+      }
+      state.user.progresso_aulas = Array.from(merged);
+      state.user.liberar_trava_7dias_manual = true;
+      state.daysSincePurchase = Math.max(10, Number(state.daysSincePurchase || 0));
+      simulatedComplete = true;
+    }
+
+    state.modules = mergeModulesCatalog(state.modules);
+    updateHeaderAndProfile();
+    renderTracks();
+    renderCertificateView({ syncInputs: false });
+    showToast(
+      simulatedComplete
+        ? 'Simulação ativada: Certificado Oficial 100% liberado!'
+        : 'Simulação revertida para o progresso inicial.'
+    );
+  }
+
+  /* ========================================================================
      INICIALIZACAO
      ======================================================================== */
   function isDemoEnvironment() {
@@ -4389,14 +5686,18 @@
     const aiTestVipBtn = document.querySelector('#ai-locked-banner button[onclick*="quickSwitch"]');
     if (aiTestVipBtn) aiTestVipBtn.classList.toggle('hidden', !showDemo);
 
-    const dropdownDemoSection = document.querySelector('#profile-dropdown .dropdown-section');
-    if (dropdownDemoSection && dropdownDemoSection.textContent.includes('Trocar conta de teste')) {
-      dropdownDemoSection.classList.toggle('hidden', !showDemo);
-      const nextDivider = dropdownDemoSection.nextElementSibling;
-      if (nextDivider && nextDivider.classList.contains('dropdown-divider')) {
-        nextDivider.classList.toggle('hidden', !showDemo);
+    const certDevBox = document.getElementById('cert-dev-box');
+    if (certDevBox) certDevBox.classList.toggle('hidden', !showDemo);
+
+    document.querySelectorAll('#profile-dropdown .dropdown-section').forEach((sec) => {
+      if (sec.textContent.includes('Trocar conta de teste')) {
+        sec.classList.toggle('hidden', !showDemo);
+        const nextDivider = sec.nextElementSibling;
+        if (nextDivider && nextDivider.classList.contains('dropdown-divider')) {
+          nextDivider.classList.toggle('hidden', !showDemo);
+        }
       }
-    }
+    });
   }
 
   async function init() {
@@ -4457,11 +5758,17 @@
               : 'vip';
       highlightSimMenu(simKey);
       await loadCatalogAndSession();
+      if ((window.location.hash || '').toLowerCase() === '#certificado' && !isProprietarioMode()) {
+        navigate('certificate');
+      }
     } else if (isDemoEnvironment()) {
       if (wantsProprietarioUrl) {
         await quickSwitch('proprietario@rural.com', 'proprietario');
       } else {
         await quickSwitch('vip@rural.com', 'vip');
+        if ((window.location.hash || '').toLowerCase() === '#certificado' && !isProprietarioMode()) {
+          navigate('certificate');
+        }
       }
     } else {
       showLoginScreen();
@@ -4526,7 +5833,15 @@
     handleAiKeydown,
     askPresetCase,
     handleAiSubmit,
-    copyAiReply
+    copyAiReply,
+    openCertificateFromMenu,
+    setCertificateSide,
+    handleCertNamePreview,
+    handleCertDocInput,
+    saveCertificateProfile,
+    printCertificatePdf,
+    downloadCertificatePng,
+    toggleDemoCertificateReady
   };
 
   if (document.readyState === 'loading') {

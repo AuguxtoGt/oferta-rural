@@ -32,10 +32,12 @@
       <div class="login-card">
         <div class="login-brand">
           <div class="brand-mark-lg">
-            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8">
-              <rect x="2" y="2" width="28" height="28" rx="8" fill="#15803d" stroke="none"/>
-              <path d="M10 21C10 15.5 14.5 11 21 11C21 16.5 16.5 21 10 21Z" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M10 21L16 15" stroke="#bbf7d0" stroke-width="1.8" stroke-linecap="round"/>
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="2" y="2" width="28" height="28" rx="8" fill="#14532d"/>
+              <path d="M16 7.2L23.2 10.1V16.4C23.2 21 20.1 24.1 16 25.6C11.9 24.1 8.8 21 8.8 16.4V10.1L16 7.2Z" stroke="#dcfce7" stroke-width="1.45" stroke-linejoin="round"/>
+              <path d="M16 21V13" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round"/>
+              <path d="M16 17.6C13.2 17.6 12 15.6 12.2 13.3C14.4 13.3 16 14.8 16 17.6Z" fill="#ffffff"/>
+              <path d="M16 16.3C18.7 16.3 19.9 14.4 19.7 12.2C17.6 12.2 16 13.6 16 16.3Z" fill="#86efac"/>
             </svg>
           </div>
           <span class="login-eyebrow">PORTAL DO ALUNO</span>
@@ -101,9 +103,11 @@
         <!-- Esquerda: Logo minimalista -->
         <a href="#modulos" class="nav-brand" onclick="window.RRApp.navigate('home'); return false;">
           <span class="nav-brand-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-              <path d="M6 19C6 12.5 11 7.5 18 7.5C18 14.5 13 19 6 19Z" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M6 19L12.5 12.5" stroke-linecap="round"/>
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3L19.4 6V12.2C19.4 16.9 16.2 20.1 12 21.6C7.8 20.1 4.6 16.9 4.6 12.2V6L12 3Z" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round"/>
+              <path d="M12 17.2V9.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12 14C9.2 14 8 12 8.2 9.6C10.4 9.6 12 11.1 12 14Z" fill="currentColor"/>
+              <path d="M12 12.6C14.7 12.6 15.9 10.7 15.7 8.5C13.6 8.5 12 9.9 12 12.6Z" fill="currentColor" opacity="0.82"/>
             </svg>
           </span>
           <span class="nav-brand-title">Imóvel Rural em Dia</span>
@@ -116,6 +120,9 @@
           </button>
           <button type="button" id="nav-btn-tools" class="nav-item" data-nav="tools" onclick="window.RRApp.navigate('tools')">
             Ferramentas e Planilhas
+          </button>
+          <button type="button" id="nav-btn-certificate" class="nav-item" data-nav="certificate" data-role-only="consultor" onclick="window.RRApp.navigate('certificate')">
+            Certificado
           </button>
           <button type="button" id="nav-btn-ai" class="nav-item hidden" data-nav="ai" onclick="window.RRApp.navigate('ai')">
             Consultor IA
@@ -184,6 +191,15 @@
               </div>
 
               <div class="dropdown-divider"></div>
+
+              <div class="dropdown-section" data-role-only="consultor">
+                <button type="button" id="dropdown-cert-btn" class="dropdown-item" onclick="window.RRApp.openCertificateFromMenu()">
+                  <span>Certificado de Conclusão</span>
+                  <span id="dropdown-cert-pill" class="cert-mini-pill">0/34</span>
+                </button>
+              </div>
+
+              <div class="dropdown-divider" data-role-only="consultor"></div>
 
               <div class="dropdown-section">
                 <span class="dropdown-section-label">Trocar conta de teste</span>
@@ -289,6 +305,31 @@
       <!-- VITRINE DE TRILHAS E CAPAS DE MODULOS (ESTILO APPLE BOOKS / APPLE TV+) -->
       <section id="tracks-container" class="tracks-showcase" aria-label="Trilhas de Módulos">
         <!-- Renderizado dinamicamente via app.js -->
+      </section>
+
+      <!-- BANNER EXECUTIVO DO CERTIFICADO DE CONCLUSAO (CONSULTOR) -->
+      <section id="home-certificate-banner" class="home-cert-section" data-role-only="consultor" aria-label="Certificado de Conclusão">
+        <div class="home-cert-card">
+          <div class="home-cert-left">
+            <span class="home-cert-eyebrow">CERTIFICAÇÃO DE CURSO LIVRE · LEI FEDERAL Nº 9.394/96 (ART. 42)</span>
+            <h2 id="home-cert-title" class="home-cert-title">Certificado Oficial de Conclusão</h2>
+            <p id="home-cert-desc" class="home-cert-desc">Conclua as 34 aulas obrigatórias da Trilha Principal (Módulos 01 a 11) após o cronograma de 7 dias para emitir seu certificado nominal em PDF A4 Paisagem (Frente e Verso) e imagem PNG de alta resolução.</p>
+            <div class="home-cert-progress-wrap">
+              <div class="home-cert-progress-meta">
+                <span id="home-cert-progress-label">0 de 34 aulas obrigatórias concluídas</span>
+                <strong id="home-cert-progress-pct">0%</strong>
+              </div>
+              <div class="home-kpi-track">
+                <div id="home-cert-progress-bar" class="home-kpi-fill" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="home-cert-right">
+            <button type="button" id="home-cert-cta-btn" class="btn-apple-primary" onclick="window.RRApp.navigate('certificate')">
+              <span id="home-cert-cta-label">Ver Modelo e Progresso</span>
+            </button>
+          </div>
+        </div>
       </section>
 
     </main>
@@ -1295,6 +1336,148 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================== -->
+    <!-- VIEW 5: CERTIFICADO DE CONCLUSAO DE CURSO LIVRE (FRENTE E VERSO A4)    -->
+    <!-- ====================================================================== -->
+    <section id="view-certificate" class="app-view hidden" aria-label="Certificado de Conclusão">
+      <div class="cert-workspace-container">
+        <header class="tools-hero">
+          <span class="apple-hero-eyebrow">CURSO LIVRE DE CAPACITAÇÃO · LEI FEDERAL Nº 9.394/96 (ART. 42)</span>
+          <h1 class="tools-main-title">Certificado de Conclusão.</h1>
+          <p class="tools-main-subtitle">Documento nominal em formato A4 Paisagem (Frente e Verso) com carga horária apurada, grade curricular concluída, código interno de registro e enquadramento legal de Curso Livre.</p>
+        </header>
+
+        <div class="cert-workspace-grid">
+
+          <!-- Coluna Lateral: Elegibilidade, Nome/CPF Mascarado e Download -->
+          <aside class="cert-sidebar-panel">
+
+            <div class="cert-card">
+              <span id="cert-elig-badge" class="cert-status-badge is-pending">Em andamento</span>
+              <h2 class="cert-card-title">Requisitos de Emissão Oficial</h2>
+
+              <div class="home-cert-progress-meta">
+                <span id="cert-main-pct-label">0 de 34 aulas concluídas</span>
+                <strong id="cert-main-pct-num">0%</strong>
+              </div>
+              <div class="home-kpi-track">
+                <div id="cert-main-bar" class="home-kpi-fill" style="width: 0%"></div>
+              </div>
+
+              <ul class="cert-req-list">
+                <li id="cert-req-lessons-item" class="cert-req-item">
+                  <span id="cert-req-lessons-dot" class="cert-req-dot"></span>
+                  <span id="cert-req-lessons-text">Concluir 100% das 34 aulas da Trilha Principal (Módulos 01 a 11).</span>
+                </li>
+                <li id="cert-req-days-item" class="cert-req-item">
+                  <span id="cert-req-days-dot" class="cert-req-dot"></span>
+                  <span id="cert-req-days-text">Cumprir o cronograma integral de liberação de 7 dias pós-compra.</span>
+                </li>
+                <li id="cert-req-extra-item" class="cert-req-item done">
+                  <span id="cert-req-extra-dot" class="cert-req-dot"></span>
+                  <span id="cert-req-extra-text">Trilhas complementares concluídas entram automaticamente no verso.</span>
+                </li>
+              </ul>
+
+              <div class="cert-meta-kv">
+                <div>
+                  <span>Carga Horária Apurada</span>
+                  <strong id="cert-hours-val">24 horas</strong>
+                </div>
+                <div>
+                  <span>Código de Registro</span>
+                  <strong id="cert-code-val">IRD-2026-000000</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="cert-card">
+              <h2 class="cert-card-title">Identificação Nominal no Certificado</h2>
+              <div class="form-group">
+                <label for="cert-holder-name">Nome completo do aluno</label>
+                <input
+                  type="text"
+                  id="cert-holder-name"
+                  class="apple-input"
+                  maxlength="90"
+                  placeholder="Digite seu nome e sobrenome completos"
+                  oninput="window.RRApp.handleCertNamePreview(this.value)"
+                >
+              </div>
+              <div class="form-group" style="margin-top: 12px;">
+                <label for="cert-holder-doc">CPF opcional (exibido mascarado)</label>
+                <input
+                  type="text"
+                  id="cert-holder-doc"
+                  class="apple-input"
+                  maxlength="18"
+                  placeholder="Opcional: 11 números ou ***.123.456-**"
+                  oninput="window.RRApp.handleCertDocInput(this)"
+                >
+                <span class="cert-field-help">Por privacidade (LGPD), apenas os 6 dígitos centrais são gravados no formato ***.123.456-**.</span>
+              </div>
+              <button type="button" id="btn-cert-save-profile" class="btn-apple-secondary btn-full" style="margin-top: 14px; justify-content: center;" onclick="window.RRApp.saveCertificateProfile(this)">
+                <span>Salvar Nome no Certificado</span>
+              </button>
+            </div>
+
+            <div class="cert-card">
+              <h2 class="cert-card-title">Exportar Documento</h2>
+              <div id="cert-lock-hint" class="cert-lock-hint">
+                Conclua as 34 aulas da Trilha Principal e aguarde o 8º dia de acesso para liberar a exportação oficial sem marca d'água de pré-visualização.
+              </div>
+              <div class="cert-action-stack">
+                <button type="button" id="btn-cert-pdf" class="btn-apple-primary btn-full" style="justify-content: center;" onclick="window.RRApp.printCertificatePdf()">
+                  <span>Salvar / Imprimir PDF A4 (Frente e Verso)</span>
+                </button>
+                <button type="button" id="btn-cert-png-front" class="btn-apple-secondary btn-full" style="justify-content: center;" onclick="window.RRApp.downloadCertificatePng('front')">
+                  <span>Baixar Frente em PNG (Alta Resolução)</span>
+                </button>
+                <button type="button" id="btn-cert-png-back" class="btn-apple-secondary btn-full" style="justify-content: center;" onclick="window.RRApp.downloadCertificatePng('back')">
+                  <span>Baixar Verso em PNG (Grade e Base Legal)</span>
+                </button>
+              </div>
+            </div>
+
+            <div id="cert-dev-box" class="cert-dev-box hidden">
+              <p><strong>Modo de Teste Local / Admin:</strong> simule com 1 clique a conclusão das 34 aulas + prazo de 7 dias para testar o Certificado Oficial liberado agora.</p>
+              <button type="button" id="btn-cert-dev-toggle" class="btn-apple-secondary btn-full" style="justify-content: center;" onclick="window.RRApp.toggleDemoCertificateReady()">
+                <span id="btn-cert-dev-label">Simular 100% Concluído (Liberar Agora)</span>
+              </button>
+            </div>
+
+          </aside>
+
+          <!-- Palco Principal: Visualizacao Realista Frente e Verso A4 Paisagem -->
+          <div class="cert-stage-panel">
+            <div class="cert-stage-topbar">
+              <div class="cert-side-tabs" role="tablist" aria-label="Lado do certificado">
+                <button type="button" id="cert-side-front-btn" class="cert-side-btn active" onclick="window.RRApp.setCertificateSide('front')">
+                  Frente do Certificado
+                </button>
+                <button type="button" id="cert-side-back-btn" class="cert-side-btn" onclick="window.RRApp.setCertificateSide('back')">
+                  Verso (Grade e Base Legal)
+                </button>
+                <button type="button" id="cert-side-both-btn" class="cert-side-btn" onclick="window.RRApp.setCertificateSide('both')">
+                  Frente + Verso
+                </button>
+              </div>
+              <span id="cert-preview-mode-tag" class="cert-preview-tag is-preview">Modelo de Pré-visualização</span>
+            </div>
+
+            <div id="cert-svg-stage" class="cert-svg-stage">
+              <!-- Renderizado dinamicamente via app.js -->
+            </div>
+
+            <div class="cert-legal-note-card">
+              <strong>Enquadramento Legal do Certificado:</strong> Emitido na modalidade de Curso Livre de Capacitação e Atualização Privada, nos termos do art. 42 da Lei Federal nº 9.394/1996 (Diretrizes e Bases da Educação Nacional) e do Decreto nº 5.154/2004. Possui finalidade estritamente educacional sobre organização documental e preenchimento declaratório em portais públicos, não configurando graduação superior, curso técnico regulamentado pelo MEC, vínculo ou credenciamento junto a órgãos governamentais (INCRA, Receita Federal, SICAR, IBAMA ou cartórios), nem habilitação em conselhos de classe (CREA, CFT, OAB ou CRC) para atos privativos.
+            </div>
+          </div>
+
         </div>
       </div>
     </section>

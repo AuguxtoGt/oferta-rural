@@ -397,7 +397,7 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 200, responsePayload);
   }
 
-  // PUT /api/auth -> toggle_lesson, admin_save_user, admin_save_drip
+  // PUT /api/auth -> toggle_lesson, update_certificate_profile, demo_toggle_certificate_ready, admin_save_user, admin_save_drip
   if (req.method === 'PUT') {
     const rlPut = checkRateLimit(ip, 'auth_put', 30, 60000);
     if (!rlPut.allowed) {
@@ -432,11 +432,26 @@ module.exports = async function handler(req, res) {
 
     const action = String(body.action || '').toLowerCase();
 
+    const getMainTrackLessonIds = () => {
+      const coursesDb = require('./_lib/courses-db');
+      return (Array.isArray(coursesDb.modules) ? coursesDb.modules : [])
+        .filter((mod) => {
+          const num = Number(mod && mod.number);
+          return num >= 1 && num <= 11;
+        })
+        .flatMap((mod) =>
+          (Array.isArray(mod.lessons) ? mod.lessons : [])
+            .map((lesson) => String((lesson && lesson.id) || '').trim())
+            .filter(Boolean)
+        );
+    };
+
     if (action === 'toggle_lesson') {
       const lessonId = String(body.lessonId || '').trim();
       if (
         !lessonId ||
         lessonId.length > 64 ||
+        lessonId.startsWith('__') ||
         !/^[a-zA-Z0-9_:-]+$/.test(lessonId)
       ) {
         return sendJson(res, 400, {
@@ -471,6 +486,161 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, {
         ok: true,
         completed: existsIdx < 0,
+        progresso_aulas: updatedUser.progresso_aulas,
+        user: sanitizeUserForClient(updatedUser, dripConfig)
+      });
+    }
+
+    if (action === 'update_certificate_profile') {
+      const rawName = String(body.fullName || '')
+        .replace(/[<>]/g, '')
+        .replace(/[\u2014\u2013]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 90);
+
+      if (rawName.length < 4) {
+        return sendJson(res, 400, {
+          ok: false,
+          error: 'Informe seu nome completo com pelo menos 4 caracteres.'
+        });
+      }
+
+      const rawDoc = String(body.maskedDoc || '').trim();
+      let maskedDoc = '';
+      if (rawDoc) {
+        if (/^\*{3}\.\d{3}\.\d{3}-\*{2}$/.test(rawDoc)) {
+          maskedDoc = rawDoc;
+        } else if (!rawDoc.includes('*')) {
+          const digits = rawDoc.replace(/\D/g, '');
+          if (digits.length === 11) {
+            maskedDoc = `***.${digits.slice(3, 6)}.${digits.slice(6, 9)}-**`;
+          }
+        }
+
+        if (!maskedDoc) {
+          return sendJson(res, 400, {
+            ok: false,
+            error:
+              'Informe os 11 numeros do CPF para mascaramento automatico ou deixe o campo em branco.'
+          });
+        }
+      }
+
+      const nextProgress = Array.isArray(actor.user.progresso_aulas)
+        ? actor.user.progresso_aulas.filter(
+            (item) => !String(item).startsWith('__cert_doc:')
+          )
+        : [];
+
+      if (maskedDoc) {
+        nextProgress.push(`__cert_doc:${maskedDoc}`);
+      }
+
+      const dripConfig = await getDripConfig();
+      if (
+        body.markIssued === true &&
+        !nextProgress.some((item) => String(item).startsWith('__cert_issued:'))
+      ) {
+        const mainLessonIds = getMainTrackLessonIds();
+        const accessNow = computeAccessStatus(actor.user, dripConfig);
+        const isEligibleServer =
+          mainLessonIds.length > 0 &&
+          mainLessonIds.every((id) => nextProgress.includes(id)) &&
+          (actor.user.isAdmin === true ||
+            actor.user.liberar_trava_7dias_manual === true ||
+            accessNow.daysSincePurchase >= 7);
+        if (isEligibleServer) {
+          nextProgress.push(
+            `__cert_issued:${new Date().toISOString().slice(0, 10)}`
+          );
+        }
+      }
+
+      const updatedUser = await updateUserAccess(actor.user.email, {
+        nome: rawName,
+        progresso_aulas: nextProgress
+      });
+
+      return sendJson(res, 200, {
+        ok: true,
+        message: 'Dados do certificado salvos com sucesso.',
+        maskedDoc,
+        progresso_aulas: updatedUser.progresso_aulas,
+        user: sanitizeUserForClient(updatedUser, dripConfig)
+      });
+    }
+
+    if (action === 'demo_toggle_certificate_ready') {
+      if (isProductionEnv() && !actor.isOriginAdmin) {
+        return sendJson(res, 403, {
+          ok: false,
+          error:
+            'Simulacao disponivel apenas em ambiente local ou conta administrativa.'
+        });
+      }
+
+      const mainLessonIds = getMainTrackLessonIds();
+
+      const currentProgress = Array.isArray(actor.user.progresso_aulas)
+        ? [...actor.user.progresso_aulas]
+        : [];
+      const currentDripConfig = await getDripConfig();
+      const allMainDone =
+        mainLessonIds.length > 0 &&
+        mainLessonIds.every((id) => currentProgress.includes(id)) &&
+        (actor.user.liberar_trava_7dias_manual === true ||
+          computeAccessStatus(actor.user, currentDripConfig).daysSincePurchase >=
+            7);
+
+      if (allMainDone) {
+        const mainLessonSet = new Set(mainLessonIds);
+        const resetProgress = currentProgress.filter((item) => {
+          const key = String(item || '');
+          return !mainLessonSet.has(key) && !key.startsWith('__cert_issued:');
+        });
+
+        const updatedUser = await updateUserAccess(actor.user.email, {
+          progresso_aulas: resetProgress,
+          liberar_trava_7dias_manual: false
+        });
+        const dripConfig = await getDripConfig();
+        const access = computeAccessStatus(updatedUser, dripConfig);
+
+        return sendJson(res, 200, {
+          ok: true,
+          simulatedComplete: false,
+          daysSincePurchase: access.daysSincePurchase,
+          progresso_aulas: updatedUser.progresso_aulas,
+          user: sanitizeUserForClient(updatedUser, dripConfig)
+        });
+      }
+
+      const fullProgress = [...currentProgress];
+      for (const id of mainLessonIds) {
+        if (!fullProgress.includes(id)) {
+          fullProgress.push(id);
+        }
+      }
+      if (
+        !fullProgress.some((item) => String(item).startsWith('__cert_issued:'))
+      ) {
+        fullProgress.push(
+          `__cert_issued:${new Date().toISOString().slice(0, 10)}`
+        );
+      }
+
+      const updatedUser = await updateUserAccess(actor.user.email, {
+        progresso_aulas: fullProgress,
+        liberar_trava_7dias_manual: true
+      });
+      const dripConfig = await getDripConfig();
+      const access = computeAccessStatus(updatedUser, dripConfig);
+
+      return sendJson(res, 200, {
+        ok: true,
+        simulatedComplete: true,
+        daysSincePurchase: access.daysSincePurchase,
         progresso_aulas: updatedUser.progresso_aulas,
         user: sanitizeUserForClient(updatedUser, dripConfig)
       });
